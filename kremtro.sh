@@ -1,10 +1,9 @@
 #!/bin/bash
-# alias geymslan
-# Version bersion 1 
-# 24.06.2013
-# 05.01.2014
-# geyma í /etc/profile.d með ln -s /etc/profile.d/kremtro Dropbox/asdfgasdf
- 
+# https://github.com/kthordarson/dotfiles
+# keep this file in ~/dotfiles
+# run setupdotfiles.sh to load kremtro.sh from .bashrc
+# sync with git
+# 
  
 #basic
 alias vi='vim'
