@@ -72,5 +72,25 @@ man() {
 			man "$@"
 }
 
+# history stuff
+export HISTCONTROL="erasedups:ignoreboth"       # no duplicate entries
+export HISTSIZE=100000                          # big big history (default is 500)
+export HISTFILESIZE=$HISTSIZE                   # big big history
+type shopt &> /dev/null && shopt -s histappend  # append to history, don't overwrite it
 
+##
+## better `cd`'ing
+##
+
+# Case-insensitive globbing (used in pathname expansion)
+shopt -s nocaseglob;
+
+# Correct spelling errors in arguments supplied to cd
+shopt -s cdspell;
+
+# Autocorrect on directory names to match a glob.
+shopt -s dirspell 2> /dev/null
+
+# Turn on recursive globbing (enables ** to recurse all directories)
+shopt -s globstar 2> /dev/null
 
