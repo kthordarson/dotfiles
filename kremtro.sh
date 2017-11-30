@@ -10,6 +10,7 @@ alias vi='vim'
 alias ll="ls -lah"
 #show only folders
 alias lsd="ls -lF ${colorflag} | grep --color=never '^d'"
+alias tree="find . -print | sed -e 's;[^/]*/;|____;g;s;____|; |;g'"
 
 # sudo apt *
 alias apt-get="sudo apt-get"
@@ -27,7 +28,12 @@ alias fgrep='fgrep --color=auto'
  
 #misc
 alias alljobs='for user in $(cut -f1 -d: /etc/passwd); do crontab -u $user -l; done'
- 
+alias findit="find . -type f -name"
+alias sourceme="source ~/dotfiles/kremtro.sh"
+updateme() {
+  (cd ~/dotfiles/ && git pull)
+}
+
 #networking 
 alias port1='netstat -tulanp'
 alias port3="watch -n 1 'netstat -Wnepo'"
@@ -57,6 +63,7 @@ alias reboot='sudo reboot'
 alias updateapt='sudo apt-get -y upgrade'
 alias apt='sudo apt -y '
 alias apt-get='sudo apt-get -y'
+alias svim='sudo vim'
 
 
 # Color man pages
