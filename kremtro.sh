@@ -4,27 +4,33 @@
 # run setupdotfiles.sh to load kremtro.sh from .bashrc
 # sync with git
 # 
- 
+export PATH=$PATH:~/dotfiles
+
 #basic
 alias vi='vim'
 alias ll="ls -lah"
+alias llr="ll -tr"
+
 #show only folders
-alias lsd="ls -lF ${colorflag} | grep --color=never '^d'"
+alias lsd="ls -lF ${colorflag} | grep '^d'"
 alias tree="find . -print | sed -e 's;[^/]*/;|____;g;s;____|; |;g'"
 
 # sudo apt *
 alias apt-get="sudo apt-get"
 alias apt-cache="sudo apt-cache"
- 
- 
+function aptbig {
+    dpkg-query -W --showformat='''${Installed-Size;10}\t${Package}\n''' | sort -k1,1n
+}
+
+
 #nicer output
 alias path='echo -e ${PATH//:/\\n}'
 alias mountt='mount | column -t'
 alias nocomment='grep -Ev '\''^(#|$)'\'''
  
-alias grep='grep --color=auto'
-alias egrep='egrep --color=auto'
-alias fgrep='fgrep --color=auto'
+#alias grep='grep --color=auto'
+#alias egrep='egrep --color=auto'
+#alias fgrep='fgrep --color=auto'
  
 #misc
 alias alljobs='for user in $(cut -f1 -d: /etc/passwd); do crontab -u $user -l; done'
@@ -56,7 +62,7 @@ alias biggest="find . -printf '%s %p\n'| sort -nr | head -20"
 sbs(){ du -b --max-depth 1 | sort -nr | perl -pe 's{([0-9]+)}{sprintf "%.1f%s", (>=2**30? ((/2**30, "G"): (>=2**20? ((/2**20, "M"): (>=2**10? ((/2**10, "K"): ((, "")}e';}
  
 #export TERM=xterm-color
-export GREP_OPTIONS='--color=auto' GREP_COLOR='1;32'
+#export GREP_OPTIONS='--color=auto' GREP_COLOR='1;32'
 
 #root stuff
 alias reboot='sudo reboot'
