@@ -110,8 +110,9 @@ shopt -s globstar 2> /dev/null
 function findit()
 {
     if [ $# -gt 0 ]; then
-        echo "Your command line contains $# arguments"
-        find $1 -type f -exec grep -iHn $2 {} +
+        echo "Searching in $1 for string $2"
+        find $1 -type f -exec grep -iHno $2 {} +
+        # grep -r -E -o ".{0,10}wantedText.{0,10}" *
     else
         echo "Missing search arguments"
         #exit 1
