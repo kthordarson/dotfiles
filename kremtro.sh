@@ -34,7 +34,7 @@ alias nocomment='grep -Ev '\''^(#|$)'\'''
  
 #misc
 alias alljobs='for user in $(cut -f1 -d: /etc/passwd); do crontab -u $user -l; done'
-alias findit="find . -type f -name"
+#alias findit="find . -type f -name"
 alias sourceme="source ~/dotfiles/kremtro.sh"
 updateme() {
   (cd ~/dotfiles/ && git pull)
@@ -107,3 +107,18 @@ shopt -s dirspell 2> /dev/null
 # Turn on recursive globbing (enables ** to recurse all directories)
 shopt -s globstar 2> /dev/null
 
+function findit()
+{
+    if [ $# -gt 0 ]; then
+        echo "Your command line contains $# arguments"
+        find $1 -type f -exec grep -iHn $2 {} +
+    else
+        echo "Missing search arguments"
+        #exit 1
+    fi
+
+#    echo "search parh is $1"
+#    echo "string is $2"
+
+#    find $1 -type f -exec grep -iHn $2 {} +
+}
