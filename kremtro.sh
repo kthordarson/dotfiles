@@ -21,7 +21,7 @@ alias apt-cache="sudo apt-cache"
 function aptbig {
     dpkg-query -W --showformat='''${Installed-Size;10}\t${Package}\n''' | sort -k1,1n
 }
-
+alias apt-biggest="dpkg-query -Wf '${Installed-Size}\t${Package}\n' | sort -n"
 
 #nicer output
 alias path='echo -e ${PATH//:/\\n}'
@@ -123,3 +123,5 @@ function findit()
 
 #    find $1 -type f -exec grep -iHn $2 {} +
 }
+
+
