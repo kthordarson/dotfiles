@@ -76,6 +76,8 @@ alias apt='sudo apt -y '
 alias apt-get='sudo apt-get -y'
 alias svim='sudo vim'
 
+# cat with colors
+alias c='pygmentize -O style=monokai -f console256 -g'
 
 # Color man pages
 man() {
@@ -128,5 +130,11 @@ function findit()
 
 #    find $1 -type f -exec grep -iHn $2 {} +
 }
+
+# setup prompt
+source ~/dotfiles/.bash_prompt
+
+# load ffmpeg aliases
+source ~/dotfiles/ffm.sh
 
 
