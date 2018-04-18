@@ -52,7 +52,10 @@ alias ipad="dig +short myip.opendns.com @resolver1.opendns.com"
 ## get top process eating memory
 alias psmem='ps auxf | sort -nr -k 4'
 alias psmem10='ps auxf | sort -nr -k 4 | head -10'
-
+#alias bigopenfiles="lsof / | awk '{ if($7 > 1048576) print $7/1048576 "MB" " " $9 " " ( }' | sort -n -u | tail)"
+#function bigopenfiles(){
+#    lsof | awk "'{ if($7 > 1048576) print $7/1048576 "MB" " " $9 " " ( }' | sort -n -u | tail)"
+#}
 ## get top process eating cpu ##
 alias pscpu='ps auxf | sort -nr -k 3'
 alias pscpu10='ps auxf | sort -nr -k 3 | head -10'
@@ -132,7 +135,7 @@ function findit()
 }
 
 # setup prompt
-source ~/dotfiles/.bash_prompt
+#source ~/dotfiles/.bash_prompt
 
 # load ffmpeg aliases
 source ~/dotfiles/ffm.sh
