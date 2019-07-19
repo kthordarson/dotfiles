@@ -3,7 +3,7 @@
 # keep this file in ~/dotfiles
 # run setupdotfiles.sh to load kremtro.sh from .bashrc
 # sync with git
-#
+# 19.07.2019 
 export PATH=$PATH:~/dotfiles
 
 #basic
