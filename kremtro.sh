@@ -15,8 +15,10 @@ alias llr="ll -tr"
 
 #show only folders
 alias lsd="ls -lF ${colorflag} | grep '^d'"
-alias tree="find . -print | sed -e 's;[^/]*/;|____;g;s;____|; |;g'"
-
+#alias tree="find . -print | sed -e 's;[^/]*/;|____;g;s;____|; |;g'"
+#alias newtree="tree $1 --noreport  -tiafFD | tail"
+function newtree() { tree $1 --noreport -tiaFD | tail; } 
+# function tree() { tree -isafF $1 | grep -v "/$" | tr '[]' ' ' | sort -k1nr | head;  }
 # sudo apt *
 alias apt-get="sudo apt-get"
 alias apt-cache="sudo apt-cache"
