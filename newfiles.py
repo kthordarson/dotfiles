@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 import os
 import time
 import argparse
@@ -6,11 +8,16 @@ import argparse
 def get_tree(path, filelist):
     for entry in os.scandir(path):
         if entry.is_dir(follow_symlinks=False):
-            get_tree(entry.path, filelist)
-            filelist.append((entry, entry.stat().st_ctime))
+            try:
+                get_tree(entry.path, filelist)
+                filelist.append((entry, entry.stat().st_ctime))
+            except:
+                pass
         else:
-            entry.stat(follow_symlinks=False).st_size
-            filelist.append((entry, entry.stat().st_ctime))
+            try:
+                entry.stat(follow_symlinks=False).st_size
+            except:
+                pass
 
 
 myparse = argparse.ArgumentParser(description="Find new files")
@@ -21,7 +28,7 @@ input_path = args.Path
 limit = args.Number
 
 filelist = []
-result = get_tree("c:/temp/", filelist)
+result = get_tree(input_path, filelist)
 filelist.sort(key=lambda x: x[1], reverse=False)
 for file in filelist[-limit:]:
     print(time.ctime(file[1]), file[0].path)
