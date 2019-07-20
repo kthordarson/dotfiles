@@ -16,6 +16,7 @@ def get_tree(path, filelist):
         else:
             try:
                 entry.stat(follow_symlinks=False).st_size
+                filelist.append((entry, entry.stat().st_ctime))
             except:
                 pass
 
