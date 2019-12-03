@@ -3,7 +3,7 @@
 # keep this file in ~/dotfiles
 # run setupdotfiles.sh to load kremtro.sh from .bashrc
 # sync with git
-#
+# 19.07.2019 
 export PATH=$PATH:~/dotfiles
 
 #basic
@@ -15,8 +15,10 @@ alias llr="ll -tr"
 
 #show only folders
 alias lsd="ls -lF ${colorflag} | grep '^d'"
-alias tree="find . -print | sed -e 's;[^/]*/;|____;g;s;____|; |;g'"
-
+#alias tree="find . -print | sed -e 's;[^/]*/;|____;g;s;____|; |;g'"
+#alias newtree="tree $1 --noreport  -tiafFD | tail"
+function newtree() { tree $1 --noreport -tiaFD | tail; } 
+# function tree() { tree -isafF $1 | grep -v "/$" | tr '[]' ' ' | sort -k1nr | head;  }
 # sudo apt *
 alias apt-get="sudo apt-get"
 alias apt-cache="sudo apt-cache"
@@ -67,8 +69,10 @@ alias biggest="find . -printf '%s %p\n'| sort -nr | head -20"
 sbs(){ du -b --max-depth 1 | sort -nr | perl -pe 's{([0-9]+)}{sprintf "%.1f%s", (>=2**30? ((/2**30, "G"): (>=2**20? ((/2**20, "M"): (>=2**10? ((/2**10, "K"): ((, "")}e';}
 
 # find stuff
-alias newest="find . -type f -printf '%TY-%Td-%Tm %.8TT %p\n' | sort -rn | head -n 10"
+# alias newest="find . -type f -printf '%TY-%Td-%Tm %.8TT %p\n' | sort -rn | head -n 10"
+function newest() { find $1 -type f -mtime -2 -printf '%TY-%Td-%Tm %.8TT %p\n' | sort | tail -n 30; }
 
+# alias newest="find  -type f -mtime -2 -printf '%TY-%Td-%Tm %.8TT %p\n' | sort | tail -n 30"
 #export TERM=xterm-color
 #export GREP_OPTIONS='--color=auto' GREP_COLOR='1;32'
 

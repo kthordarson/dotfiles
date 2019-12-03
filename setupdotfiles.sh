@@ -26,4 +26,5 @@ else
     echo "kremtro not installed, adding to .bashrc"
     addkrem
 fi
+source ~/.bashrc
 
