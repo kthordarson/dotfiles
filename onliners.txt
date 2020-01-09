@@ -1,0 +1,6 @@
+# arp flush
+watch -n 1 'sudo ip -s -s neigh flush all'
+
+# nmap output ip
+nmap -p80 192.168.11.0/24 -oG -  | grep open | awk '{print $2}'
+
