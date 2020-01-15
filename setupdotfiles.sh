@@ -28,3 +28,6 @@ else
 fi
 source ~/.bashrc
 
+# copy tmux config
+cp .tmux.conf ~/.tmux.conf
+

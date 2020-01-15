@@ -141,7 +141,10 @@ function findit()
 # setup prompt
 #source ~/dotfiles/.bash_prompt
 
-# load ffmpeg aliases
+#tmux stuff
+alias tml='tmux list-sessions'
+alias tmk='tmux kill-session -t'
+
 source ~/dotfiles/ffm.sh
 
 
