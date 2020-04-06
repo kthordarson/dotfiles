@@ -34,17 +34,17 @@ cp ~/dotfiles/.vimrc ~/.vimrc
 
 # requirements:
 # curl build-essential cmake vim python3-dev go golang npm
-sudo apt install -y build-essential cmake vim python3-dev go golang npm curl python3-pip
+sudo apt install -y build-essential cmake vim python3-dev golang npm curl python3-pip
 # setup vim plugins
 mkdir ~/.vim/plugged -p
-curl -fLo ~/.vim/autoload/plug.vim --create-dirs     https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 mkdir ~/.vim/undodir -p
 
-git clone https://github.com/ctrlpvim/ctrlp.vim.git ctrlp.vim ~/.vim/plugged
-git clone https://github.com/ycm-core/YouCompleteMe ~/.vim/plugged/
+git clone https://github.com/ctrlpvim/ctrlp.vim.git ~/.vim/plugged/ctrlp.vim
+git clone https://github.com/ycm-core/YouCompleteMe ~/.vim/plugged/YouCompleteMe
 cd ~/.vim/plugged/YouCompleteMe
 git submodule update --init --recursive
-./install --all
+python3 ./install.py --all
 
 
 
