@@ -3,7 +3,7 @@
 # keep this file in ~/dotfiles
 # run setupdotfiles.sh to load kremtro.sh from .bashrc
 # sync with git
-# 19.07.2019 
+# 19.07.2019
 export PATH=$PATH:~/dotfiles
 
 #basic
@@ -17,7 +17,7 @@ alias llr="ll -tr"
 alias lsd="ls -lF ${colorflag} | grep '^d'"
 #alias tree="find . -print | sed -e 's;[^/]*/;|____;g;s;____|; |;g'"
 #alias newtree="tree $1 --noreport  -tiafFD | tail"
-function newtree() { tree $1 --noreport -tiaFD | tail; } 
+function newtree() { tree $1 --noreport -tiaFD | tail; }
 # function tree() { tree -isafF $1 | grep -v "/$" | tr '[]' ' ' | sort -k1nr | head;  }
 # sudo apt *
 alias apt-get="sudo apt-get"
@@ -146,6 +146,6 @@ function findit()
 alias tml='tmux list-sessions'
 alias tmk='tmux kill-session -t'
 
-source ~/dotfiles/ffm.sh
+# source ~/dotfiles/ffm.sh
 
 
