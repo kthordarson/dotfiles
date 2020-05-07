@@ -16,6 +16,8 @@ set incsearch
 
 set colorcolumn=120
 
+set mouse=a
+
 highlight ColorColumn ctermbg=0 guibg=lightgray
 call plug#begin('~/.vim/plugged')
 Plug 'morhetz/gruvbox'
