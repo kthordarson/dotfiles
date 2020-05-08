@@ -3,8 +3,9 @@
 # keep this file in ~/dotfiles
 # run setupdotfiles.sh to load kremtro.sh from .bashrc
 # sync with git
-# 19.07.2019 
+# 19.07.2019
 export PATH=$PATH:~/dotfiles
+export PATH=$PATH:~/.local/bin
 
 #basic
 alias kremer='vi /home/kth/dotfiles/kremtro.sh && source ~/.bashrc'
@@ -17,7 +18,7 @@ alias llr="ll -tr"
 alias lsd="ls -lF ${colorflag} | grep '^d'"
 #alias tree="find . -print | sed -e 's;[^/]*/;|____;g;s;____|; |;g'"
 #alias newtree="tree $1 --noreport  -tiafFD | tail"
-function newtree() { tree $1 --noreport -tiaFD | tail; } 
+function newtree() { tree $1 --noreport -tiaFD | tail; }
 # function tree() { tree -isafF $1 | grep -v "/$" | tr '[]' ' ' | sort -k1nr | head;  }
 # sudo apt *
 alias apt-get="sudo apt-get"
@@ -47,6 +48,7 @@ updateme() {
 #networking
 alias port1='netstat -tulanp'
 alias port3="watch -n 1 'netstat -Wnepo'"
+alias allips="ifconfig -a | grep -o 'inet6\? \(addr:\)\?\s\?\(\(\([0-9]\+\.\)\{3\}[0-9]\+\)\|[a-fA-F0-9:]\+\)' | awk '{ sub(/inet6? (addr:)? ?/, \"\"); print }' | sort | uniq"
 #show external ip address
 alias ipad="dig +short myip.opendns.com @resolver1.opendns.com"
 #alias port4='netstat -an | grep ESTABLISHED | awk '{print $5}' | awk -F: '{print (}' | sort | uniq -c | awk '{ printf("%s\t%s\t",[,() ; for (i = 0; i < (; i++) {printf("*")}; print "" }'))])'
@@ -145,6 +147,6 @@ function findit()
 alias tml='tmux list-sessions'
 alias tmk='tmux kill-session -t'
 
-source ~/dotfiles/ffm.sh
+# source ~/dotfiles/ffm.sh
 
 
