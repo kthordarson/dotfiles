@@ -48,6 +48,7 @@ updateme() {
 #networking
 alias port1='netstat -tulanp'
 alias port3="watch -n 1 'netstat -Wnepo'"
+alias allips="ifconfig -a | grep -o 'inet6\? \(addr:\)\?\s\?\(\(\([0-9]\+\.\)\{3\}[0-9]\+\)\|[a-fA-F0-9:]\+\)' | awk '{ sub(/inet6? (addr:)? ?/, \"\"); print }' | sort | uniq"
 #show external ip address
 alias ipad="dig +short myip.opendns.com @resolver1.opendns.com"
 #alias port4='netstat -an | grep ESTABLISHED | awk '{print $5}' | awk -F: '{print (}' | sort | uniq -c | awk '{ printf("%s\t%s\t",[,() ; for (i = 0; i < (; i++) {printf("*")}; print "" }'))])'
@@ -126,7 +127,7 @@ function findit()
 {
     if [ $# -gt 0 ]; then
         echo "Searching in $1 for string $2"
-        find $1 -type f -exec grep -iHno $2 {} +
+        find $1 -type f  -exec grep -iHno $2 {} +
         # grep -r -E -o ".{0,10}wantedText.{0,10}" *
     else
         echo "Missing search arguments"
@@ -142,7 +143,10 @@ function findit()
 # setup prompt
 #source ~/dotfiles/.bash_prompt
 
-# load ffmpeg aliases
-source ~/dotfiles/ffm.sh
+#tmux stuff
+alias tml='tmux list-sessions'
+alias tmk='tmux kill-session -t'
+
+# source ~/dotfiles/ffm.sh
 
 
