@@ -28,19 +28,11 @@ else
 fi
 source ~/.bashrc
 
-<<<<<<< HEAD
-# copy tmux config
-cp .tmux.conf ~/.tmux.conf
-cp .vimrc ~/.vimrc
-
-
 # nerdtree
 git clone https://github.com/preservim/nerdtree.git ~/.vim/bundle/nerdtree
-=======
-# copy config files
-cp ~/dotfiles/.tmux.conf ~/.tmux.conf
-cp ~/dotfiles/.vimrc ~/.vimrc
 
+# gruvbox
+git clone https://github.com/morhetz/gruvbox ~/.vim/bundle/gruvbox
 # setup vim plugins
 # requirements:
 # curl build-essential cmake vim python3-dev go golang npm
@@ -80,6 +72,4 @@ install-ctrlp
 install-ycm
 
 vim -c ":PlugInstall | qa"
-
->>>>>>> 8cd78ed038cc84478e7bf62423f1b3d486ef3b6e
 
