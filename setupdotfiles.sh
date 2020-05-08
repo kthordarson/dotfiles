@@ -30,4 +30,9 @@ source ~/.bashrc
 
 # copy tmux config
 cp .tmux.conf ~/.tmux.conf
+cp .vimrc ~/.vimrc
+
+
+# nerdtree
+git clone https://github.com/preservim/nerdtree.git ~/.vim/bundle/nerdtree
 
