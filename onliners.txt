@@ -4,3 +4,6 @@ watch -n 1 'sudo ip -s -s neigh flush all'
 # nmap output ip
 nmap -p80 192.168.11.0/24 -oG -  | grep open | awk '{print $2}'
 
+# find and rename
+find /opt/omd -type f -iname "hires*" -print0 | xargs --null -I{} mv {} {}.renamed
+
