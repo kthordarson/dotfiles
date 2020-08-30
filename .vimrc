@@ -1,5 +1,9 @@
 syntax on
 
+" autoread files when changed
+set autoread
+
+
 set noerrorbells
 set tabstop=4 softtabstop=4
 set shiftwidth=4
@@ -25,10 +29,11 @@ Plug 'jremmen/vim-ripgrep'
 Plug 'tpope/vim-fugitive'
 Plug 'leafgarland/typescript-vim'
 Plug 'vim-utils/vim-man'
-Plug 'lyuts/vim-rtags'
 Plug 'git@github.com:ctrlpvim/ctrlp.vim.git'
 Plug 'git@github.com:ycm-core/YouCompleteMe.git'
 Plug 'mbbill/undotree'
+Plug 'davidhalter/jedi-vim'
+Plug 'python-mode/python-mode', { 'for': 'python', 'branch': 'develop' }
 call plug#end()
 
 colorscheme gruvbox
@@ -70,4 +75,9 @@ fun! TrimWhitespace()
     call winrestview(l:save)
 endfun
 autocmd BufWritePre * :call TrimWhitespace()
+
+
+let g:pymode_folding=0
+let g:pymode_rope=0
+let g:pymode_doc=1
 

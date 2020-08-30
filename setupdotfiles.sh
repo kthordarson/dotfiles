@@ -29,10 +29,21 @@ fi
 source ~/.bashrc
 
 # nerdtree
-git clone https://github.com/preservim/nerdtree.git ~/.vim/bundle/nerdtree
+if [-f ~/.vim/bundle/nerdtree]; then
+    echo "nertree exists"
+else
+    git clone https://github.com/preservim/nerdtree.git ~/.vim/bundle/nerdtree
+fi
+
 
 # gruvbox
-git clone https://github.com/morhetz/gruvbox ~/.vim/bundle/gruvbox
+if [-f ~/.vim/bundle/gruvbox]; then
+    echo "gruvbox exists"
+else
+    git clone https://github.com/morhetz/gruvbox ~/.vim/bundle/gruvbox
+fi
+
+
 # setup vim plugins
 # requirements:
 # curl build-essential cmake vim python3-dev go golang npm
