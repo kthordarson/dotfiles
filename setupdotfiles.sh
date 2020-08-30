@@ -29,7 +29,7 @@ fi
 source ~/.bashrc
 
 # nerdtree
-if [-f ~/.vim/bundle/nerdtree]; then
+if [ -f ~/.vim/bundle/nerdtree ]; then
     echo "nertree exists"
 else
     git clone https://github.com/preservim/nerdtree.git ~/.vim/bundle/nerdtree
@@ -37,7 +37,7 @@ fi
 
 
 # gruvbox
-if [-f ~/.vim/bundle/gruvbox]; then
+if [ -f ~/.vim/bundle/gruvbox ]; then
     echo "gruvbox exists"
 else
     git clone https://github.com/morhetz/gruvbox ~/.vim/bundle/gruvbox
