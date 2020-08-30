@@ -84,3 +84,7 @@ install-ycm
 
 vim -c ":PlugInstall | qa"
 
+# update dots
+
+~/dotfiles/dots.sh
+
