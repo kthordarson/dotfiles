@@ -7,3 +7,8 @@ nmap -p80 192.168.11.0/24 -oG -  | grep open | awk '{print $2}'
 # find and rename
 find /opt/omd -type f -iname "hires*" -print0 | xargs --null -I{} mv {} {}.renamed
 
+# find but exclude path
+find . -type f -not -path "./vvcadm/*"
+
+# find exec grep string
+find /etc -type f -exec grep -i 0gg3 {} \;
