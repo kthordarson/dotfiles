@@ -41,6 +41,7 @@ if [ -f ~/.vim/bundle/gruvbox ]; then
     echo "gruvbox exists"
 else
     git clone https://github.com/morhetz/gruvbox ~/.vim/bundle/gruvbox
+    git clone https://github.com/morhetz/gruvbox ~/.vim/plugged/gruvbox
 fi
 
 
@@ -50,14 +51,14 @@ fi
 sudo apt install -y build-essential cmake vim python3-dev golang npm curl python3-pip
 mkdir ~/.vim/undodir -p
 
-function install-plug {
-    if [ -d ~/.vim/plugged ]; then
-        echo "plugged already installed"
-    else
-        mkdir ~/.vim/plugged -p
-        curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
-    fi
-} # install-plug
+# function install-plug {
+#    if [ -d ~/.vim/plugged ]; then
+#        echo "plugged already installed"
+#    else
+#        mkdir ~/.vim/plugged -p
+#        curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+#    fi
+#} # install-plug
 
 function install-ctrlp {
     if [ -d ~/.vim/plugged/ctrlp.vim ]; then
@@ -78,11 +79,11 @@ function install-ycm {
     fi
 }
 
-install-plug
+# install-plug
 install-ctrlp
 install-ycm
 
-vim -c ":PlugInstall | qa"
+# vim -c ":PlugInstall | qa"
 
 # update dots
 
