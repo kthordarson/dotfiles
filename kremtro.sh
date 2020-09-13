@@ -48,6 +48,8 @@ updateme() {
 #networking
 alias port1='netstat -tulanp'
 alias port3="watch -n 1 'netstat -Wnepo'"
+alias portl="sudo netstat -nlpt | grep -v tcp6"
+
 alias allips="ifconfig -a | grep -o 'inet6\? \(addr:\)\?\s\?\(\(\([0-9]\+\.\)\{3\}[0-9]\+\)\|[a-fA-F0-9:]\+\)' | awk '{ sub(/inet6? (addr:)? ?/, \"\"); print }' | sort | uniq"
 #show external ip address
 alias ipad="dig +short myip.opendns.com @resolver1.opendns.com"
