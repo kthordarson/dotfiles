@@ -83,8 +83,8 @@ function newest() { find $1 -type f -mtime -2 -printf '%TY-%Td-%Tm %.8TT %p\n' |
 #root stuff
 alias reboot='sudo reboot'
 alias updateapt='sudo apt-get -y upgrade'
-alias apt='sudo apt -y '
-alias apt-get='sudo apt-get -y'
+# alias apt='sudo apt -y '
+# alias apt-get='sudo apt-get -y'
 alias svim='sudo vim'
 
 # cat with colors
