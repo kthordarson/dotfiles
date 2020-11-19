@@ -151,4 +151,7 @@ alias tmk='tmux kill-session -t'
 
 # source ~/dotfiles/ffm.sh
 
+# find zombie processes
+alias zombies='ps axo stat,ppid,pid,comm | grep -w defunct'
+
 
