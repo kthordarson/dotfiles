@@ -21,8 +21,8 @@ alias lsd="ls -lF ${colorflag} | grep '^d'"
 function newtree() { tree $1 --noreport -tiaFD | tail; }
 # function tree() { tree -isafF $1 | grep -v "/$" | tr '[]' ' ' | sort -k1nr | head;  }
 # sudo apt *
-alias apt-get="sudo apt-get"
-alias apt-cache="sudo apt-cache"
+# alias apt-get="sudo apt-get"
+# alias apt-cache="sudo apt-cache"
 function aptbig {
     dpkg-query -W --showformat='''${Installed-Size;10}\t${Package}\n''' | sort -k1,1n
 }
@@ -82,7 +82,7 @@ function newest() { find $1 -type f -mtime -2 -printf '%TY-%Td-%Tm %.8TT %p\n' |
 
 #root stuff
 alias reboot='sudo reboot'
-alias updateapt='sudo apt-get -y upgrade'
+# alias updateapt='sudo apt-get -y upgrade'
 # alias apt='sudo apt -y '
 # alias apt-get='sudo apt-get -y'
 alias svim='sudo vim'
