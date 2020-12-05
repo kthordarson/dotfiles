@@ -81,6 +81,7 @@ function newest() { find $1 -type f -mtime -2 -printf '%TY-%Td-%Tm %.8TT %p\n' |
 #export GREP_OPTIONS='--color=auto' GREP_COLOR='1;32'
 
 #root stuff
+alias sudo='sudo '
 alias reboot='sudo reboot'
 # alias updateapt='sudo apt-get -y upgrade'
 # alias apt='sudo apt -y '
