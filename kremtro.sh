@@ -26,7 +26,7 @@ function newtree() { tree $1 --noreport -tiaFD | tail; }
 function aptbig {
     dpkg-query -W --showformat='''${Installed-Size;10}\t${Package}\n''' | sort -k1,1n
 }
-alias apt-biggest="dpkg-query -Wf '${Installed-Size}\t${Package}\n' | sort -n"
+alias apt-biggest="sudo dpkg-query -Wf '${Installed-Size}\t${Package}\n' | sort -n"
 
 #nicer output
 alias path='echo -e ${PATH//:/\\n}'
@@ -38,7 +38,7 @@ alias nocomment='grep -Ev '\''^(#|$)'\'''
 #alias fgrep='fgrep --color=auto'
 
 #misc
-alias alljobs='for user in $(cut -f1 -d: /etc/passwd); do crontab -u $user -l; done'
+alias alljobs='for user in $(cut -f1 -d: /etc/passwd); do sudo crontab -u $user -l; done'
 #alias findit="find . -type f -name"
 alias sourceme="source ~/dotfiles/kremtro.sh"
 updateme() {
