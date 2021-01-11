@@ -12,3 +12,8 @@ find . -type f -not -path "./vvcadm/*"
 
 # find exec grep string
 find /etc -type f -exec grep -i 0gg3 {} \;
+
+
+sudo netstat -nlpt| grep tcp | grep -Ev "127\.0\.0\.1|[^a-f0-9]::1"
+
+
