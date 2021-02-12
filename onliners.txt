@@ -20,5 +20,6 @@ find . -type f -iname *.vcxproj -exec sed -i 's/v141_xp/v141/g' {} \;
 
 
 # update pip packages
+sudo python3 -m pip install --upgrade pip
 sudo pip3 freeze | cut -d'=' -f1 | xargs -n1 sudo pip3 install -U
 
