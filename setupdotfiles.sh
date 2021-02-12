@@ -45,8 +45,8 @@ fi
 # setup vim plugins
 # requirements:
 # curl build-essential cmake vim python3-dev go golang npm
-sudo apt install -y build-essential cmake vim python3-dev golang npm curl python3-pip
-sudo apt install -y build-essential cmake vim-nox python3-dev mono-complete golang nodejs default-jdk npm
+#sudo apt install -y build-essential cmake vim python3-dev golang npm curl python3-pip
+#sudo apt install -y build-essential cmake vim-nox python3-dev mono-complete golang nodejs default-jdk npm
 mkdir ~/.vim/undodir -p
 
 function install-plug() {

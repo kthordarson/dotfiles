@@ -18,3 +18,7 @@ sudo netstat -nlpt| grep tcp | grep -Ev "127\.0\.0\.1|[^a-f0-9]::1"
 # find search and replace string
 find . -type f -iname *.vcxproj -exec sed -i 's/v141_xp/v141/g' {} \;
 
+
+# update pip packages
+sudo pip3 freeze | cut -d'=' -f1 | xargs -n1 sudo pip3 install -U
+
