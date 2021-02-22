@@ -28,3 +28,7 @@ curl -XGET 'http://192.168.99.200:9200/_cat/health?v'
 curl -XGET 'http://192.168.99.200:9200/_cluster/state?pretty'
 curl -XPUT 'http://192.168.99.200:9200/_cluster/settings' -H 'Content-Type: application/json' -d '{ "transient" : { "cluster.routing.allocation.disk.watermark.flood_stage" : "99%", "cluster.routing.allocation.disk.watermark.high" : "95%"}}'
 
+# rename network interface
+sudo ip link set wlxd037457f172b name wlan0
+
+
