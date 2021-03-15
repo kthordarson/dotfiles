@@ -31,4 +31,6 @@ curl -XPUT 'http://192.168.99.200:9200/_cluster/settings' -H 'Content-Type: appl
 # rename network interface
 sudo ip link set wlxd037457f172b name wlan0
 
+# gnome
+killall -3 gnome-shell
 
