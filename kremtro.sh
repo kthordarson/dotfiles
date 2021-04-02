@@ -7,6 +7,12 @@
 export PATH=$PATH:~/dotfiles
 export PATH=$PATH:~/.local/bin
 
+# rootinit
+alias sudo='sudo -E '
+alias mkdir='mkdir -pv'
+
+
+
 #basic
 alias kremer='vi /home/kth/dotfiles/kremtro.sh && source ~/.bashrc'
 alias rassgat='echo rassgat'
@@ -81,7 +87,7 @@ function newest() { find $1 -type f -mtime -2 -printf '%TY-%Td-%Tm %.8TT %p\n' |
 #export GREP_OPTIONS='--color=auto' GREP_COLOR='1;32'
 
 #root stuff
-alias sudo='sudo '
+# alias sudo='sudo '
 alias reboot='sudo reboot'
 # alias updateapt='sudo apt-get -y upgrade'
 # alias apt='sudo apt -y '
