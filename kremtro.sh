@@ -6,7 +6,7 @@
 # 19.07.2019
 export PATH=$PATH:~/dotfiles
 export PATH=$PATH:~/.local/bin
-
+export PATH=$PATH:~/bin/
 # rootinit
 alias sudo='sudo -E '
 alias mkdir='mkdir -pv'

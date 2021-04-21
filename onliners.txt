@@ -35,3 +35,5 @@ sudo ip link set wlxd037457f172b name wlan0
 # gnome
 killall -3 gnome-shell
 
+# iptables foo
+watch -n1 -d "sudo iptables -vnxL | grep -v -e pkts -e Chain | sort -nk1 | tac | column -t"
