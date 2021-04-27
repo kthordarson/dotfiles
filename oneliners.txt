@@ -1,0 +1,39 @@
+# arp flush
+watch -n 1 'sudo ip -s -s neigh flush all'
+ip -s -s neigh flush all
+
+# nmap output ip
+nmap -p80 192.168.11.0/24 -oG -  | grep open | awk '{print $2}'
+
+# find and rename
+find /opt/omd -type f -iname "hires*" -print0 | xargs --null -I{} mv {} {}.renamed
+
+# find but exclude path
+find . -type f -not -path "./vvcadm/*"
+
+# find exec grep string
+find /etc -type f -exec grep -i 0gg3 {} \;
+
+sudo netstat -nlpt| grep tcp | grep -Ev "127\.0\.0\.1|[^a-f0-9]::1"
+
+# find search and replace string
+find . -type f -iname *.vcxproj -exec sed -i 's/v141_xp/v141/g' {} \;
+
+
+# update pip packages
+sudo python3 -m pip install --upgrade pip
+sudo pip3 freeze | cut -d'=' -f1 | xargs -n1 sudo pip3 install -U
+
+# gray / elastic
+curl -XGET 'http://192.168.99.200:9200/_cat/health?v'
+curl -XGET 'http://192.168.99.200:9200/_cluster/state?pretty'
+curl -XPUT 'http://192.168.99.200:9200/_cluster/settings' -H 'Content-Type: application/json' -d '{ "transient" : { "cluster.routing.allocation.disk.watermark.flood_stage" : "99%", "cluster.routing.allocation.disk.watermark.high" : "95%"}}'
+
+# rename network interface
+sudo ip link set wlxd037457f172b name wlan0
+
+# gnome
+killall -3 gnome-shell
+
+# iptables foo
+watch -n1 -d "sudo iptables -vnxL | grep -v -e pkts -e Chain | sort -nk1 | tac | column -t"
