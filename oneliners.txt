@@ -37,3 +37,8 @@ killall -3 gnome-shell
 
 # iptables foo
 watch -n1 -d "sudo iptables -vnxL | grep -v -e pkts -e Chain | sort -nk1 | tac | column -t"
+
+
+# openwrt
+opkg list-upgradable | cut -f 1 -d ' ' | xargs opkg upgrade
+
