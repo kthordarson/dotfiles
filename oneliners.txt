@@ -42,3 +42,7 @@ watch -n1 -d "sudo iptables -vnxL | grep -v -e pkts -e Chain | sort -nk1 | tac |
 # openwrt
 opkg list-upgradable | cut -f 1 -d ' ' | xargs opkg upgrade
 
+##
+iostat -dxk
+
+
