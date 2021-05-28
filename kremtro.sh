@@ -162,6 +162,6 @@ alias tmk='tmux kill-session -t'
 alias zombies='ps axo stat,ppid,pid,comm | grep -w defunct'
 
 # pythoncleanup
-alias pyclean='find . -type f | grep -E '(__pycache__|\.pyc$|\.pyo$)' | xargs rm -fr'
+#alias pyclean='find . -type f | grep -E '(__pycache__|\.pyc$|\.pyo$)' | xargs rm -fr'
 
 
