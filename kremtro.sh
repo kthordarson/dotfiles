@@ -4,6 +4,9 @@
 # run setupdotfiles.sh to load kremtro.sh from .bashrc
 # sync with git
 # 19.07.2019
+# v2 28.05.2021
+
+export LC_ALL="en_US.UTF-8"
 export PATH=$PATH:~/dotfiles
 export PATH=$PATH:~/.local/bin
 export PATH=$PATH:~/bin/
