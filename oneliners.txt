@@ -45,4 +45,5 @@ opkg list-upgradable | cut -f 1 -d ' ' | xargs opkg upgrade
 ##
 iostat -dxk
 
-
+# find all files with .yml extension, search and replace contents of earch file yml with yaml
+find . -type f -name "*.yml" -exec sed -i'' -e 's/yml/yaml/g' {} +
