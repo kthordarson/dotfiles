@@ -167,4 +167,6 @@ alias zombies='ps axo stat,ppid,pid,comm | grep -w defunct'
 # pythoncleanup
 #alias pyclean='find . -type f | grep -E '(__pycache__|\.pyc$|\.pyo$)' | xargs rm -fr'
 
+# dateformat
+alias date="date '+%d/%m/%Y %H:%M:%S'"
 
