@@ -38,7 +38,7 @@ Plug 'tpope/vim-fugitive'
 Plug 'leafgarland/typescript-vim'
 Plug 'vim-utils/vim-man'
 Plug 'git@github.com:ctrlpvim/ctrlp.vim.git'
-Plug 'git@github.com:ycm-core/YouCompleteMe.git'
+" Plug 'git@github.com:ycm-core/YouCompleteMe.git'
 Plug 'mbbill/undotree'
 Plug 'davidhalter/jedi-vim'
 Plug 'python-mode/python-mode', { 'for': 'python', 'branch': 'develop' }
@@ -72,8 +72,8 @@ nnoremap <silent> <Leader>- :vertical resize -5<CR>
 
 " YCM
 " The best part.
-nnoremap <silent> <Leader>gd :YcmCompleter GoTo<CR>
-nnoremap <silent> <Leader>gf :YcmCompleter FixIt<CR>
+" nnoremap <silent> <Leader>gd :YcmCompleter GoTo<CR>
+" nnoremap <silent> <Leader>gf :YcmCompleter FixIt<CR>
 
 autocmd BufEnter *.tsx set filetype=typescript
 
