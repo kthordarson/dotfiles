@@ -47,3 +47,19 @@ iostat -dxk
 
 # find all files with .yml extension, search and replace contents of earch file yml with yaml
 find . -type f -name "*.yml" -exec sed -i'' -e 's/yml/yaml/g' {} +
+
+# find executables
+find . -perm /u=x,g=x,o=x
+find . -executable
+for i in `find -type f`; do [ -x $i ] && echo "$i is executable"; done
+
+
+find ./ -type f -name "*" -not -name "*.o" -exec sh -c '
+    case "$(head -n 1 "$1")" in
+      ?ELF*) exit 0;;
+      MZ*) exit 0;;
+      #!*/ocamlrun*)exit0;;
+    esac
+exit 1
+' sh {} \; -print
+
