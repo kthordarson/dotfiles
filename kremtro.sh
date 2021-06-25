@@ -10,6 +10,8 @@ export LC_ALL="en_US.UTF-8"
 export PATH=$PATH:~/dotfiles
 export PATH=$PATH:~/.local/bin
 export PATH=$PATH:~/bin/
+export PATH=$PATH:~/.cargo/bin/
+
 # rootinit
 alias sudo='sudo '
 alias mkdir='mkdir -pv'
