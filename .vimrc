@@ -17,10 +17,12 @@ set noswapfile
 set undodir=~/.vim/undodir
 set undofile
 set incsearch
+set number
 
-set colorcolumn=120
+set colorcolumn=160
 
 set mouse=a
+set ttymouse=xterm2
 
 highlight ColorColumn ctermbg=0 guibg=lightgray
 
@@ -42,6 +44,7 @@ Plug 'git@github.com:ctrlpvim/ctrlp.vim.git'
 Plug 'mbbill/undotree'
 Plug 'davidhalter/jedi-vim'
 Plug 'python-mode/python-mode', { 'for': 'python', 'branch': 'develop' }
+Plug 'scrooloose/nerdtree'
 call plug#end()
 
 colorscheme gruvbox
@@ -88,4 +91,12 @@ autocmd BufWritePre * :call TrimWhitespace()
 let g:pymode_folding=0
 let g:pymode_rope=0
 let g:pymode_doc=1
+
+" KEYMAP===============================
+:nmap <leader>e :NERDTreeToggle<CR>
+:nmap <F6> :NERDTreeToggle<CR>
+autocmd vimenter * if !argc() | NERDTree | endif
+" close NERDTree if last buffer left
+autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTreeType") && b:NERDTreeType == "primary") | q | endif
+
 
