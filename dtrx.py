@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
 # dtrx -- Intelligently extract various archive types.
@@ -88,7 +88,7 @@ mimetypes.types_map.setdefault('.gem', 'application/x-ruby-gem')
 logger = logging.getLogger('dtrx-log')
 
 def cmp(a, b):
-    return (a > b) - (a < b) 
+    return (a > b) - (a < b)
 
 class FilenameChecker(object):
 	free_func = os.open
@@ -285,7 +285,7 @@ class BaseExtractor(object):
 		if (self.is_fatal_error(error_code) or ((not got_files) and (error_code is not None))):
 			command = ' '.join(self.pipes[error_index][0])
 			raise ExtractorError("%s error: '%s' returned status code %s" % (self.pipes[error_index][1], command, error_code))
-		
+
 	def extract_archive(self):
 		self.pipe(self.extract_pipe)
 		self.run_pipes()
@@ -330,7 +330,7 @@ class BaseExtractor(object):
 		for process in processes:
 			process.stdout.close()
 		self.check_success(False)
-	
+
 
 class CompressionExtractor(BaseExtractor):
 	file_type = 'compressed file'
@@ -373,13 +373,13 @@ class CompressionExtractor(BaseExtractor):
 			os.unlink(self.target)
 			raise
 
-			
+
 class TarExtractor(BaseExtractor):
 	file_type = 'tar file'
 	extract_pipe = ['tar', '-x']
 	list_pipe = ['tar', '-t']
-		
-		
+
+
 class CpioExtractor(BaseExtractor):
 	file_type = 'cpio file'
 	extract_pipe = ['cpio', '-i', '--make-directories', '--quiet',
@@ -559,7 +559,7 @@ class SevenExtractor(NoPipeExtractor):
 			elif fn_index is not None:
 				yield line[fn_index:]
 		self.archive.close()
-		
+
 
 class CABExtractor(NoPipeExtractor):
 	file_type = 'CAB archive'
@@ -692,7 +692,7 @@ class OverwriteHandler(BaseHandler):
 		if os.path.isdir(self.target):
 			shutil.rmtree(self.target)
 		os.rename(self.extractor.target, self.target)
-		
+
 
 class MatchHandler(BaseHandler):
 	def can_handle(contents, options):
@@ -744,7 +744,7 @@ class BombHandler(BaseHandler):
 		self.set_target(basename, self.extractor.name_checker)
 		os.rename(self.extractor.target, self.target)
 
-		
+
 class BasePolicy(object):
 	try:
 		size = fcntl.ioctl(sys.stdout.fileno(), termios.TIOCGWINSZ,
@@ -756,7 +756,7 @@ class BasePolicy(object):
 	choice_wrapper = textwrap.TextWrapper(width=width, initial_indent=' * ',
 										  subsequent_indent='   ',
 										  break_long_words=False)
-	
+
 	def __init__(self, options):
 		self.current_policy = None
 		if options.batch:
@@ -794,7 +794,7 @@ class BasePolicy(object):
 
 	def __cmp__(self, other):
 		return cmp(self.current_policy, other)
-	
+
 
 class OneEntryPolicy(BasePolicy):
 	answers = {'h': EXTRACT_HERE, 'i': EXTRACT_WRAP, 'r': EXTRACT_RENAME,
@@ -880,7 +880,7 @@ class RecursionPolicy(BasePolicy):
 
 	def ok_to_recurse(self):
 		return self.current_policy in (RECURSE_ALWAYS, RECURSE_ONCE)
-			
+
 
 class ExtractorBuilder(object):
 	extractor_map = {'tar': {'extractors': (TarExtractor,),
@@ -1017,7 +1017,7 @@ class ExtractorBuilder(object):
 		return [result for regexp, result in  list(magic_map.items())
 				if regexp.search(output)]
 	magic_map_matches = classmethod(magic_map_matches)
-		
+
 	def try_by_magic(cls, filename):
 		process = subprocess.Popen(['file', '-z', filename], stdout=subprocess.PIPE)
 		status = process.wait()
@@ -1052,7 +1052,7 @@ class BaseAction(object):
 		self.filenames = filenames
 		self.target = None
 		self.do_print = False
-		
+
 	def report(self, function, *args):
 		try:
 			error = function(*args)
@@ -1136,7 +1136,7 @@ class ListAction(BaseAction):
 			print (first_line)
 		for line in filename_lister:
 			print (line)
-			
+
 	def run(self, filename, extractor):
 		self.did_list = False
 		error = self.report(self.list_filenames, extractor, filename)
@@ -1287,7 +1287,7 @@ class ExtractorApplication(object):
 			logger.error(' '.join(message))
 			self.show_stderr(logger.error, stderr)
 		return True
-		
+
 	def download(self, filename):
 		url = filename.lower()
 		for protocol in 'http', 'https', 'ftp':
