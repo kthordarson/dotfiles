@@ -104,7 +104,7 @@ alias reboot='sudo reboot'
 alias svim='sudo vim'
 
 # cat with colors
-alias c='pygmentize -O style=monokai -f console256 -g'
+alias catcolor='pygmentize -O style=monokai -f console256 -g'
 
 # Color man pages
 man() {
@@ -176,3 +176,6 @@ alias zombies='ps axo stat,ppid,pid,comm | grep -w defunct'
 # dateformat
 alias date="date '+%d/%m/%Y %H:%M:%S'"
 
+
+# git
+alias gcr="git clone --recursive "
