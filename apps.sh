@@ -75,3 +75,7 @@ cargo install procs
 # https://github.com/ogham/dog
 sudo snap install dog
 
+
+# jq jsom formatter
+sudo apt install -y jq
+
