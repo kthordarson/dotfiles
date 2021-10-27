@@ -11,7 +11,7 @@ export PATH=$PATH:~/dotfiles
 export PATH=$PATH:~/.local/bin
 export PATH=$PATH:~/bin/
 export PATH=$PATH:~/.cargo/bin/
-
+export PYGAME_HIDE_SUPPORT_PROMPT=true
 # rootinit
 alias sudo='sudo '
 alias mkdir='mkdir -pv'
