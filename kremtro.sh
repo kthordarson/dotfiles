@@ -82,7 +82,9 @@ alias pscpu10='ps auxf | sort -nr -k 3 | head -10'
 #diskspace
 alias most='du -hsx * | sort -rh | head -10'
 alias usage="du -h --max-depth=1 | sort -rh"
-alias biggest="find . -printf '%s %p\n'| sort -nr | head -20"
+alias biggest="find . -path ./.git -prune -o -printf '%s %p\n'| sort -nr | head -20"
+# find . -path ./misc -prune -o -name '*.txt' -print
+# find -name "*.js" -not -path "./directory/*"
 alias foldersize="du -sch $1"
 
 sbs(){ du -b --max-depth 1 | sort -nr | perl -pe 's{([0-9]+)}{sprintf "%.1f%s", (>=2**30? ((/2**30, "G"): (>=2**20? ((/2**20, "M"): (>=2**10? ((/2**10, "K"): ((, "")}e';}
@@ -124,7 +126,8 @@ export HISTCONTROL="erasedups:ignoreboth"       # no duplicate entries
 export HISTSIZE=100000                          # big big history (default is 500)
 export HISTFILESIZE=$HISTSIZE                   # big big history
 type shopt &> /dev/null && shopt -s histappend  # append to history, don't overwrite it
-
+# PROMPT_COMMAND="history -a; history -n"
+export PROMPT_COMMAND="history -a; $PROMPT_COMMAND"
 ##
 ## better `cd`'ing
 ##
