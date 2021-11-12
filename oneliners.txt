@@ -4,6 +4,8 @@ ip -s -s neigh flush all
 
 # nmap output ip
 nmap -p80 192.168.11.0/24 -oG -  | grep open | awk '{print $2}'
+# nmap grep sed awk
+nmap -oG -  192.168.1.0/24 -p22,80,443 -sV | egrep -v '^#' | egrep -v 'Status: Up' | egrep -v 'closed' | awk '{split($0,a,","); printf "%-20s\n", a[1]}' | sed -e 's/()//g' | sed -e 's/\// /g'
 
 # find and rename
 find /opt/omd -type f -iname "hires*" -print0 | xargs --null -I{} mv {} {}.renamed
