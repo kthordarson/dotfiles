@@ -1,5 +1,6 @@
 #!/bin/bash
 # https://github.com/kthordarson/dotfiles
+# git@github.com:kthordarson/dotfiles.git
 # keep this file in ~/dotfiles
 # run setupdotfiles.sh to load kremtro.sh from .bashrc
 # sync with git
