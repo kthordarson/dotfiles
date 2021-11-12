@@ -83,7 +83,8 @@ alias pscpu10='ps auxf | sort -nr -k 3 | head -10'
 #diskspace
 alias most='du -hsx * | sort -rh | head -10'
 alias usage="du -h --max-depth=1 | sort -rh"
-alias biggest="find . -path ./.git -prune -o -printf '%s %p\n'| sort -nr | head -20"
+alias biggest="find . -name .git -prune -o -name '*' -printf '%s %p\n'| sort -nr | head -20"
+# alias biggest="find . -path ./.git -prune -o -printf '%s %p\n'| sort -nr | head -20"
 # find . -path ./misc -prune -o -name '*.txt' -print
 # find -name "*.js" -not -path "./directory/*"
 alias foldersize="du -sch $1"
