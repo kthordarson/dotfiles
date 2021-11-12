@@ -82,12 +82,25 @@ function install-ycm() {
     fi
 }
 
+# dtrx
+mkdir ~/bin
+ln -s ~/dotfiles/dtrx.py ~/bin/dtrx
+
+# install requirements
+sudo apt install -y python3.8-dev python3.8-full nmap wireshark python3-impacket
+sudo apt install  -y build-essential cmake make automake autoconf python3-dev mono-complete golang nodejs npm 
+
+sudo update-alternatives --install /usr/bin/python pythn /usr/bin/python3.8 1
+
+
 # update dots & configs
 ~/dotfiles/dots.sh
-vim -c ":PlugInstall | qa"
 
 install-plug
+vim -c ":PlugInstall | qa"
+
+# install-plug
 
 install-ctrlp
+install-ycm
 
-# install-ycm
