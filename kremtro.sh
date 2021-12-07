@@ -23,11 +23,13 @@ alias mkdir='mkdir -pv'
 alias kremer='vi /home/kth/dotfiles/kremtro.sh && source ~/.bashrc'
 alias rassgat='echo rassgat'
 alias vi='vim'
-alias ll="ls -lah"
+unalias ll
+alias ll="lsd -la"
+#alias ll="ls -lah"
 alias llr="ll -tr"
 
 #show only folders
-alias lsd="ls -lF ${colorflag} | grep '^d'"
+# alias lsd="ls -lF ${colorflag} | grep '^d'"
 #alias tree="find . -print | sed -e 's;[^/]*/;|____;g;s;____|; |;g'"
 #alias newtree="tree $1 --noreport  -tiafFD | tail"
 function newtree() { tree $1 --noreport -tiaFD | tail; }
