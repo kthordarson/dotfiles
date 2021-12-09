@@ -79,3 +79,9 @@ sudo snap install dog
 # jq jsom formatter
 sudo apt install -y jq
 
+
+# btop
+git clone --recursive https://github.com/aristocratos/btop ~/btop
+cd ~/btop && gmake
+ln -s ~/btop/bin/btop ~/.local/bin/btop
+
