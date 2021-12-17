@@ -1,3 +1,6 @@
+# kill
+ps aux | grep code | awk '{print $2}' | xargs kill -9 $1
+
 # arp flush
 watch -n 1 'sudo ip -s -s neigh flush all'
 ip -s -s neigh flush all
