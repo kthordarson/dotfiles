@@ -11,4 +11,5 @@ for project in localpacks:
 	pack = project.project_name
 	print(f'[local] {idx}/{localcount} update {pack}')
 	call(f'pip install -v --upgrade --user {pack} ', shell=True)
+	idx += 1
 
