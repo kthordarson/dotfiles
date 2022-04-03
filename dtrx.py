@@ -1,24 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-#
-# dtrx -- Intelligently extract various archive types.
-# Copyright © 2006-2011 Brett Smith <brettcsmith@brettcsmith.org>
-# Copyright © 2008 Peter Kelemen <Peter.Kelemen@gmail.com>
-#
-# This program is free software; you can redistribute it and/or modify it
-# under the terms of the GNU General Public License as published by the
-# Free Software Foundation; either version 3 of the License, or (at your
-# option) any later version.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General
-# Public License for more details.
-#
-# You should have received a copy of the GNU General Public License along
-# with this program; if not, see <http://www.gnu.org/licenses/>.
-
-# Python 2.3 string methods: 'rfind', 'rindex', 'rjust', 'rstrip'
 import operator
 import errno
 import fcntl
@@ -40,13 +20,8 @@ import textwrap
 import traceback
 from urllib import parse as urlparse
 
-try:
-	set
-except NameError:
-	from sets import Set as set
-
-VERSION = "7.1"
-VERSION_BANNER = """dtrx version %s
+VERSION = '7.1'
+VERSION_BANNER = '''dtrx version %s
 Copyright © 2006-2011 Brett Smith <brettcsmith@brettcsmith.org>
 Copyright © 2008 Peter Kelemen <Peter.Kelemen@gmail.com>
 
@@ -58,7 +33,7 @@ option) any later version.
 This program is distributed in the hope that it will be useful, but
 WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General
-Public License for more details.""" % (VERSION,)
+Public License for more details.''' % (VERSION,)
 
 MATCHING_DIRECTORY = 1
 ONE_ENTRY_KNOWN = 2
@@ -149,7 +124,7 @@ class BaseExtractor(object):
 
 	def __init__(self, filename, encoding):
 		if encoding and (encoding not in self.decoders):
-			raise ValueError("unrecognized encoding %s" % (encoding,))
+			raise ValueError('unrecognized encoding %s' % (encoding,))
 		self.filename = os.path.realpath(filename)
 		self.encoding = encoding
 		self.file_count = 0
@@ -163,13 +138,13 @@ class BaseExtractor(object):
 		try:
 			self.archive = open(filename, 'r')
 		except (IOError, OSError) as error:
-			raise ExtractorError("could not open %s: %s" %
+			raise ExtractorError('could not open %s: %s' %
 								 (filename, error.strerror))
 		if encoding:
-			self.pipe(self.decoders[encoding], "decoding")
+			self.pipe(self.decoders[encoding], 'decoding')
 		self.prepare()
 
-	def pipe(self, command, description="extraction"):
+	def pipe(self, command, description='extraction'):
 		self.pipes.append((command, description))
 
 	def add_process(self, processes, command, stdin, stdout):
@@ -179,7 +154,7 @@ class BaseExtractor(object):
 											  stderr=self.stderr))
 		except OSError as error:
 			if error.errno == errno.ENOENT:
-				raise ExtractorUnusable("could not run %s" % (command[0],))
+				raise ExtractorUnusable('could not run %s' % (command[0],))
 			raise
 
 	def run_pipes(self, final_stdout=None):
@@ -219,8 +194,8 @@ class BaseExtractor(object):
 			self.file_count += len(filenames)
 			path = path[start_index:]
 			for filename in filenames:
-				if (ExtractorBuilder.try_by_mimetype(filename) or
-					ExtractorBuilder.try_by_extension(filename)):
+				if (ExtractorBuilder.try_by_mimetype(self, filename) or
+					ExtractorBuilder.try_by_extension(self, filename)):
 					self.included_archives.append(os.path.join(path, filename))
 
 	def check_contents(self):
@@ -281,10 +256,11 @@ class BaseExtractor(object):
 
 	def check_success(self, got_files):
 		error_index, error_code = self.first_bad_exit_code()
-		logger.debug("success results: %s %s %s" % (got_files, error_index, self.exit_codes))
+		logger.debug('success results: %s %s %s' % (got_files, error_index, self.exit_codes))
 		if (self.is_fatal_error(error_code) or ((not got_files) and (error_code is not None))):
 			command = ' '.join(self.pipes[error_index][0])
-			raise ExtractorError("%s error: '%s' returned status code %s" % (self.pipes[error_index][1], command, error_code))
+			raise ExtractorError(f'{self.pipes[error_index][1]}, {command}, {error_code}')
+			#raise ExtractorError('%s error: '%s' returned status code %s' % (self.pipes[error_index][1], command, error_code))
 
 	def extract_archive(self):
 		self.pipe(self.extract_pipe)
@@ -294,7 +270,7 @@ class BaseExtractor(object):
 		try:
 			self.target = tempfile.mkdtemp(prefix='.dtrx-', dir='.')
 		except (OSError, IOError) as error:
-			raise ExtractorError("cannot extract here: %s" % (error.strerror,))
+			raise ExtractorError('cannot extract here: %s' % (error.strerror,))
 		old_path = os.path.realpath(os.curdir)
 		os.chdir(self.target)
 		try:
@@ -313,7 +289,7 @@ class BaseExtractor(object):
 
 	def get_filenames(self, internal=False):
 		if not internal:
-			self.pipe(self.list_pipe, "listing")
+			self.pipe(self.list_pipe, 'listing')
 		processes = []
 		stdin = self.archive
 		for command in [pipe[0] for pipe in self.pipes]:
@@ -352,7 +328,7 @@ class CompressionExtractor(BaseExtractor):
 		# check and make sure this actually looks like a compressed file.
 		if 'compress' not in [match[0] for match in
 							  ExtractorBuilder.try_by_magic(self.filename)]:
-			raise ExtractorError("doesn't look like a compressed file")
+			raise ExtractorError('doesnt look like a compressed file')
 		yield self.basename()
 
 	def extract(self):
@@ -364,7 +340,7 @@ class CompressionExtractor(BaseExtractor):
 		try:
 			output_fd, self.target = tempfile.mkstemp(prefix='.dtrx-', dir='.')
 		except (OSError, IOError) as error:
-			raise ExtractorError("cannot extract here: %s" % (error.strerror,))
+			raise ExtractorError('cannot extract here: %s' % (error.strerror,))
 		self.run_pipes(output_fd)
 		os.close(output_fd)
 		try:
@@ -391,7 +367,7 @@ class RPMExtractor(CpioExtractor):
 	file_type = 'RPM'
 
 	def prepare(self):
-		self.pipe(['rpm2cpio', '-'], "rpm2cpio")
+		self.pipe(['rpm2cpio', '-'], 'rpm2cpio')
 
 	def basename(self):
 		pieces = os.path.basename(self.filename).split('.')
@@ -416,22 +392,22 @@ class DebExtractor(TarExtractor):
 	data_re = re.compile(r'^data\.tar\.[a-z0-9]+$')
 
 	def prepare(self):
-		self.pipe(['ar', 't', self.filename], "finding package data file")
+		self.pipe(['ar', 't', self.filename], 'finding package data file')
 		for filename in self.get_filenames(internal=True):
 			if self.data_re.match(filename):
 				data_filename = filename
 				break
 		else:
-			raise ExtractorError(".deb contains no data.tar file")
+			raise ExtractorError('.deb contains no data.tar file')
 		self.archive.seek(0, 0)
 		self.pipes.pop()
 		# self.pipes = start_pipes
 		encoding = mimetypes.guess_type(data_filename)[1]
 		if not encoding:
-			raise ExtractorError("data.tar file has unrecognized encoding")
+			raise ExtractorError('data.tar file has unrecognized encoding')
 		self.pipe(['ar', 'p', self.filename, data_filename],
-				  "extracting data.tar from .deb")
-		self.pipe(self.decoders[encoding], "decoding data.tar")
+				  'extracting data.tar from .deb')
+		self.pipe(self.decoders[encoding], 'decoding data.tar')
 
 	def basename(self):
 		pieces = os.path.basename(self.filename).split('_')
@@ -450,16 +426,16 @@ class DebExtractor(TarExtractor):
 class DebMetadataExtractor(DebExtractor):
 	def prepare(self):
 		self.pipe(['ar', 'p', self.filename, 'control.tar.gz'],
-				  "control.tar.gz extraction")
-		self.pipe(['zcat'], "control.tar.gz decompression")
+				  'control.tar.gz extraction')
+		self.pipe(['zcat'], 'control.tar.gz decompression')
 
 
 class GemExtractor(TarExtractor):
 	file_type = 'Ruby gem'
 
 	def prepare(self):
-		self.pipe(['tar', '-xO', 'data.tar.gz'], "data.tar.gz extraction")
-		self.pipe(['zcat'], "data.tar.gz decompression")
+		self.pipe(['tar', '-xO', 'data.tar.gz'], 'data.tar.gz extraction')
+		self.pipe(['zcat'], 'data.tar.gz decompression')
 
 	def check_contents(self):
 		self.check_included_archives()
@@ -470,8 +446,8 @@ class GemMetadataExtractor(CompressionExtractor):
 	file_type = 'Ruby gem'
 
 	def prepare(self):
-		self.pipe(['tar', '-xO', 'metadata.gz'], "metadata.gz extraction")
-		self.pipe(['zcat'], "metadata.gz decompression")
+		self.pipe(['tar', '-xO', 'metadata.gz'], 'metadata.gz extraction')
+		self.pipe(['zcat'], 'metadata.gz decompression')
 
 	def basename(self):
 		return os.path.basename(self.filename) + '-metadata.txt'
@@ -530,6 +506,7 @@ class LZHExtractor(ZipExtractor):
 
 	def get_filenames(self):
 		filenames = NoPipeExtractor.get_filenames(self)
+		fn_index = None
 		for line in filenames:
 			fn_index = self.border_line_file_index(line)
 			if fn_index is not None:
@@ -610,6 +587,8 @@ class RarExtractor(NoPipeExtractor):
 	extract_command = ['unrar', 'x']
 	list_command = ['unrar', 'l']
 	border_re = re.compile('^-+$')
+	mimetype_map = {}
+	extension_map = {}
 
 	def get_filenames(self):
 		inside = False
@@ -639,17 +618,17 @@ class BaseHandler(object):
 			status = subprocess.call(['chmod', '-R', 'u+rwX',
 									  self.extractor.target])
 		if status != 0:
-			return "%s returned with exit status %s" % (command, status)
+			return '%s returned with exit status %s' % (command, status)
 		return self.organize()
 
 	def set_target(self, target, checker):
 		self.target = checker(target).check()
 		if self.target != target:
-			logger.warning("extracting %s to %s" %
+			logger.warning('extracting %s to %s' %
 						   (self.extractor.filename, self.target))
 
 
-# The "where to extract" table, with options and archive types.
+# The 'where to extract' table, with options and archive types.
 # This dictates the contents of each can_handle method.
 #
 #         Flat           Overwrite            None
@@ -658,7 +637,7 @@ class BaseHandler(object):
 # Bomb    .              basename             DirectoryChecked
 
 class FlatHandler(BaseHandler):
-	def can_handle(contents, options):
+	def can_handle(self, contents, options):
 		return ((options.flat and (contents != ONE_ENTRY_KNOWN)) or
 				(options.overwrite and (contents == MATCHING_DIRECTORY)))
 	can_handle = staticmethod(can_handle)
@@ -682,7 +661,7 @@ class FlatHandler(BaseHandler):
 
 
 class OverwriteHandler(BaseHandler):
-	def can_handle(contents, options):
+	def can_handle(self,  contents, options):
 		return ((options.flat and (contents == ONE_ENTRY_KNOWN)) or
 				(options.overwrite and (contents != MATCHING_DIRECTORY)))
 	can_handle = staticmethod(can_handle)
@@ -695,7 +674,7 @@ class OverwriteHandler(BaseHandler):
 
 
 class MatchHandler(BaseHandler):
-	def can_handle(contents, options):
+	def can_handle(self, contents, options):
 		return ((contents == MATCHING_DIRECTORY) or
 				((contents in ONE_ENTRY_UNKNOWN) and
 				 options.one_entry_policy.ok_for_match()))
@@ -724,7 +703,7 @@ class MatchHandler(BaseHandler):
 class EmptyHandler(object):
 	target = ''
 
-	def can_handle(contents, options):
+	def can_handle(self, contents, options):
 		return contents == EMPTY
 	can_handle = staticmethod(can_handle)
 
@@ -735,7 +714,7 @@ class EmptyHandler(object):
 
 
 class BombHandler(BaseHandler):
-	def can_handle(contents, options):
+	def can_handle(self, contents, options):
 		return True
 	can_handle = staticmethod(can_handle)
 
@@ -748,8 +727,8 @@ class BombHandler(BaseHandler):
 class BasePolicy(object):
 	try:
 		size = fcntl.ioctl(sys.stdout.fileno(), termios.TIOCGWINSZ,
-						   struct.pack("HHHH", 0, 0, 0, 0))
-		width = struct.unpack("HHHH", size)[1]
+						   struct.pack('HHHH', 0, 0, 0, 0))
+		width = struct.unpack('HHHH', size)[1]
 	except IOError:
 		width = 80
 	width = width - 1
@@ -765,11 +744,11 @@ class BasePolicy(object):
 			self.permanent_policy = None
 
 	def ask_question(self, question):
-		question = question + ["You can:"]
+		question = question + ['You can:']
 		for choice in self.choices:
 			question.extend(self.choice_wrapper.wrap(choice))
 		while True:
-			print ("\n".join(question))
+			print ('\n'.join(question))
 			try:
 				answer = input(self.prompt)
 			except EOFError:
@@ -799,10 +778,10 @@ class BasePolicy(object):
 class OneEntryPolicy(BasePolicy):
 	answers = {'h': EXTRACT_HERE, 'i': EXTRACT_WRAP, 'r': EXTRACT_RENAME,
 			   '': EXTRACT_WRAP}
-	choice_template = ["extract the %s _I_nside a new directory named %s",
-					   "extract the %s and _R_ename it %s",
-					   "extract the %s _H_ere"]
-	prompt = "What do you want to do?  (I/r/h) "
+	choice_template = ['extract the %s _I_nside a new directory named %s',
+					   'extract the %s and _R_ename it %s',
+					   'extract the %s _H_ere']
+	prompt = 'What do you want to do?  (I/r/h) '
 
 	def __init__(self, options):
 		BasePolicy.__init__(self, options)
@@ -819,14 +798,12 @@ class OneEntryPolicy(BasePolicy):
 		elif 'inside'.startswith(default):
 			self.permanent_policy = EXTRACT_WRAP
 		elif default is not None:
-			raise ValueError("bad value %s for default policy" % (default,))
+			raise ValueError('bad value %s for default policy' % (default,))
 
 	def prep(self, archive_filename, extractor):
-		question = self.wrap(
-			"%s contains one %s but its name doesn't match.",
-			archive_filename, extractor.content_type)
-		question.append(" Expected: " + extractor.basename())
-		question.append("   Actual: " + extractor.content_name)
+		question = self.wrap('%s contains one %s but its name doesnt match.', archive_filename, extractor.content_type)
+		question.append(' Expected: ' + extractor.basename())
+		question.append('   Actual: ' + extractor.content_name)
 		choice_vars = (extractor.content_type, extractor.basename())
 		self.choices = [text % choice_vars[:text.count('%s')]
 						for text in self.choice_template]
@@ -840,12 +817,12 @@ class OneEntryPolicy(BasePolicy):
 class RecursionPolicy(BasePolicy):
 	answers = {'o': RECURSE_ONCE, 'a': RECURSE_ALWAYS, 'n': RECURSE_NOT_NOW,
 			   'v': RECURSE_NEVER, 'l': RECURSE_LIST, '': RECURSE_NOT_NOW}
-	choices = ["_A_lways extract included archives during this session",
-			   "extract included archives this _O_nce",
-			   "choose _N_ot to extract included archives this once",
-			   "ne_V_er extract included archives during this session",
-			   "_L_ist included archives"]
-	prompt = "What do you want to do?  (a/o/N/v/l) "
+	choices = ['_A_lways extract included archives during this session',
+			   'extract included archives this _O_nce',
+			   'choose _N_ot to extract included archives this once',
+			   'ne_V_er extract included archives during this session',
+			   '_L_ist included archives']
+	prompt = 'What do you want to do?  (a/o/N/v/l) '
 
 	def __init__(self, options):
 		BasePolicy.__init__(self, options)
@@ -861,7 +838,7 @@ class RecursionPolicy(BasePolicy):
 			self.current_policy = self.permanent_policy or RECURSE_NOT_NOW
 			return
 		question = self.wrap(
-			"%s contains %s other archive file(s), out of %s file(s) total.",
+			'%s contains %s other archive file(s), out of %s file(s) total.',
 			current_filename, archive_count, extractor.file_count)
 		if target == '.':
 			target = ''
@@ -872,7 +849,7 @@ class RecursionPolicy(BasePolicy):
 			self.current_policy = self.ask_question(question)
 			if self.current_policy != RECURSE_LIST:
 				break
-			print ("\n%s\n" %
+			print ('\n%s\n' %
 				   '\n'.join([os.path.join(target, included_root, filename)
 							  for filename in extractor.included_archives]))
 		if self.current_policy in (RECURSE_ALWAYS, RECURSE_NEVER):
@@ -991,19 +968,18 @@ class ExtractorBuilder(object):
 		# or extension suggests something less than ideal -- but it seems less
 		# likely so I'm sticking with this.
 		for func_name in ('mimetype', 'extension', 'magic'):
-			logger.debug("getting extractors by %s" % (func_name,))
-			extractor_types = \
-							getattr(self, 'try_by_' + func_name)(self.filename)
-			logger.debug("done getting extractors")
+			logger.debug('getting extractors by %s' % (func_name,))
+			extractor_types = getattr(self, 'try_by_' + func_name)(self,self.filename)
+			logger.debug('done getting extractors')
 			for ext_args in extractor_types:
 				if ext_args in tried_types:
 					continue
 				tried_types.add(ext_args)
-				logger.debug("trying %s extractor from %s" % (ext_args, func_name))
+				logger.debug('trying %s extractor from %s' % (ext_args, func_name))
 				for extractor in self.build_extractor(*ext_args):
 					yield extractor
 
-	def try_by_mimetype(cls, filename):
+	def try_by_mimetype(self, cls, filename):
 		mimetype, encoding = mimetypes.guess_type(filename)
 		try:
 			return [(cls.mimetype_map[mimetype], encoding)]
@@ -1013,12 +989,12 @@ class ExtractorBuilder(object):
 		return []
 	try_by_mimetype = classmethod(try_by_mimetype)
 
-	def magic_map_matches(cls, output, magic_map):
+	def magic_map_matches(self, cls, output, magic_map):
 		return [result for regexp, result in  list(magic_map.items())
 				if regexp.search(output)]
 	magic_map_matches = classmethod(magic_map_matches)
 
-	def try_by_magic(cls, filename):
+	def try_by_magic(self, cls, filename):
 		process = subprocess.Popen(['file', '-z', filename], stdout=subprocess.PIPE)
 		status = process.wait()
 		if status != 0:
@@ -1036,7 +1012,7 @@ class ExtractorBuilder(object):
 		return [(m, e) for m in mimes for e in encodings]
 	try_by_magic = classmethod(try_by_magic)
 
-	def try_by_extension(cls, filename):
+	def try_by_extension(self, cls, filename):
 		parts = filename.split('.')[-2:]
 		results = []
 		while parts:
@@ -1068,7 +1044,7 @@ class BaseAction(object):
 			print('')
 		else:
 			self.do_print = True
-		print ("%s:" % (filename,))
+		print ('%s:' % (filename,))
 
 
 class ExtractionAction(BaseAction):
@@ -1079,8 +1055,8 @@ class ExtractionAction(BaseAction):
 		if extractor.content_type in ONE_ENTRY_UNKNOWN:
 			self.options.one_entry_policy.prep(self.current_filename, extractor)
 		for handler in self.handlers:
-			if handler.can_handle(extractor.content_type, self.options):
-				logger.debug("using %s handler" % (handler.__name__,))
+			if handler.can_handle(self, extractor.content_type, self.options):
+				logger.debug('using %s handler' % (handler.__name__,))
 				self.current_handler = handler(extractor, self.options)
 				break
 
@@ -1103,7 +1079,7 @@ class ExtractionAction(BaseAction):
 		while filenames:
 			filename = filenames.pop()
 			if isdir(filename):
-				print ("%s/" % (filename,))
+				print ('%s/' % (filename,))
 				new_filenames = os.listdir(filename)
 				new_filenames.sort()
 				filenames.extend([pathjoin(filename, new_filename) for new_filename in new_filenames])
@@ -1141,7 +1117,7 @@ class ListAction(BaseAction):
 		self.did_list = False
 		error = self.report(self.list_filenames, extractor, filename)
 		if error and self.did_list:
-			logger.error("lister failed: ignore above listing for %s" % (filename,))
+			logger.error('lister failed: ignore above listing for %s' % (filename,))
 		return error
 
 
@@ -1165,14 +1141,14 @@ class ExtractorApplication(object):
 	def abort(self, signal_num, frame):
 		signal.signal(signal_num, signal.SIG_IGN)
 		print('')
-		logger.debug("traceback:\n" + ''.join(traceback.format_stack(frame)).rstrip())
-		logger.debug("got signal %s" % (signal_num,))
+		logger.debug('traceback:\n' + ''.join(traceback.format_stack(frame)).rstrip())
+		logger.debug('got signal %s' % (signal_num,))
 		try:
 			basename = self.current_extractor.target
 		except AttributeError:
 			basename = None
 		if basename is not None:
-			logger.debug("cleaning up %s" % (basename,))
+			logger.debug('cleaning up %s' % (basename,))
 			clean_targets = set([os.path.realpath('.')])
 			if hasattr(self, 'current_directory'):
 				clean_targets.add(os.path.realpath(self.current_directory))
@@ -1182,48 +1158,46 @@ class ExtractorApplication(object):
 
 	def parse_options(self, arguments):
 		parser = optparse.OptionParser(
-			usage="%prog [options] archive [archive2 ...]",
-			description="Intelligent archive extractor",
+			usage='%prog [options] archive [archive2 ...]',
+			description='Intelligent archive extractor',
 			version=VERSION_BANNER
 			)
 		parser.add_option('-l', '-t', '--list', '--table', dest='show_list',
 						  action='store_true', default=False,
-						  help="list contents of archives on standard output")
+						  help='list contents of archives on standard output')
 		parser.add_option('-m', '--metadata', dest='metadata',
 						  action='store_true', default=False,
-						  help="extract metadata from a .deb/.gem")
+						  help='extract metadata from a .deb/.gem')
 		parser.add_option('-r', '--recursive', dest='recursive',
 						  action='store_true', default=False,
-						  help="extract archives contained in the ones listed")
+						  help='extract archives contained in the ones listed')
 		parser.add_option('--one', '--one-entry', dest='one_entry_default',
 						  default=None,
-						  help=("specify extraction policy for one-entry " +
-								"archives: inside/rename/here"))
-		parser.add_option('-n', '--noninteractive', dest='batch',
-						  action='store_true', default=False,
-						  help="don't ask how to handle special cases")
+						  help=('specify extraction policy for one-entry ' +
+								'archives: inside/rename/here'))
+		parser.add_option('-n', '--noninteractive', dest='batch',action='store_true', default=False,help='dont ask how to handle special cases')
 		parser.add_option('-o', '--overwrite', dest='overwrite',
 						  action='store_true', default=False,
-						  help="overwrite any existing target output")
+						  help='overwrite any existing target output')
 		parser.add_option('-f', '--flat', '--no-directory', dest='flat',
 						  action='store_true', default=False,
-						  help="extract everything to the current directory")
+						  help='extract everything to the current directory')
 		parser.add_option('-v', '--verbose', dest='verbose',
 						  action='count', default=0,
-						  help="be verbose/print debugging information")
+						  help='be verbose/print debugging information')
 		parser.add_option('-q', '--quiet', dest='quiet',
 						  action='count', default=3,
-						  help="suppress warning/error messages")
+						  help='suppress warning/error messages')
 		self.options, filenames = parser.parse_args(arguments)
 		if not filenames:
-			parser.error("you did not list any archives")
+			parser.error('you did not list any archives')
 		# This makes WARNING is the default.
 		self.options.log_level = (10 * (self.options.quiet -
 										self.options.verbose))
 		try:
 			self.options.one_entry_policy = OneEntryPolicy(self.options)
 		except ValueError:
-			parser.error("invalid value for --one-entry option")
+			parser.error('invalid value for --one-entry option')
 		self.options.recursion_policy = RecursionPolicy(self.options)
 		self.archives = {os.path.realpath(os.curdir): filenames}
 
@@ -1231,22 +1205,22 @@ class ExtractorApplication(object):
 		logging.getLogger().setLevel(self.options.log_level)
 		handler = logging.StreamHandler()
 		handler.setLevel(self.options.log_level)
-		formatter = logging.Formatter("dtrx: %(levelname)s: %(message)s")
+		formatter = logging.Formatter('dtrx: %(levelname)s: %(message)s')
 		handler.setFormatter(formatter)
 		logger.addHandler(handler)
-		logger.debug("logger is set up")
+		logger.debug('logger is set up')
 
 	def recurse(self, filename, extractor, action):
 		self.options.recursion_policy.prep(filename, action.target, extractor)
 		if self.options.recursion_policy.ok_to_recurse():
 			for filename in extractor.included_archives:
-				logger.debug("recursing with %s archive" % (extractor.content_type,))
+				logger.debug('recursing with %s archive' % (extractor.content_type,))
 				tail_path, basename = os.path.split(filename)
 				path_args = [self.current_directory, extractor.included_root, tail_path]
-				logger.debug("included root: %s" % (extractor.included_root,))
-				logger.debug("tail path: %s" % (tail_path,))
+				logger.debug('included root: %s' % (extractor.included_root,))
+				logger.debug('tail path: %s' % (tail_path,))
 				if os.path.isdir(action.target):
-					logger.debug("action target: %s" % (action.target,))
+					logger.debug('action target: %s' % (action.target,))
 					path_args.insert(1, action.target)
 				directory = os.path.join(*path_args)
 				self.archives.setdefault(directory, []).append(basename)
@@ -1257,11 +1231,11 @@ class ExtractorApplication(object):
 		except OSError as error:
 			return error.strerror
 		if stat.S_ISDIR(result.st_mode):
-			return "cannot work with a directory"
+			return 'cannot work with a directory'
 
 	def show_stderr(self, logger_func, stderr):
 		if stderr:
-			logger_func(f"Error output from this process: {stderr}")
+			logger_func(f'Error output from this process: {stderr}')
 
 	def try_extractors(self, filename, builder):
 		errors = []
@@ -1276,14 +1250,14 @@ class ExtractorApplication(object):
 				self.show_stderr(logger.warn, extractor.get_stderr())
 				self.recurse(filename, extractor, self.action)
 				return
-		logger.error("could not handle %s" % (filename,))
+		logger.error('could not handle %s' % (filename,))
 		if not errors:
-			logger.error("not a known archive type")
+			logger.error('not a known archive type')
 			return True
 		for file_type, encoding, error, stderr in errors:
-			message = ["treating as", file_type, "failed:", error]
+			message = ['treating as', file_type, 'failed:', error]
 			if encoding:
-				message.insert(1, "%s-encoded" % (encoding,))
+				message.insert(1, '%s-encoded' % (encoding,))
 			logger.error(' '.join(message))
 			self.show_stderr(logger.error, stderr)
 		return True
@@ -1299,7 +1273,7 @@ class ExtractorApplication(object):
 		# that matches the basename of the URL.
 		status = subprocess.call(['wget', '-c', filename], stdin=subprocess.PIPE)
 		if status != 0:
-			return None, "wget returned status code %s" % (status,)
+			return None, 'wget returned status code %s' % (status,)
 		return os.path.basename(urlparse.urlparse(filename)[2]), None
 
 	def run(self):
@@ -1318,7 +1292,7 @@ class ExtractorApplication(object):
 					error = (self.check_file(filename) or self.try_extractors(filename, builder.get_extractor()))
 				if error:
 					if error != True:
-						logger.error("%s: %s" % (filename, error))
+						logger.error('%s: %s' % (filename, error))
 					self.failures.append(filename)
 				else:
 					self.successes.append(filename)
