@@ -121,6 +121,8 @@ class BaseExtractor(object):
 	decoders = {'bzip2': ['bzcat'], 'gzip': ['zcat'], 'compress': ['zcat'],
 				'lzma': ['lzcat'], 'xz': ['xzcat'], 'lzip': ['lzip', '-cd']}
 	name_checker = DirectoryChecker
+	mimetype_map = {}
+	extension_map = {}
 
 	def __init__(self, filename, encoding):
 		if encoding and (encoding not in self.decoders):
