@@ -72,6 +72,7 @@ alias allips="ifconfig -a | grep -o 'inet6\? \(addr:\)\?\s\?\(\(\([0-9]\+\.\)\{3
 #show external ip address
 alias ipad="dig +short myip.opendns.com @resolver1.opendns.com"
 #alias port4='netstat -an | grep ESTABLISHED | awk '{print $5}' | awk -F: '{print (}' | sort | uniq -c | awk '{ printf("%s\t%s\t",[,() ; for (i = 0; i < (; i++) {printf("*")}; print "" }'))])'
+alias arpdump="arp -avn  | grep -vE 'incomplete|Entries' | awk '{print $4}'"
 
 ## get top process eating memory
 alias psmem='ps auxf | sort -nr -k 4'
