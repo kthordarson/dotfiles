@@ -19,7 +19,7 @@ import termios
 import textwrap
 import traceback
 from urllib import parse as urlparse
-
+from loguru import logger
 VERSION = '7.1'
 VERSION_BANNER = '''dtrx version %s
 Copyright © 2006-2011 Brett Smith <brettcsmith@brettcsmith.org>
@@ -60,7 +60,7 @@ mimetypes.encodings_map.setdefault('.xz', 'xz')
 mimetypes.encodings_map.setdefault('.lz', 'lzip')
 mimetypes.types_map.setdefault('.gem', 'application/x-ruby-gem')
 
-logger = logging.getLogger('dtrx-log')
+# logger = logging.getLogger('dtrx-log')
 
 def cmp(a, b):
     return (a > b) - (a < b)
@@ -971,7 +971,11 @@ class ExtractorBuilder(object):
 		# likely so I'm sticking with this.
 		for func_name in ('mimetype', 'extension', 'magic'):
 			logger.debug('getting extractors by %s' % (func_name,))
-			extractor_types = getattr(self, 'try_by_' + func_name)(self,self.filename)
+			try:
+				extractor_types = getattr(self, 'try_by_' + func_name)(self,self.filename)
+			except AttributeError as e:
+				logger.error(f'[err] {e}')
+				return None
 			logger.debug('done getting extractors')
 			for ext_args in extractor_types:
 				if ext_args in tried_types:
@@ -991,7 +995,7 @@ class ExtractorBuilder(object):
 		return []
 	try_by_mimetype = classmethod(try_by_mimetype)
 
-	def magic_map_matches(self, cls, output, magic_map):
+	def magic_map_matches(self, cls=None, output=None, magic_map=None):
 		return [result for regexp, result in  list(magic_map.items())
 				if regexp.search(output)]
 	magic_map_matches = classmethod(magic_map_matches)
@@ -1005,8 +1009,8 @@ class ExtractorBuilder(object):
 		process.stdout.close()
 		if output.startswith('%s: ' % filename):
 			output = output[len(filename) + 2:]
-		mimes = cls.magic_map_matches(output, cls.magic_mime_map)
-		encodings = cls.magic_map_matches(output, cls.magic_encoding_map)
+		mimes = cls.magic_map_matches(output=output, magic_map=cls.magic_mime_map)
+		encodings = cls.magic_map_matches(output, cls.magic_encsoding_map)
 		if mimes and not encodings:
 			encodings = [None]
 		elif encodings and not mimes:
@@ -1209,7 +1213,7 @@ class ExtractorApplication(object):
 		handler.setLevel(self.options.log_level)
 		formatter = logging.Formatter('dtrx: %(levelname)s: %(message)s')
 		handler.setFormatter(formatter)
-		logger.addHandler(handler)
+		# logger.addHandler(handler)
 		logger.debug('logger is set up')
 
 	def recurse(self, filename, extractor, action):
