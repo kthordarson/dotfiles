@@ -34,7 +34,7 @@ alias llr="ll -tr"
 # alias lsd="ls -lF ${colorflag} | grep '^d'"
 #alias tree="find . -print | sed -e 's;[^/]*/;|____;g;s;____|; |;g'"
 #alias newtree="tree $1 --noreport  -tiafFD | tail"
-function newtree() { tree $1 --noreport -tiaFD | tail; }
+function newtree() { tree "$1" --noreport -tiaFD | tail; }
 # function tree() { tree -isafF $1 | grep -v "/$" | tr '[]' ' ' | sort -k1nr | head;  }
 # sudo apt *
 # alias apt-get="sudo apt-get"
@@ -72,6 +72,7 @@ alias allips="ifconfig -a | grep -o 'inet6\? \(addr:\)\?\s\?\(\(\([0-9]\+\.\)\{3
 #show external ip address
 alias ipad="dig +short myip.opendns.com @resolver1.opendns.com"
 #alias port4='netstat -an | grep ESTABLISHED | awk '{print $5}' | awk -F: '{print (}' | sort | uniq -c | awk '{ printf("%s\t%s\t",[,() ; for (i = 0; i < (; i++) {printf("*")}; print "" }'))])'
+alias arpdump="arp -avn  | grep -vE 'incomplete|Entries' | awk '{print $4}'"
 
 alias arpdump="arp -avn  | grep -vE 'incomplete|Entries' | awk '{print $4}'"
 
@@ -87,7 +88,8 @@ alias pscpu='ps auxf | sort -nr -k 3'
 alias pscpu10='ps auxf | sort -nr -k 3 | head -10'
 
 #diskspace
-alias most='du -hsx * | sort -rh | head -10'
+# alias most='du -hsx * | sort -rh | head -10'
+alias most='function _most(){ du -hsx $1* | sort -rh | head -10;  };_most'
 alias usage="du -h --max-depth=1 | sort -rh"
 alias biggest="find . -name .git -prune -o -name '*' -printf '%s %p\n'| sort -nr | head -20"
 # alias biggest="find . -path ./.git -prune -o -printf '%s %p\n'| sort -nr | head -20"
@@ -99,7 +101,7 @@ sbs(){ du -b --max-depth 1 | sort -nr | perl -pe 's{([0-9]+)}{sprintf "%.1f%s", 
 
 # find stuff
 # alias newest="find . -type f -printf '%TY-%Td-%Tm %.8TT %p\n' | sort -rn | head -n 10"
-function newest() { find $1 -type f -mtime -2 -printf '%TY-%Td-%Tm %.8TT %p\n' | sort | tail -n 30; }
+function newest() { find "$1" -type f -mtime -2 -printf '%TY-%Td-%Tm %.8TT %p\n' | sort | tail -n 30; }
 
 # alias newest="find  -type f -mtime -2 -printf '%TY-%Td-%Tm %.8TT %p\n' | sort | tail -n 30"
 #export TERM=xterm-color
@@ -156,7 +158,7 @@ function findit()
 {
     if [ $# -gt 0 ]; then
         echo "Searching in $1 for string $2"
-        find $1 -type f  -exec grep -iHno $2 {} +
+        find "$1" -type f  -exec grep -iHno "$2" {} +
         # grep -r -E -o ".{0,10}wantedText.{0,10}" *
     else
         echo "Missing search arguments"
