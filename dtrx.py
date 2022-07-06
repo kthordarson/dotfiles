@@ -626,8 +626,7 @@ class BaseHandler(object):
 	def set_target(self, target, checker):
 		self.target = checker(target).check()
 		if self.target != target:
-			logger.warning('extracting %s to %s' %
-						   (self.extractor.filename, self.target))
+			logger.warning('extracting %s to %s' % (self.extractor.filename, self.target))
 
 
 # The 'where to extract' table, with options and archive types.
@@ -1253,7 +1252,7 @@ class ExtractorApplication(object):
 				if extractor.target is not None:
 					self.clean_destination(extractor.target)
 			else:
-				self.show_stderr(logger.warn, extractor.get_stderr())
+				self.show_stderr(logger.warning, extractor.get_stderr())
 				self.recurse(filename, extractor, self.action)
 				return
 		logger.error('could not handle %s' % (filename,))
