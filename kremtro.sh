@@ -91,6 +91,7 @@ alias pscpu10='ps auxf | sort -nr -k 3 | head -10'
 # alias most='du -hsx * | sort -rh | head -10'
 alias most='function _most(){ du -hsx $1* | sort -rh | head -10;  };_most'
 alias usage="du -h --max-depth=1 | sort -rh"
+alias usage10="du -h --max-depth=1 | sort -rh| head -10"
 alias biggest="find . -name .git -prune -o -name '*' -printf '%s %p\n'| sort -nr | head -20"
 # alias biggest="find . -path ./.git -prune -o -printf '%s %p\n'| sort -nr | head -20"
 # find . -path ./misc -prune -o -name '*.txt' -print
@@ -133,8 +134,9 @@ man() {
 
 # history stuff
 export HISTCONTROL="erasedups:ignoreboth"       # no duplicate entries
-export HISTSIZE=100000                          # big big history (default is 500)
+export HISTSIZE=-1                         # big big history (default is 500)
 export HISTFILESIZE=$HISTSIZE                   # big big history
+export HISTIGNORE="ls:ll:history:df" # ignores
 type shopt &> /dev/null && shopt -s histappend  # append to history, don't overwrite it
 # PROMPT_COMMAND="history -a; history -n"
 export PROMPT_COMMAND="history -a; $PROMPT_COMMAND"
@@ -189,6 +191,27 @@ alias zombies='ps axo stat,ppid,pid,comm | grep -w defunct'
 # dateformat
 alias date="date '+%d/%m/%Y %H:%M:%S'"
 
-
 # git
 alias gcr="git clone --recursive "
+
+# dns dig
+# Run `dig` and display the most useful info
+digga() {
+	dig +nocmd "$1" any +multiline +noall +answer
+}
+
+# man
+# Get colors in manual pages
+man() {
+	env \
+		LESS_TERMCAP_mb="$(printf '\e[1;31m')" \
+		LESS_TERMCAP_md="$(printf '\e[1;31m')" \
+		LESS_TERMCAP_me="$(printf '\e[0m')" \
+		LESS_TERMCAP_se="$(printf '\e[0m')" \
+		LESS_TERMCAP_so="$(printf '\e[1;44;33m')" \
+		LESS_TERMCAP_ue="$(printf '\e[0m')" \
+		LESS_TERMCAP_us="$(printf '\e[1;32m')" \
+		man "$@"
+}
+
+

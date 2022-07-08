@@ -626,8 +626,7 @@ class BaseHandler(object):
 	def set_target(self, target, checker):
 		self.target = checker(target).check()
 		if self.target != target:
-			logger.warning('extracting %s to %s' %
-						   (self.extractor.filename, self.target))
+			logger.warning('extracting %s to %s' % (self.extractor.filename, self.target))
 
 
 # The 'where to extract' table, with options and archive types.

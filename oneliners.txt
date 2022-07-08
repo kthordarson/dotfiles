@@ -1,3 +1,5 @@
+binwalk -e -D 'squashfs:squashfs:7z x %e'
+
 # journalctl logs
 journalctl --vacuum-time=1weeks
 
@@ -77,3 +79,7 @@ exit 1
 
 # active gitforks bookmarklet
 # javascript:location='https://techgaun.github.io/active-forks/index.html#'+window.location.href
+
+
+# cron
+for user in $(cut -f1 -d: /etc/passwd); do echo $user; crontab -u $user -l; done
