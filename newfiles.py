@@ -22,11 +22,11 @@ def get_tree(path, filelist):
 
 
 myparse = argparse.ArgumentParser(description="Find new files")
-myparse.add_argument('Path', metavar='path', type=str, help="Path to search", default=".")
-myparse.add_argument('Number', metavar='filenum', type=int, help="Limit to x results", default=10)
+myparse.add_argument('--path', metavar='path', type=str, help="Path to search", default=".")
+myparse.add_argument('--number', metavar='filenum', type=int, help="Limit to x results", default=10)
 args = myparse.parse_args()
-input_path = args.Path
-limit = args.Number
+input_path = args.path
+limit = args.number
 
 filelist = []
 result = get_tree(input_path, filelist)
