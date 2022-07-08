@@ -134,6 +134,7 @@ man() {
 export HISTCONTROL="erasedups:ignoreboth"       # no duplicate entries
 export HISTSIZE=-1                         # big big history (default is 500)
 export HISTFILESIZE=$HISTSIZE                   # big big history
+export HISTIGNORE="ls:ll:history:df" # ignores
 type shopt &> /dev/null && shopt -s histappend  # append to history, don't overwrite it
 # PROMPT_COMMAND="history -a; history -n"
 export PROMPT_COMMAND="history -a; $PROMPT_COMMAND"
