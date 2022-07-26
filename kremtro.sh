@@ -9,6 +9,7 @@
 
 export LC_ALL="en_US.UTF-8"
 export PATH=$PATH:~/dotfiles
+export PATH=$PATH:~/dotfiles/scripts
 export PATH=$PATH:~/.local/bin
 export PATH=$PATH:~/bin/
 export PATH=$PATH:~/.cargo/bin/
