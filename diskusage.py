@@ -55,22 +55,24 @@ class DirItem:
 		self.bigfiles = sorted(subfiles, key=lambda d: d.size, reverse=True)[0:self.maxfiles]
 
 def get_directory_size(directory):
-    total = 0
-    try:
-        for entry in os.scandir(directory):
-            if entry.is_file():
-                total += entry.stat().st_size
-            elif entry.is_dir():
-                try:
-                    total += get_directory_size(entry.path)
-                except FileNotFoundError:
-                    print(f'[err] dir:{directory} {e}')
-    except NotADirectoryError:
-        return os.path.getsize(directory)
-    except (PermissionError, FileNotFoundError) as e:
-        print(f'[err] dir:{directory} {e}')
-        return 0
-    return total
+	total = 0
+	try:
+		for entry in os.scandir(directory):
+			if entry.is_symlink():
+				break
+			if entry.is_file():
+				total += entry.stat().st_size
+			elif entry.is_dir():
+				try:
+					total += get_directory_size(entry.path)
+				except FileNotFoundError:
+					print(f'[err] dir:{directory} {e}')
+	except NotADirectoryError:
+		return os.path.getsize(directory)
+	except (PermissionError, FileNotFoundError) as e:
+		print(f'[err] dir:{directory} {e}')
+		return 0
+	return total
 
 def get_subfilecount(directory):
 	try:
@@ -94,11 +96,11 @@ def get_subdircount(directory):
 	return dc
 
 def get_size_format(b, factor=1024, suffix="B"):
-    for unit in ["", "K", "M", "G", "T", "P", "E", "Z"]:
-        if b < factor:
-            return f"{b:.2f}{unit}{suffix}"
-        b /= factor
-    return f"{b:.2f}Y{suffix}"
+	for unit in ["", "K", "M", "G", "T", "P", "E", "Z"]:
+		if b < factor:
+			return f"{b:.2f}{unit}{suffix}"
+		b /= factor
+	return f"{b:.2f}Y{suffix}"
 
 myparse = argparse.ArgumentParser(description="show folder sizes and things..")
 myparse.add_argument('--path', metavar='path', type=str, help="Path to search", default=".")
@@ -129,7 +131,7 @@ if args.sort == 'files':
 if args.sort == 'dirs':
 	sorteditems =  sorted(itemlist, key=operator.attrgetter("subdircount"))
 for item in sorteditems:
-	print(f'{item.name} size: {item.get_size()} totalitems: {item.subitemcount:,} files: {item.subfilecount:,} subdirs: {item.subdircount:,}')
+	print(f'{item.get_size():>10}  {str(item.name):20} total: {item.subitemcount:7} files: {item.subfilecount:7} subdirs: {item.subdircount}')
 	if getbigfiles:
 		for bigitem in item.bigfiles:
 			print(f'\t[bi] {bigitem}')
