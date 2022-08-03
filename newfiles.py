@@ -23,13 +23,13 @@ def get_tree(path, filelist):
 
 myparse = argparse.ArgumentParser(description="Find new files")
 myparse.add_argument('--path', metavar='path', type=str, help="Path to search", default=".")
-myparse.add_argument('--number', metavar='filenum', type=int, help="Limit to x results", default=10)
+myparse.add_argument('--maxfiles', metavar='maxfiles', type=int, help="Limit to x results", default=10)
 args = myparse.parse_args()
 input_path = args.path
-limit = args.number
+maxfiles = args.maxfiles
 
 filelist = []
 result = get_tree(input_path, filelist)
 filelist.sort(key=lambda x: x[1], reverse=False)
-for file in filelist[-limit:]:
+for file in filelist[-maxfiles:]:
     print(time.ctime(file[1]), file[0].path)
