@@ -56,7 +56,10 @@ alias nocomment='grep -Ev '\''^(#|$)'\'''
 #alias fgrep='fgrep --color=auto'
 
 #misc
-alias alljobs='for user in $(cut -f1 -d: /etc/passwd); do sudo crontab -u $user -l; done'
+#alias alljobs='for user in $(cut -f1 -d: /etc/passwd); do sudo crontab -u $user -l; done'
+function alljobs() {
+	for user in $(cut -f1 -d: /etc/passwd); do sudo crontab -u $user -l; done
+}
 #alias findit="find . -type f -name"
 alias sourceme="source ~/dotfiles/kremtro.sh"
 updateme() {
@@ -91,7 +94,10 @@ alias pscpu10='ps auxf | sort -nr -k 3 | head -10'
 
 #diskspace
 # alias most='du -hsx * | sort -rh | head -10'
-alias most='function _most(){ du -hsx $1* | sort -rh | head -10;  };_most'
+function most(){
+	du -hsx $1* | sort -rh | head -20;
+	}
+
 alias usage="du -h --max-depth=1 | sort -rh"
 alias usage10="du -h --max-depth=1 | sort -rh| head -10"
 alias biggest="find . -name .git -prune -o -name '*' -printf '%s %p\n'| sort -nr | head -20"
@@ -217,3 +223,37 @@ man() {
 }
 
 
+function findupefiles () {
+awk -F'/' '{
+  f = $NF
+  a[f] = f in a? a[f] RS $0 : $0
+  b[f]++ }
+  END{for(x in b)
+        if(b[x]>1)
+          printf "Duplicate Filename: %s\n%s\n",x,a[x] }' <(find . -type f)
+
+}
+
+function findupesmd5() {
+awk '{
+  md5=$1
+  a[md5]=md5 in a ? a[md5] RS $2 : $2
+  b[md5]++ }
+  END{for(x in b)
+        if(b[x]>1)
+          printf "Duplicate Files (MD5:%s):\n%s\n",x,a[x] }' <(find . -type f -exec md5sum {} +)
+}
+
+function findupessize()
+{
+awk '{
+  size = $1
+  a[size]=size in a ? a[size] RS $2 : $2
+  b[size]++ }
+  END{for(x in b)
+        if(b[x]>1)
+          printf "Duplicate Files By Size: %d Bytes\n%s\n",x,a[x] }' <(find . -type f -exec du -b {} +)
+
+}
+
+alias dupeguru='/usr/bin/python ~/development2/dupeguru/run.py'
