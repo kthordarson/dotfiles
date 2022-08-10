@@ -83,3 +83,13 @@ exit 1
 
 # cron
 for user in $(cut -f1 -d: /etc/passwd); do echo $user; crontab -u $user -l; done
+
+# https://askubuntu.com/questions/421712/comparing-the-contents-of-two-directories
+# diff compare stuff
+find /dir1/ -type f -exec md5sum {} + | sort -k 2 > dir1.txt
+find /dir2/ -type f -exec md5sum {} + | sort -k 2 > dir2.txt
+diff -u dir1.txt dir2.txt
+diff <(find /dir1/ -type f -exec md5sum {} + | sort -k 2) <(find /dir2/ -type f -exec md5sum {} + | sort -k 2)
+diff <(find /dir1/ -type f -exec md5sum {} + | sort -k 2 | cut -f1 -d" ") <(find /dir2/ -type f -exec md5sum {} + | sort -k 2 | cut -f1 -d" ")
+diff <(find /dir1/ -type f -exec md5sum {} + | sort -k 2 | sed 's/ .*\// /') <(find /dir2/ -type f -exec md5sum {} + | sort -k 2 | sed 's/ .*\// /')
+git diff --no-index dir1/ dir2/
