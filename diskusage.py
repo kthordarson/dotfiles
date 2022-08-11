@@ -88,11 +88,11 @@ def get_subfilecount(directory):
 
 
 def get_subdircount(directory):
+	dc = 0 
 	try:
 		dc = len([k for k in directory.glob('**/*') if k.is_dir()])
-	except PermissionError as e:
-		print(f'[err] {e} d:{directory}')
-		return 0
+	except (PermissionError,FileNotFoundError) as e:
+		print(f'[err] {e} d:{directory}')		
 	return dc
 
 def get_size_format(b, factor=1024, suffix="B"):
