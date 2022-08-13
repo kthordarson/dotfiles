@@ -20,20 +20,11 @@ import textwrap
 import traceback
 from urllib import parse as urlparse
 from loguru import logger
-VERSION = '7.1'
+VERSION = '7.1x'
 VERSION_BANNER = '''dtrx version %s
 Copyright © 2006-2011 Brett Smith <brettcsmith@brettcsmith.org>
 Copyright © 2008 Peter Kelemen <Peter.Kelemen@gmail.com>
-
-This program is free software; you can redistribute it and/or modify it
-under the terms of the GNU General Public License as published by the
-Free Software Foundation; either version 3 of the License, or (at your
-option) any later version.
-
-This program is distributed in the hope that it will be useful, but
-WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General
-Public License for more details.''' % (VERSION,)
+.''' % (VERSION,)
 
 MATCHING_DIRECTORY = 1
 ONE_ENTRY_KNOWN = 2
@@ -140,23 +131,23 @@ class BaseExtractor(object):
 		try:
 			self.archive = open(filename, 'r')
 		except (IOError, OSError) as error:
-			raise ExtractorError('could not open %s: %s' %
-								 (filename, error.strerror))
+			logger.warning(f'could not open {filename}: {error}')
+			raise ExtractorError(f'could not open {filename}: {error}') #  (filename, error.strerror))
 		if encoding:
 			self.pipe(self.decoders[encoding], 'decoding')
 		self.prepare()
+		logger.debug(f'[be] init f:{filename} enc:{encoding}')
 
 	def pipe(self, command, description='extraction'):
 		self.pipes.append((command, description))
 
 	def add_process(self, processes, command, stdin, stdout):
 		try:
-			processes.append(subprocess.Popen(command, stdin=stdin,
-											  stdout=stdout,
-											  stderr=self.stderr))
+			processes.append(subprocess.Popen(command, stdin=stdin, stdout=stdout, stderr=self.stderr))
 		except OSError as error:
+			logger.error(f'[err] {error}')
 			if error.errno == errno.ENOENT:
-				raise ExtractorUnusable('could not run %s' % (command[0],))
+				raise ExtractorUnusable(f'could not run {command}')
 			raise
 
 	def run_pipes(self, final_stdout=None):
@@ -258,7 +249,7 @@ class BaseExtractor(object):
 
 	def check_success(self, got_files):
 		error_index, error_code = self.first_bad_exit_code()
-		logger.debug('success results: %s %s %s' % (got_files, error_index, self.exit_codes))
+		logger.debug(f'success results: {got_files}, {error_index}, {self.exit_codes}')
 		if (self.is_fatal_error(error_code) or ((not got_files) and (error_code is not None))):
 			command = ' '.join(self.pipes[error_index][0])
 			raise ExtractorError(f'{self.pipes[error_index][1]}, {command}, {error_code}')
@@ -272,7 +263,7 @@ class BaseExtractor(object):
 		try:
 			self.target = tempfile.mkdtemp(prefix='.dtrx-', dir='.')
 		except (OSError, IOError) as error:
-			raise ExtractorError('cannot extract here: %s' % (error.strerror,))
+			raise ExtractorError(f'cannot extract here: {error}')
 		old_path = os.path.realpath(os.curdir)
 		os.chdir(self.target)
 		try:
@@ -281,7 +272,8 @@ class BaseExtractor(object):
 			self.contents = os.listdir('.')
 			self.check_contents()
 			self.check_success(self.content_type != EMPTY)
-		except EXTRACTION_ERRORS:
+		except EXTRACTION_ERRORS as e:
+			logger.error(f'[err] {e} oldpath:{old_path} st:{self.target} {self.archive}')
 			self.archive.close()
 			os.chdir(old_path)
 			shutil.rmtree(self.target, ignore_errors=True)
@@ -969,18 +961,18 @@ class ExtractorBuilder(object):
 		# or extension suggests something less than ideal -- but it seems less
 		# likely so I'm sticking with this.
 		for func_name in ('mimetype', 'extension', 'magic'):
-			logger.debug('getting extractors by %s' % (func_name,))
+			logger.debug(f'getting extractors by {func_name}')
 			try:
 				extractor_types = getattr(self, 'try_by_' + func_name)(self,self.filename)
 			except AttributeError as e:
 				logger.error(f'[err] {e}')
 				return None
-			logger.debug('done getting extractors')
+			# logger.debug('done getting extractors')
 			for ext_args in extractor_types:
 				if ext_args in tried_types:
 					continue
 				tried_types.add(ext_args)
-				logger.debug('trying %s extractor from %s' % (ext_args, func_name))
+				logger.debug(f'trying {ext_args} extractor from {func_name}')
 				for extractor in self.build_extractor(*ext_args):
 					yield extractor
 
@@ -1038,8 +1030,8 @@ class BaseAction(object):
 		try:
 			error = function(*args)
 		except EXTRACTION_ERRORS as exception:
-			error = str(exception)
-			logger.debug(''.join(traceback.format_exception(*sys.exc_info())))
+			# error = str(exception)
+			logger.error(f'err {exception}')
 		return error
 
 	def show_filename(self, filename):
@@ -1061,7 +1053,7 @@ class ExtractionAction(BaseAction):
 			self.options.one_entry_policy.prep(self.current_filename, extractor)
 		for handler in self.handlers:
 			if handler.can_handle(self, extractor.content_type, self.options):
-				logger.debug('using %s handler' % (handler.__name__,))
+				logger.debug(f'using {handler.__name__} handler')
 				self.current_handler = handler(extractor, self.options)
 				break
 
@@ -1099,6 +1091,7 @@ class ExtractionAction(BaseAction):
 				 self.report(self.show_extraction, extractor))
 		if not error:
 			self.target = self.current_handler.target
+		logger.debug(f'[extact] f:{filename} ext:{extractor} err:{error}')
 		return error
 
 
@@ -1145,15 +1138,16 @@ class ExtractorApplication(object):
 
 	def abort(self, signal_num, frame):
 		signal.signal(signal_num, signal.SIG_IGN)
-		print('')
-		logger.debug('traceback:\n' + ''.join(traceback.format_stack(frame)).rstrip())
-		logger.debug('got signal %s' % (signal_num,))
+		# print('')
+		logger.debug(f'traceback: {traceback.format_stack(frame)} sig:{signal_num}')# + ''.join(traceback.format_stack(frame)).rstrip())
+		# logger.debug('got signal %s' % (signal_num,))
 		try:
 			basename = self.current_extractor.target
-		except AttributeError:
+		except AttributeError as e:
+			logger.warning(f'[abort] {e}')
 			basename = None
 		if basename is not None:
-			logger.debug('cleaning up %s' % (basename,))
+			logger.debug(f'cleaning up {basename}')
 			clean_targets = set([os.path.realpath('.')])
 			if hasattr(self, 'current_directory'):
 				clean_targets.add(os.path.realpath(self.current_directory))
@@ -1213,19 +1207,19 @@ class ExtractorApplication(object):
 		formatter = logging.Formatter('dtrx: %(levelname)s: %(message)s')
 		handler.setFormatter(formatter)
 		# logger.addHandler(handler)
-		logger.debug('logger is set up')
+		# logger.debug('logger is set up')
 
 	def recurse(self, filename, extractor, action):
 		self.options.recursion_policy.prep(filename, action.target, extractor)
 		if self.options.recursion_policy.ok_to_recurse():
 			for filename in extractor.included_archives:
-				logger.debug('recursing with %s archive' % (extractor.content_type,))
+				logger.debug(f'recursing with {extractor.content_type} archive')
 				tail_path, basename = os.path.split(filename)
 				path_args = [self.current_directory, extractor.included_root, tail_path]
-				logger.debug('included root: %s' % (extractor.included_root,))
-				logger.debug('tail path: %s' % (tail_path,))
+				logger.debug(f'included root: {extractor.included_root}')
+				logger.debug(f'tail path: {tail_path}')
 				if os.path.isdir(action.target):
-					logger.debug('action target: %s' % (action.target,))
+					logger.debug(f'action target: {action.target}')
 					path_args.insert(1, action.target)
 				directory = os.path.join(*path_args)
 				self.archives.setdefault(directory, []).append(basename)
@@ -1234,11 +1228,13 @@ class ExtractorApplication(object):
 		try:
 			result = os.stat(filename)
 		except OSError as error:
+			logger.warning(f'{filename}: {error}')
 			return error.strerror
 		if stat.S_ISDIR(result.st_mode):
 			return 'cannot work with a directory'
 
 	def show_stderr(self, logger_func, stderr):
+		# logger.warning(f'[showstderr] {logger_func} {stderr}')
 		if stderr:
 			logger_func(f'Error output from this process: {stderr}')
 
@@ -1248,23 +1244,25 @@ class ExtractorApplication(object):
 			self.current_extractor = extractor  # For the abort() method.
 			error = self.action.run(filename, extractor)
 			if error:
+				logger.warning(f'[tryext] {error} extr:{extractor} b:{builder} fn:{filename}')
 				errors.append((extractor.file_type, extractor.encoding, error, extractor.get_stderr()))
 				if extractor.target is not None:
 					self.clean_destination(extractor.target)
 			else:
-				self.show_stderr(logger.warning, extractor.get_stderr())
+				logger.info(f'[tryext] {filename} extracted with {extractor.file_type} {extractor.encoding} {error}')
+				#self.show_stderr(logger.warning, extractor.get_stderr())
 				self.recurse(filename, extractor, self.action)
 				return
-		logger.error('could not handle %s' % (filename,))
+		logger.error(f'could not handle {filename}')
 		if not errors:
-			logger.error('not a known archive type')
+			logger.error(f'not a known archive type f:{filename} b:{builder}')
 			return True
 		for file_type, encoding, error, stderr in errors:
 			message = ['treating as', file_type, 'failed:', error]
 			if encoding:
 				message.insert(1, '%s-encoded' % (encoding,))
-			logger.error(' '.join(message))
-			self.show_stderr(logger.error, stderr)
+			logger.error(f'[err] {message}')
+			# self.show_stderr(logger.error, stderr)
 		return True
 
 	def download(self, filename):
@@ -1290,14 +1288,16 @@ class ExtractorApplication(object):
 		while self.archives:
 			self.current_directory, self.filenames = self.archives.popitem()
 			os.chdir(self.current_directory)
+			logger.debug(f'[run] a:{self.action} cwd:{self.current_directory} fns:{self.filenames}')
 			for filename in self.filenames:
 				filename, error = self.download(filename)
 				if not error:
 					builder = ExtractorBuilder(filename, self.options)
 					error = (self.check_file(filename) or self.try_extractors(filename, builder.get_extractor()))
+					logger.debug(f'builder {builder}')
 				if error:
 					if error != True:
-						logger.error('%s: %s' % (filename, error))
+						logger.error(f'{filename} {error}')
 					self.failures.append(filename)
 				else:
 					self.successes.append(filename)

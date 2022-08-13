@@ -3,3 +3,4 @@ scripts/__pycache__
 dtrx-tle.py
 .dtrx*
 __pycache__/**
+dotfiles.code-workspace
