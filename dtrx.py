@@ -1027,6 +1027,7 @@ class BaseAction(object):
 		self.do_print = False
 
 	def report(self, function, *args):
+		error = None
 		try:
 			error = function(*args)
 		except EXTRACTION_ERRORS as exception:
@@ -1084,6 +1085,7 @@ class ExtractionAction(BaseAction):
 				print (filename)
 
 	def run(self, filename, extractor):
+		logger.debug(f'[extact] run f:{filename} ext:{extractor}')
 		self.current_filename = filename
 		error = (self.report(extractor.extract) or
 				 self.report(self.get_handler, extractor) or

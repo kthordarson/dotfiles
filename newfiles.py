@@ -32,14 +32,18 @@ if __name__ == '__main__':
     myparse = argparse.ArgumentParser(description="Find new files")
     myparse.add_argument('--path', metavar='path', type=str, help="Path to search", default=".")
     myparse.add_argument('--maxfiles', metavar='maxfiles', type=int, help="Limit to x results", default=30)
+    myparse.add_argument('--old', help="Show oldest", action='store_true')
     args = myparse.parse_args()
     input_path = args.path
     maxfiles = args.maxfiles
-
+    if args.old:
+        showold = True
+    else:
+        showold = False
     filelist = []
     get_tree(input_path, filelist)
     reslist = [k for k in filelist if k[0].is_file()]
-    reslist.sort(key=lambda x: x[1], reverse=False)
+    reslist.sort(key=lambda x: x[1], reverse=showold)
     logger.debug(f'[done] f:{len(filelist)} r:{len(reslist)}')
     
     for file in reslist[-maxfiles:]:

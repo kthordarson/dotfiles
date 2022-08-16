@@ -72,4 +72,4 @@ if __name__ == '__main__':
 	logger.debug(f'[done] f:{len(filelist)} r:{len(reslist)}')    
 	for file in reslist[-maxfiles:]:
 		fitem = Path(file[0])
-		print(f' {humanbytes(file[1])} {fitem.name}')
+		print(f'{humanbytes(file[1])} folder:{fitem.parent} file:{fitem.name}')
