@@ -7,6 +7,8 @@ from pathlib import Path
 from loguru import logger
 from datetime import datetime
 
+EXCLUDES = ['.git', '__pycache__', '.idea', '.vscode', '.ipynb_checkpoints']
+
 def format_bytes(size):
 	# 2**10 = 1024
 	power = 2**10
@@ -16,6 +18,7 @@ def format_bytes(size):
 		size /= power
 		n += 1
 	return size, power_labels[n]+'bytes'
+
 def humanbytes(B):
 	"""Return the given bytes as a human friendly KB, MB, GB, or TB string."""
 	B = float(B)
@@ -42,7 +45,7 @@ def get_tree(path, filelist):
 		logger.warning(f'[symlink] skipping {path}')
 	else:
 		for entry in os.scandir(path):
-			if entry.is_dir(follow_symlinks=False) and not entry.is_symlink():
+			if entry.is_dir(follow_symlinks=False) and not entry.is_symlink() and entry.name not in EXCLUDES:
 				try:
 					get_tree(entry.path, filelist)
 					filelist.append(entry)
@@ -62,7 +65,10 @@ if __name__ == '__main__':
 	myparse = argparse.ArgumentParser(description="Find new files")
 	myparse.add_argument('--path', metavar='path', type=str, help="Path to search", default=".")
 	myparse.add_argument('--maxfiles', metavar='maxfiles', type=int, help="Limit to x results", default=30)
+	myparse.add_argument('--excludes', help="use exclude list", action='store_true', default=False)
 	args = myparse.parse_args()
+	if not args.excludes:
+		EXCLUDES = []
 	input_path = args.path
 	maxfiles = args.maxfiles
 	filelist = []
