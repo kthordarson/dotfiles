@@ -28,15 +28,15 @@ def humanbytes(B):
 	TB = float(KB ** 4) # 1,099,511,627,776
 
 	if B < KB:
-		return '{0} {1}'.format(B,'Bytes' if 0 == B > 1 else 'Byte')
+		return f'{B:.0f} B' #return f'{0} {1}'.format(B,'B' if 0 == B > 1 else 'B')
 	elif KB <= B < MB:
-		return '{0:.2f} KB'.format(B / KB)
+		return '{0:.0f} KB'.format(B / KB)
 	elif MB <= B < GB:
-		return '{0:.2f} MB'.format(B / MB)
+		return '{0:.0f} MB'.format(B / MB)
 	elif GB <= B < TB:
-		return '{0:.2f} GB'.format(B / GB)
+		return '{0:.0f} GB'.format(B / GB)
 	elif TB <= B:
-		return '{0:.2f} TB'.format(B / TB)
+		return '{0:.0f} TB'.format(B / TB)
 
 
 def get_tree(path, filelist):
@@ -78,4 +78,7 @@ if __name__ == '__main__':
 	logger.debug(f'[done] f:{len(filelist)} r:{len(reslist)}')    
 	for file in reslist[-maxfiles:]:
 		fitem = Path(file[0])
-		print(f'{humanbytes(file[1])} folder:{fitem.parent} file:{fitem.name}')
+		parent = str(fitem.parent)
+		if parent == '.':
+			parent = ''
+		print(f'{humanbytes(file[1]):<5} f:{fitem.name} {parent}')
