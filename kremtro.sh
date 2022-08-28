@@ -27,7 +27,16 @@ alias john='/home/kth/randomgits/john/run/john'
 alias kremer='vi /home/kth/dotfiles/kremtro.sh && source ~/.bashrc'
 alias rassgat='echo rassgat'
 alias vi='vim'
-unalias ll
+
+
+if alias ll &>/dev/null; then
+  unalias ll
+else
+    echo "ll ok";
+fi
+
+
+#unalias ll
 alias ll="lsd -la"
 #alias ll="ls -lah"
 alias llr="ll -tr"
