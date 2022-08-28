@@ -29,11 +29,13 @@ alias rassgat='echo rassgat'
 alias vi='vim'
 
 
-if alias ll &>/dev/null; then
+if alias ll &>/dev/null;
+then
   unalias ll
-else
-    echo "ll ok";
 fi
+#else
+#    echo "ll ok";
+#fi
 
 
 #unalias ll
