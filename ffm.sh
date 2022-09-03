@@ -4,6 +4,8 @@
 
 #alias fmakevid='echo ffmpeg -framerate 24 -f image2 -pix_fmt yuv420p -i "$1/image-%08d.jpg" $2'
 #alias fextract='echo ffmpeg -r 1 -i $1 -r 1 "$2/image-%08d.jpg"'
+# ffmpeg -i <input>   -c:v libx264 -crf 23 -profile:v baseline -level 3.0 -pix_fmt yuv420p   -c:a aac -ac 2 -b:a 128k   -movflags faststart   output.mp4
+
 function fmakevid(){
     if [ -z $1 ]
     then
