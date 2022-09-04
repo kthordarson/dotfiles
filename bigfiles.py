@@ -81,4 +81,4 @@ if __name__ == '__main__':
 		parent = str(fitem.parent)
 		if parent == '.':
 			parent = ''
-		print(f'{humanbytes(file[1]):<5} f:{fitem.name} {parent}')
+		print(f'{humanbytes(file[1]):<5}  file: {parent}/{fitem.name[:30]:<30} ')
