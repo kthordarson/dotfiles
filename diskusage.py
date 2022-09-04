@@ -105,9 +105,9 @@ def get_subdircount(directory):
 def get_size_format(b, factor=1024, suffix="B"):
 	for unit in ["", "K", "M", "G", "T", "P", "E", "Z"]:
 		if b < factor:
-			return f"{b:.2f}{unit}{suffix}"
+			return f"{b:.2f} {unit}{suffix}"
 		b /= factor
-	return f"{b:.2f}Y{suffix}"
+	return f"{b:.2f} {suffix}"
 
 myparse = argparse.ArgumentParser(description="show folder sizes and things..")
 myparse.add_argument('--path', metavar='path', type=str, help="Path to search", default=".")
@@ -148,8 +148,10 @@ if args.sort == 'files':
 	sorteditems = sorted(itemlist, key=operator.attrgetter("subfilecount"))
 if args.sort == 'dirs':
 	sorteditems =  sorted(itemlist, key=operator.attrgetter("subdircount"))
+print(f'[size] {" "*5}[name]{" "*15}[items] [files] [folders]')
+print(f'{"-"*60}')
 for item in sorteditems:
-	print(f'{item.get_size():>10}  {item.dirname[0:20]:<20} total: {item.subitemcount:7} files: {item.subfilecount:7} subdirs: {item.subdircount}')
+	print(f'{item.get_size():<10}  {item.dirname[0:20]:<20} {item.subitemcount:<7} {item.subfilecount:<7} {item.subdircount:<7}')
 	if getbigfiles:
 		for bigitem in item.bigfiles:
 			print(f'\t[bi] {bigitem.filename[0:20]:<20} {bigitem.get_size():>10}')
@@ -157,4 +159,6 @@ for item in sorteditems:
 	total_items += item.subitemcount
 	total_files += item.subfilecount
 	total_dirs += item.subdircount
-print(f'[total] size: {get_size_format(b=total_size, suffix="B")} items: {total_items:,} files: {total_files:,} dirs: {total_dirs:,}')
+#print(f'[t] {get_size_format(b=total_size, suffix="B")} {" "*34} {total_files:,} {total_dirs:,}')
+print(f'{"-"*60}')
+print(f'{get_size_format(b=total_size, suffix="B")} {" "*23}{total_items:<7} {total_files:<7} {total_dirs:<7}')
