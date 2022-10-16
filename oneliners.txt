@@ -92,4 +92,9 @@ diff -u dir1.txt dir2.txt
 diff <(find /dir1/ -type f -exec md5sum {} + | sort -k 2) <(find /dir2/ -type f -exec md5sum {} + | sort -k 2)
 diff <(find /dir1/ -type f -exec md5sum {} + | sort -k 2 | cut -f1 -d" ") <(find /dir2/ -type f -exec md5sum {} + | sort -k 2 | cut -f1 -d" ")
 diff <(find /dir1/ -type f -exec md5sum {} + | sort -k 2 | sed 's/ .*\// /') <(find /dir2/ -type f -exec md5sum {} + | sort -k 2 | sed 's/ .*\// /')
-git diff --no-index dir1/ dir2/
+git diff --no-index dir2/ dir2/
+
+
+# bluetooth mouse fix
+sudo modprobe uhid
+
