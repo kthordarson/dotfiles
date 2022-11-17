@@ -1,5 +1,6 @@
 import pkg_resources
 from subprocess import call
+from loguru import logger
 
 localpacks = [k for k in pkg_resources.working_set if 'kth' in k.location]
 # packages = [dist.project_name for dist in pkg_resources.working_set]
