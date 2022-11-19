@@ -20,10 +20,11 @@ import textwrap
 import traceback
 from urllib import parse as urlparse
 from loguru import logger
-VERSION = '7.1x'
+VERSION = '7.2'
 VERSION_BANNER = '''dtrx version %s
 Copyright © 2006-2011 Brett Smith <brettcsmith@brettcsmith.org>
 Copyright © 2008 Peter Kelemen <Peter.Kelemen@gmail.com>
+Copyright © 2022 kthordarson@gmail.com
 .''' % (VERSION,)
 
 MATCHING_DIRECTORY = 1
