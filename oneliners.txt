@@ -1,3 +1,6 @@
+# ping arp
+for ip in $(arp -an | sed  's/(//' | sed 's/)//' | awk '{print $2}'); do ping -c 3 $ip;done
+
 binwalk -e -D 'squashfs:squashfs:7z x %e'
 
 # journalctl logs
