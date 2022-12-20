@@ -52,8 +52,11 @@ def get_tree(path, filelist):
 				except Exception as e:
 					logger.error(f'[err] {e} entry:{entry} entry.is_symlink():{entry.is_symlink()}')
 			else:
-				if entry.is_file and not entry.is_symlink():
-					filelist.append(entry)
+				try:
+					if entry.is_file and not entry.is_symlink():
+						filelist.append(entry)
+				except FileNotFoundError as e:
+					logger.error(e)
 				# try:
 				#     entry.stat(follow_symlinks=False).st_size
 				# except FileNotFoundError as e:
@@ -75,7 +78,7 @@ if __name__ == '__main__':
 	get_tree(input_path, filelist)
 	reslist = [(k, k.stat().st_size) for k in filelist if k.is_file()]
 	reslist.sort(key=lambda x: x[1], reverse=False)
-	logger.debug(f'[done] f:{len(filelist)} r:{len(reslist)}')    
+	logger.debug(f'[done] f:{len(filelist)} r:{len(reslist)}')
 	for file in reslist[-maxfiles:]:
 		fitem = Path(file[0])
 		parent = str(fitem.parent)
