@@ -6,6 +6,7 @@ import argparse
 from pathlib import Path
 from loguru import logger
 from datetime import datetime
+import glob
 
 def get_tree(path, filelist, excludes):
     path = Path(path)
@@ -31,7 +32,10 @@ def get_tree(path, filelist, excludes):
 
 if __name__ == '__main__':
     myparse = argparse.ArgumentParser(description="Find new files")
-    myparse.add_argument('--path', metavar='path', type=str, help="Path to search", default=".")
+    _default = str(Path(myparse.prog).parent)
+	# myparse.add_argument('--path', metavar='path', type=str, help="Path to search", nargs='?', const='.', action='store_const')
+    myparse.add_argument('path', nargs='?', type=str, default=_default,	 metavar='input_path')
+    #myparse.add_argument('--path', metavar='path', type=str, help="Path to search", default=".")
     myparse.add_argument('--maxfiles', metavar='maxfiles', type=int, help="Limit to x results", default=30)
     myparse.add_argument('--old', help="Show oldest", action='store_true')
     myparse.add_argument('--excludes', help="use exclude list", action='store_true', default=False)
@@ -40,19 +44,21 @@ if __name__ == '__main__':
         EXCLUDES = ['.git', '__pycache__', '.idea', '.vscode', '.ipynb_checkpoints']
     else:
         EXCLUDES = []
-    input_path = args.path
     maxfiles = args.maxfiles
     if args.old:
         showold = True
     else:
         showold = False
     filelist = []
-    get_tree(input_path, filelist, EXCLUDES)
-    reslist = [k for k in filelist if k[0].is_file()]
+    # get_tree(input_path, filelist, EXCLUDES)
+    # filelist.append((entry, entry.stat().st_ctime))
+    filelist_ = [Path(k) for k in glob.glob(str(Path(args.path))+'/**',recursive=True, include_hidden=True)]
+    reslist = [(Path(k), k.stat().st_ctime) for k in filelist_ if Path(k).is_file()]
+    #reslist = [k for k in filelist if k[0].is_file()]
     reslist.sort(key=lambda x: x[1], reverse=showold)
-    logger.debug(f'[done] f:{len(filelist)} r:{len(reslist)}')
+    logger.debug(f'[done] f:{len(filelist_)} r:{len(reslist)}')
     
     for file in reslist[-maxfiles:]:
         filetime = datetime.fromtimestamp(file[0].stat().st_ctime)
         age = datetime.now() - filetime
-        print(f'd:{filetime} a:{age.seconds} f:{file[0].path}')
+        print(f'd:{filetime} a:{age.seconds} f:{str(file[0])}')
