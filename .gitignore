@@ -5,3 +5,4 @@ dtrx-tle.py
 .dtrx*
 __pycache__/**
 dotfiles.code-workspace
+test*
