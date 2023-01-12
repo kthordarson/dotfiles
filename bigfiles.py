@@ -45,7 +45,7 @@ if __name__ == '__main__':
 	# myparse.add_argument('--path', metavar='path', type=str, help="Path to search", nargs='?', const='.', action='store_const')
 	myparse.add_argument('path', nargs='?', type=str, default=_default,	 metavar='input_path')
 	myparse.add_argument('--maxfiles', metavar='maxfiles', type=int, help="Limit to x results", default=30)
-	myparse.add_argument('--excludes', help="use exclude list", action='store_true', default=False)	
+	myparse.add_argument('--excludes', help="use exclude list", action='store_true', default=False)
 	args = myparse.parse_args()
 	if not args.excludes:
 		EXCLUDES = []
@@ -53,8 +53,16 @@ if __name__ == '__main__':
 	#input_path = args.path
 	filelist = []
 	filelist = [Path(k) for k in glob.glob(str(Path(args.path))+'/**',recursive=True, include_hidden=True)]
+	reslist = []
 	if filelist:
-		reslist = [(k, k.stat().st_size) for k in filelist if k.is_file()]
+		for k in filelist:
+			try:
+				if Path(k).is_file() and not Path(k).is_symlink():
+					reslist.append((Path(k), k.stat().st_size))
+			except PermissionError as e:
+				logger.warning(f'[err] {e} k={k}')
+
+		#reslist = [(k, k.stat().st_size) for k in filelist if k.is_file()]
 		reslist.sort(key=lambda x: x[1], reverse=False)
 		logger.debug(f'[done] f:{len(filelist)} r:{len(reslist)}')
 		for file in reslist[-maxfiles:]:

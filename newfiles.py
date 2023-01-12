@@ -53,11 +53,18 @@ if __name__ == '__main__':
     # get_tree(input_path, filelist, EXCLUDES)
     # filelist.append((entry, entry.stat().st_ctime))
     filelist_ = [Path(k) for k in glob.glob(str(Path(args.path))+'/**',recursive=True, include_hidden=True)]
-    reslist = [(Path(k), k.stat().st_ctime) for k in filelist_ if Path(k).is_file()]
+    reslist = []
+    for k in filelist_:
+        try:
+            if Path(k).is_file() and not Path(k).is_symlink():
+                reslist.append((Path(k), k.stat().st_ctime))
+        except PermissionError as e:
+            logger.warning(f'[err] {e} k={k}')
+    #reslist = [(Path(k), k.stat().st_ctime) for k in filelist_ if Path(k).is_file()]
     #reslist = [k for k in filelist if k[0].is_file()]
     reslist.sort(key=lambda x: x[1], reverse=showold)
     logger.debug(f'[done] f:{len(filelist_)} r:{len(reslist)}')
-    
+
     for file in reslist[-maxfiles:]:
         filetime = datetime.fromtimestamp(file[0].stat().st_ctime)
         age = datetime.now() - filetime
