@@ -39,6 +39,17 @@ def humanbytes(B):
 	elif TB <= B:
 		return '{0:.0f} TB'.format(B / TB)
 
+def filelist_generator(path):
+    # foo
+    filelist_ = [Path(k) for k in glob.glob(str(Path(path))+'/**',recursive=True, include_hidden=True)]
+    for k in filelist_:
+        try:
+            if Path(k).is_file() and not Path(k).is_symlink():
+                yield((Path(k), k.stat().st_size))
+        except PermissionError as e:
+            logger.warning(f'[err] {e} k={k}')
+
+
 if __name__ == '__main__':
 	myparse = argparse.ArgumentParser(description="Find new files", exit_on_error=False)
 	_default = str(Path(myparse.prog).parent)
@@ -51,23 +62,23 @@ if __name__ == '__main__':
 		EXCLUDES = []
 	maxfiles = args.maxfiles
 	#input_path = args.path
-	filelist = []
-	filelist = [Path(k) for k in glob.glob(str(Path(args.path))+'/**',recursive=True, include_hidden=True)]
-	reslist = []
-	if filelist:
-		for k in filelist:
-			try:
-				if Path(k).is_file() and not Path(k).is_symlink():
-					reslist.append((Path(k), k.stat().st_size))
-			except PermissionError as e:
-				logger.warning(f'[err] {e} k={k}')
+	# filelist = []
+	# filelist = [Path(k) for k in glob.glob(str(Path(args.path))+'/**',recursive=True, include_hidden=True)]
+	reslist = [k for k in filelist_generator(args.path)]
+	reslist.sort(key=lambda x: x[1], reverse=False)
+	logger.debug(f'[done]  r:{len(reslist)}')
+	for file in reslist[-maxfiles:]:
+		fitem = Path(file[0])
+		parent = str(fitem.parent)
+		if parent == '.':
+			parent = ''
+		print(f'{humanbytes(file[1]):<5}  file: {parent}/{fitem.name[:30]:<30} ')
+	# if filelist:
+	# 	for k in filelist:
+	# 		try:
+	# 			if Path(k).is_file() and not Path(k).is_symlink():
+	# 				reslist.append((Path(k), k.stat().st_size))
+	# 		except PermissionError as e:
+	# 			logger.warning(f'[err] {e} k={k}')
 
-		#reslist = [(k, k.stat().st_size) for k in filelist if k.is_file()]
-		reslist.sort(key=lambda x: x[1], reverse=False)
-		logger.debug(f'[done] f:{len(filelist)} r:{len(reslist)}')
-		for file in reslist[-maxfiles:]:
-			fitem = Path(file[0])
-			parent = str(fitem.parent)
-			if parent == '.':
-				parent = ''
-			print(f'{humanbytes(file[1]):<5}  file: {parent}/{fitem.name[:30]:<30} ')
+	# 	#reslist = [(k, k.stat().st_size) for k in filelist if k.is_file()]

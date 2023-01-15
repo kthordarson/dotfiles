@@ -8,27 +8,16 @@ from loguru import logger
 from datetime import datetime
 import glob
 
-def get_tree(path, filelist, excludes):
-    path = Path(path)
-    if path.is_symlink():
-        logger.warning(f'[symlink] skipping {path}')
-    else:
-        for entry in os.scandir(path):
-            if entry.is_dir(follow_symlinks=False) and not entry.is_symlink() and entry.name not in EXCLUDES:
-                try:
-                    get_tree(entry.path, filelist, excludes)
-                    filelist.append((entry, entry.stat().st_ctime))
-                except Exception as e:
-                    logger.error(f'[err] {e} entry:{entry} entry.is_symlink():{entry.is_symlink()}')
-            else:
-                if entry.is_file and not entry.is_symlink():
-                    filelist.append((entry, entry.stat().st_ctime))
-                # try:
-                #     entry.stat(follow_symlinks=False).st_size
-                # except FileNotFoundError as e:
-                #     logger.warning(f'[err] {e}')
-                # except Exception as e:
-                #     logger.error(f'[err] {e}')
+def filelist_generator(path):
+    # foo
+    filelist_ = [Path(k) for k in glob.glob(str(Path(path))+'/**',recursive=True, include_hidden=True)]
+    for k in filelist_:
+        try:
+            if Path(k).is_file() and not Path(k).is_symlink():
+                yield((Path(k), k.stat().st_ctime))
+        except PermissionError as e:
+            logger.warning(f'[err] {e} k={k}')
+
 
 if __name__ == '__main__':
     myparse = argparse.ArgumentParser(description="Find new files")
@@ -50,20 +39,9 @@ if __name__ == '__main__':
     else:
         showold = False
     filelist = []
-    # get_tree(input_path, filelist, EXCLUDES)
-    # filelist.append((entry, entry.stat().st_ctime))
-    filelist_ = [Path(k) for k in glob.glob(str(Path(args.path))+'/**',recursive=True, include_hidden=True)]
-    reslist = []
-    for k in filelist_:
-        try:
-            if Path(k).is_file() and not Path(k).is_symlink():
-                reslist.append((Path(k), k.stat().st_ctime))
-        except PermissionError as e:
-            logger.warning(f'[err] {e} k={k}')
-    #reslist = [(Path(k), k.stat().st_ctime) for k in filelist_ if Path(k).is_file()]
-    #reslist = [k for k in filelist if k[0].is_file()]
+    reslist = [k for k in filelist_generator(args.path)]
     reslist.sort(key=lambda x: x[1], reverse=showold)
-    logger.debug(f'[done] f:{len(filelist_)} r:{len(reslist)}')
+    logger.debug(f'[done] r:{len(reslist)}')
 
     for file in reslist[-maxfiles:]:
         filetime = datetime.fromtimestamp(file[0].stat().st_ctime)
