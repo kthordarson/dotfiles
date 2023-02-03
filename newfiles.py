@@ -10,7 +10,15 @@ import glob
 
 def filelist_generator(path):
     # foo
-    filelist_ = [Path(k) for k in glob.glob(str(Path(path))+'/**',recursive=True, include_hidden=True)]
+    # filelist_ = [Path(k) for k in glob.glob(str(Path(path))+'/**',recursive=True, include_hidden=True)]
+    filelist_= []
+
+    for k in glob.glob(str(Path(path))+'/**',recursive=True, include_hidden=True):
+        try:
+            filelist_.append(Path(k))
+        except KeyboardInterrupt as e:
+            logger.error(e)
+    logger.debug(f'[flg] {len(filelist_)}')
     for k in filelist_:
         try:
             if Path(k).is_file() and not Path(k).is_symlink():

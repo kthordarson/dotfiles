@@ -40,14 +40,15 @@ def humanbytes(B):
 		return '{0:.0f} TB'.format(B / TB)
 
 def filelist_generator(path):
-    # foo
-    filelist_ = [Path(k) for k in glob.glob(str(Path(path))+'/**',recursive=True, include_hidden=True)]
-    for k in filelist_:
-        try:
-            if Path(k).is_file() and not Path(k).is_symlink():
-                yield((Path(k), k.stat().st_size))
-        except PermissionError as e:
-            logger.warning(f'[err] {e} k={k}')
+	# foo
+	filelist_ = [Path(k) for k in glob.glob(str(Path(path))+'/**',recursive=True, include_hidden=True)]
+	logger.debug(f'[flg] :{len(filelist_)}')
+	for k in filelist_:
+		try:
+			if Path(k).is_file() and not Path(k).is_symlink():
+				yield((Path(k), k.stat().st_size))
+		except PermissionError as e:
+			logger.warning(f'[err] {e} k={k}')
 
 
 if __name__ == '__main__':
