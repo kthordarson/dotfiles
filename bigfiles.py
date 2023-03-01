@@ -52,7 +52,7 @@ def filelist_generator(path):
 
 
 if __name__ == '__main__':
-	myparse = argparse.ArgumentParser(description="Find new files", exit_on_error=False)
+	myparse = argparse.ArgumentParser(description="Find new files")
 	_default = str(Path(myparse.prog).parent)
 	# myparse.add_argument('--path', metavar='path', type=str, help="Path to search", nargs='?', const='.', action='store_const')
 	myparse.add_argument('path', nargs='?', type=str, default=_default,	 metavar='input_path')
