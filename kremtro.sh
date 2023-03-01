@@ -14,14 +14,12 @@ export PATH=$PATH:~/.local/bin
 export PATH=$PATH:/usr/local/bin
 export PATH=$PATH:~/bin/
 export PATH=$PATH:~/.cargo/bin/
-export PATH=$PATH:/home/kth/randomgits/john/run/
 export PYGAME_HIDE_SUPPORT_PROMPT=true
 # rootinit
 alias sudo='sudo '
 alias mkdir='mkdir -pv'
 
-# john
-alias john='/home/kth/randomgits/john/run/john'
+alias john="~/development2/john/run/john"
 
 #basic
 alias kremer='vi /home/kth/dotfiles/kremtro.sh && source ~/.bashrc'
