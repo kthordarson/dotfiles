@@ -58,6 +58,7 @@ if __name__ == '__main__':
 	myparse.add_argument('path', nargs='?', type=str, default=_default,	 metavar='input_path')
 	myparse.add_argument('--maxfiles', metavar='maxfiles', type=int, help="Limit to x results", default=30)
 	myparse.add_argument('--excludes', help="use exclude list", action='store_true', default=False)
+	myparse.add_argument('-r','--reverse', help="reverse list", action='store_true', default=False, dest='reverselist')
 	args = myparse.parse_args()
 	if not args.excludes:
 		EXCLUDES = []
@@ -66,14 +67,15 @@ if __name__ == '__main__':
 	# filelist = []
 	# filelist = [Path(k) for k in glob.glob(str(Path(args.path))+'/**',recursive=True, include_hidden=True)]
 	reslist = [k for k in filelist_generator(args.path)]
-	reslist.sort(key=lambda x: x[1], reverse=False)
+	reslist.sort(key=lambda x: x[1], reverse=args.reverselist)
 	logger.debug(f'[done]  r:{len(reslist)}')
 	for file in reslist[-maxfiles:]:
 		fitem = Path(file[0])
 		parent = str(fitem.parent)
 		if parent == '.':
 			parent = ''
-		print(f'{humanbytes(file[1]):<5}  file: {parent}/{fitem.name[:30]:<30} ')
+		#print(f'{humanbytes(file[1]):<5}  file: {parent}/{fitem.name[:30]:<30} ')
+		print(f'{humanbytes(file[1]):<5}  file: {parent}/{fitem.name} ')
 	# if filelist:
 	# 	for k in filelist:
 	# 		try:
