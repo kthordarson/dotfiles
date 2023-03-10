@@ -89,11 +89,6 @@ def get_subfilecount(directory):
 		return 0
 	return filecount
 
-#def get_subfile_biggest(directory, maxfiles):
-#	filelist = [k for k in directory.glob('**/*') if k.is_file()]
-#	return
-
-
 def get_subdircount(directory):
 	dc = 0
 	try:
