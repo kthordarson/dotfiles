@@ -34,7 +34,7 @@ if __name__ == '__main__':
     myparse.add_argument('path', nargs='?', type=str, default=_default,	 metavar='input_path')
     #myparse.add_argument('--path', metavar='path', type=str, help="Path to search", default=".")
     myparse.add_argument('--maxfiles', metavar='maxfiles', type=int, help="Limit to x results", default=30)
-    myparse.add_argument('--old', help="Show oldest", action='store_true')
+    myparse.add_argument('--reverse','-r', help="reverse", action='store_true', dest='reverse', default=False)
     myparse.add_argument('--excludes', help="use exclude list", action='store_true', default=False)
     args = myparse.parse_args()
     if args.excludes:
@@ -42,13 +42,13 @@ if __name__ == '__main__':
     else:
         EXCLUDES = []
     maxfiles = args.maxfiles
-    if args.old:
-        showold = True
+    if args.reverse:
+        reverse = True
     else:
-        showold = False
+        reverse = False
     filelist = []
     reslist = [k for k in filelist_generator(args.path)]
-    reslist.sort(key=lambda x: x[1], reverse=showold)
+    reslist.sort(key=lambda x: x[1], reverse=args.reverse)
     logger.debug(f'[done] r:{len(reslist)}')
 
     for file in reslist[-maxfiles:]:
