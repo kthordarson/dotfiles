@@ -114,6 +114,7 @@ if __name__ == '__main__':
 	myparse.add_argument('--sort', metavar='sort', type=str, help="sort by size/files/dirs", default='size')
 	myparse.add_argument('--maxfiles', metavar='maxfiles', type=int, help="include X biggest file(s)", default='0')
 	myparse.add_argument('--excludes', help="use exclude list", action='store_true', default=False)
+	myparse.add_argument('-r','--reverse', help="reverse list", action='store_true', default=False, dest='reverselist')
 	args = myparse.parse_args()
 	if args.excludes:
 		EXCLUDES = ['.git', '__pycache__', '.idea', '.vscode', '.ipynb_checkpoints']
@@ -140,11 +141,11 @@ if __name__ == '__main__':
 	total_files = 0
 	total_dirs = 0
 	if args.sort == 'size':
-		sorteditems = sorted(itemlist, key=operator.attrgetter("totalsize"))
+		sorteditems = sorted(itemlist, key=operator.attrgetter("totalsize"), reverse=args.reverselist)
 	if args.sort == 'files':
-		sorteditems = sorted(itemlist, key=operator.attrgetter("subfilecount"))
+		sorteditems = sorted(itemlist, key=operator.attrgetter("subfilecount"), reverse=args.reverselist)
 	if args.sort == 'dirs':
-		sorteditems =  sorted(itemlist, key=operator.attrgetter("subdircount"))
+		sorteditems =  sorted(itemlist, key=operator.attrgetter("subdircount"), reverse=args.reverselist)
 	print(f'[size] {" "*5}[name]{" "*15}[items] [files] [folders]')
 	print(f'{"-"*60}')
 	for item in sorteditems:
