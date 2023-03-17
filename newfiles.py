@@ -8,7 +8,7 @@ from loguru import logger
 from datetime import datetime
 import glob
 
-def filelist_generator(path):
+def xfilelist_generator(path):
     # foo
     # filelist_ = [Path(k) for k in glob.glob(str(Path(path))+'/**',recursive=True, include_hidden=True)]
     filelist_= []
@@ -25,6 +25,28 @@ def filelist_generator(path):
                 yield((Path(k), k.stat().st_ctime))
         except PermissionError as e:
             logger.warning(f'[err] {e} k={k}')
+
+def filelist_generator(startpath):
+	# foo
+	#filelist_ = [Path(k) for k in glob.glob(str(Path(path))+'/**',recursive=True, include_hidden=True) if k not in EXCLUDES]
+	if startpath.endswith('/'):
+		startpath += '**'
+	else:
+		startpath += '/**'
+	startpath = Path(startpath)
+	filelist_ = [Path(k) for k in glob.glob(str(startpath),recursive=True, include_hidden=True)]
+	logger.debug(f'[flg] :{len(filelist_)}')
+	for file in filelist_:
+		try:
+			if Path(file).is_file() and not Path(file).is_symlink():
+				for p in file.parts:
+					if p in EXCLUDES:
+						break
+				else:
+					yield((Path(file), file.stat().st_size))
+		except PermissionError as e:
+			logger.warning(f'[err] {e} k={file}')
+
 
 
 if __name__ == '__main__':
