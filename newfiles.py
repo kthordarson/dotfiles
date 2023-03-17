@@ -71,9 +71,9 @@ if __name__ == '__main__':
     filelist = []
     reslist = [k for k in filelist_generator(args.path)]
     reslist.sort(key=lambda x: x[1], reverse=args.reverse)
-    logger.debug(f'[done] r:{len(reslist)}')
-
+    #logger.debug(f'[done] r:{len(reslist)}')
+    print(f'{"filetime":<27}{"age":<8}{"file":<20}')
     for file in reslist[-maxfiles:]:
         filetime = datetime.fromtimestamp(file[0].stat().st_ctime)
         age = datetime.now() - filetime
-        print(f'd:{filetime} a:{age.seconds} f:{str(file[0])}')
+        print(f'{filetime} {age.seconds:<8} {file[0]}')

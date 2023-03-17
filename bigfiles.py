@@ -78,14 +78,15 @@ if __name__ == '__main__':
 	# filelist = [Path(k) for k in glob.glob(str(Path(args.path))+'/**',recursive=True, include_hidden=True)]
 	reslist = [k for k in filelist_generator(args.path)]
 	reslist.sort(key=lambda x: x[1], reverse=args.reverselist)
-	logger.debug(f'[done]  r:{len(reslist)}')
+	#logger.debug(f'[done]  r:{len(reslist)}')
+	print(f'{"size":<15} {"path":<30}')
 	for file in reslist[-maxfiles:]:
 		fitem = Path(file[0])
 		parent = str(fitem.parent)
 		if parent == '.':
 			parent = ''
 		#print(f'{humanbytes(file[1]):<5}  file: {parent}/{fitem.name[:30]:<30} ')
-		print(f'{humanbytes(file[1]):<5}  file: {parent}/{fitem.name} ')
+		print(f'{humanbytes(file[1]):<15} {parent}/{fitem.name} ')
 	# if filelist:
 	# 	for k in filelist:
 	# 		try:
