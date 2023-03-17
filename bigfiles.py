@@ -39,16 +39,26 @@ def humanbytes(B):
 	elif TB <= B:
 		return '{0:.0f} TB'.format(B / TB)
 
-def filelist_generator(path):
+def filelist_generator(startpath):
 	# foo
-	filelist_ = [Path(k) for k in glob.glob(str(Path(path))+'/**',recursive=True, include_hidden=True)]
+	#filelist_ = [Path(k) for k in glob.glob(str(Path(path))+'/**',recursive=True, include_hidden=True) if k not in EXCLUDES]
+	if startpath.endswith('/'):
+		startpath += '**'
+	else:
+		startpath += '/**'
+	startpath = Path(startpath)
+	filelist_ = [Path(k) for k in glob.glob(str(startpath),recursive=True, include_hidden=True)]
 	logger.debug(f'[flg] :{len(filelist_)}')
-	for k in filelist_:
+	for file in filelist_:
 		try:
-			if Path(k).is_file() and not Path(k).is_symlink():
-				yield((Path(k), k.stat().st_size))
+			if Path(file).is_file() and not Path(file).is_symlink():
+				for p in file.parts:
+					if p in EXCLUDES:
+						break
+				else:
+					yield((Path(file), file.stat().st_size))
 		except PermissionError as e:
-			logger.warning(f'[err] {e} k={k}')
+			logger.warning(f'[err] {e} k={file}')
 
 
 if __name__ == '__main__':
@@ -56,7 +66,7 @@ if __name__ == '__main__':
 	_default = str(Path(myparse.prog).parent)
 	# myparse.add_argument('--path', metavar='path', type=str, help="Path to search", nargs='?', const='.', action='store_const')
 	myparse.add_argument('path', nargs='?', type=str, default=_default,	 metavar='input_path')
-	myparse.add_argument('--maxfiles', metavar='maxfiles', type=int, help="Limit to x results", default=30)
+	myparse.add_argument('-m','--maxfiles', metavar='maxfiles', type=int, help="Limit to x results", default=30)
 	myparse.add_argument('--excludes', help="use exclude list", action='store_true', default=False)
 	myparse.add_argument('-r','--reverse', help="reverse list", action='store_true', default=False, dest='reverselist')
 	args = myparse.parse_args()
