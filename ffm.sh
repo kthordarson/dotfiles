@@ -1,3 +1,4 @@
+#!/bin/bash
 #ffmpeg aliases v1.0
 #ffmpeg -framerate 12 -f image2   -pix_fmt yuv420p -i <dirin>/image-%08d.jpg <out>.mp4
 #ffmpeg -r 1 -i <filein>.mp4 -r 1 "<outdir>/image-%08d.jpg"

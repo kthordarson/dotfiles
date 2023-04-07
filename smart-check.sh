@@ -65,7 +65,7 @@ function smartcheck()
 	# Obtain the serial
 
         smartoutput=$(sudo smartctl -v 1,raw48:54 -v 7,raw48:54 -v 195,raw48:54 -a $1)
-        serial=`echo "$smartoutput" | egrep "Serial Number:|Serial number:" | grep -v "\[No" | awk '{print $3}'`
+        serial=$(echo "$smartoutput" | egrep "Serial Number:|Serial number:" | grep -v "\[No" | awk '{print $3}')
 	if [[ "${SERIALS[@]}" =~ "${serial}" ]] &&  [ ${serial} ]; then
 		# we've seen this serial before from another device
 		return 0;

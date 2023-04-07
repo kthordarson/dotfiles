@@ -1,3 +1,4 @@
+#!/bin/bash
 function whileloop
 {
 number=1

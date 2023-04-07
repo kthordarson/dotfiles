@@ -1,3 +1,6 @@
+# nmap
+sudo setcap cap_net_raw,cap_net_admin,cap_net_bind_service+eip /usr/local/bin/nmap
+
 # ping arp
 for ip in $(arp -an | sed  's/(//' | sed 's/)//' | awk '{print $2}'); do ping -c 3 $ip;done
 

@@ -1,3 +1,4 @@
+#!/bin/bash
 cd ~
 git clone https://github.com/ReFirmLabs/binwalk.git
 cd binwalk

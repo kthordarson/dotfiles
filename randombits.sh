@@ -1,3 +1,4 @@
+#!/bin/bash
 sudo systemctl disable cups.socket cups.path cups.service
 sudo systemctl kill --signal=SIGKILL cups.service
 sudo systemctl stop cups.socket cups.path

@@ -1,3 +1,4 @@
+#!/bin/bash
 # source: https://github.com/ibraheemdev/modern-unix
 mkdir ~/apps_dl/
 # https://github.com/sharkdp/bat

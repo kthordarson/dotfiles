@@ -40,7 +40,9 @@ fi
 alias ll="lsd -la"
 #alias ll="ls -lah"
 alias llr="ll -tr"
-
+function llw() {
+  ls -al "$(which $1)"
+}
 #show only folders
 # alias lsd="ls -lF ${colorflag} | grep '^d'"
 #alias tree="find . -print | sed -e 's;[^/]*/;|____;g;s;____|; |;g'"
