@@ -49,7 +49,7 @@ def filelist_generator(startpath, EXCLUDES):
 	else:
 		startpath += '/**'
 	# startpath = Path(startpath)
-	filelist_ = [FileItem(Path(k)) for k in glob.glob(startpath,recursive=True, include_hidden=True)]
+	filelist_ = [FileItem(Path(k)) for k in glob.glob(startpath,recursive=True, include_hidden=True) if not Path(k).is_symlink()]
 	logger.debug(f'[flg] :{len(filelist_)}')
 	for file in filelist_:
 		skipfile = False
@@ -59,7 +59,7 @@ def filelist_generator(startpath, EXCLUDES):
 				skipfile = True
 		if not skipfile:
 			try:
-				if Path(file).is_file() and not Path(file).is_symlink():
+				if Path(file).is_file():
 					yield (FileItem(file))
 					#yield((Path(file), Path(file).stat().st_size, Path(file).stat().st_ctime))
 			except PermissionError as e:
