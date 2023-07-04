@@ -268,3 +268,11 @@ awk '{
 }
 
 alias dupeguru='/usr/bin/python ~/development2/dupeguru/run.py'
+alias ogr='open $(git remote get-url origin)'
+
+# gitfoo
+
+# open remote url
+alias ogr='open $(git remote get-url origin)'
+# print remote url
+alias pgr='echo $(git remote get-url origin)'
