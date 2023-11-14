@@ -25,6 +25,9 @@ class FileItem:
 			self.size = self.name.stat().st_size
 		except AttributeError as e:
 			logger.error(f'[err] {e} file: {self.filename}')
+		except FileNotFoundError as e:
+			logger.warning(f'[err] {e} file: {self.filename}')
+			return
 		self.st_atime = self.name.stat().st_atime
 		self.st_mtime = self.name.stat().st_mtime
 		self.st_ctime = self.name.stat().st_ctime
@@ -44,12 +47,10 @@ def get_size_format(b, factor=1024, suffix="B"):
 def filelist_generator(startpath, EXCLUDES):
 	# foo
 	#filelist_ = [Path(k) for k in glob.glob(str(Path(path))+'/**',recursive=True, include_hidden=True) if k not in EXCLUDES]
-	if startpath.endswith('/'):
-		startpath += '**'
-	else:
-		startpath += '/**'
 	# startpath = Path(startpath)
-	filelist_ = [FileItem(Path(k)) for k in glob.glob(startpath,recursive=True, include_hidden=True) if not Path(k).is_symlink()]
+	# filelist_ = [FileItem(Path(k)) for k in glob.glob(startpath,recursive=True, include_hidden=True) if not Path(k).is_symlink()]
+	startpath = Path(startpath)
+	filelist_ = [k for k in startpath.rglob('*')]
 	logger.debug(f'[flg] :{len(filelist_)}')
 	for file in filelist_:
 		skipfile = False
@@ -130,10 +131,6 @@ if __name__ == '__main__':
 		reverse = False
 	filelist = []
 	#reslist = [k for k in filelist_generator(args.path)]
-	if args.path.endswith('/'):
-		startpath = args.path + '**'
-	else:
-		startpath = args.path + '/**'
 	filelist = [k for k in filelist_generator(args.path, EXCLUDES)]
 	#filelist = [FileItem(Path(k)) for k in glob.glob(startpath,recursive=True, include_hidden=True)]
 	printlist(filelist, args)

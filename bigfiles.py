@@ -42,12 +42,9 @@ def humanbytes(B):
 def filelist_generator(startpath):
 	# foo
 	#filelist_ = [Path(k) for k in glob.glob(str(Path(path))+'/**',recursive=True, include_hidden=True) if k not in EXCLUDES]
-	if startpath.endswith('/'):
-		startpath += '**'
-	else:
-		startpath += '/**'
 	startpath = Path(startpath)
-	filelist_ = [Path(k) for k in glob.glob(str(startpath),recursive=True, include_hidden=True)]
+	# filelist_ = [Path(k) for k in glob.glob(str(startpath),recursive=True, include_hidden=True)]
+	filelist_ = [k for k in startpath.rglob('*')]
 	logger.debug(f'[flg] :{len(filelist_)}')
 	for file in filelist_:
 		try:
@@ -62,12 +59,12 @@ def filelist_generator(startpath):
 
 
 if __name__ == '__main__':
-	myparse = argparse.ArgumentParser(description="Find new files")
+	myparse = argparse.ArgumentParser(description="Find big files")
 	_default = str(Path(myparse.prog).parent)
 	# myparse.add_argument('--path', metavar='path', type=str, help="Path to search", nargs='?', const='.', action='store_const')
 	myparse.add_argument('path', nargs='?', type=str, default=_default,	 metavar='input_path')
 	myparse.add_argument('-m','--maxfiles', metavar='maxfiles', type=int, help="Limit to x results", default=30)
-	myparse.add_argument('--excludes', help="use exclude list", action='store_true', default=False)
+	myparse.add_argument('-e', '--excludes', help="use exclude list", action='store_true', default=False)
 	myparse.add_argument('-r','--reverse', help="reverse list", action='store_true', default=False, dest='reverselist')
 	args = myparse.parse_args()
 	if not args.excludes:

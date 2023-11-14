@@ -37,7 +37,7 @@ fi
 
 
 #unalias ll
-alias ll="lsd -la"
+alias ll="ls -la"
 #alias ll="ls -lah"
 alias llr="ll -tr"
 function llw() {
