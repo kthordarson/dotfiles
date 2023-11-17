@@ -86,7 +86,8 @@ alias portss="sudo ss -tulpn4 | grep LISTEN"
 
 alias allips="ifconfig -a | grep -o 'inet6\? \(addr:\)\?\s\?\(\(\([0-9]\+\.\)\{3\}[0-9]\+\)\|[a-fA-F0-9:]\+\)' | awk '{ sub(/inet6? (addr:)? ?/, \"\"); print }' | sort | uniq"
 #show external ip address
-alias ipad="dig +short myip.opendns.com @resolver1.opendns.com"
+# alias ipad="dig +short myip.opendns.com @resolver1.opendns.com"
+alias ipad="curl https://ipinfo.io/ip"
 #alias port4='netstat -an | grep ESTABLISHED | awk '{print $5}' | awk -F: '{print (}' | sort | uniq -c | awk '{ printf("%s\t%s\t",[,() ; for (i = 0; i < (; i++) {printf("*")}; print "" }'))])'
 alias arpdump="arp -avn  | grep -vE 'incomplete|Entries' | awk '{print $4}'"
 
