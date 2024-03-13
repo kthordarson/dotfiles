@@ -1,3 +1,9 @@
+# find print file size
+find /home/kth/temp/gta/ -type f -name *.exe -exec ls -lh "{}" \;
+
+# awk find grep print filename
+find ~/temp/gta/ -type f -name '*.pdf*'  | sort | uniq | awk -F"/" '{print $NF}'
+
 # nmap
 sudo setcap cap_net_raw,cap_net_admin,cap_net_bind_service+eip /usr/local/bin/nmap
 

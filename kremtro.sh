@@ -41,7 +41,12 @@ alias ll="ls -la"
 #alias ll="ls -lah"
 alias llr="ll -tr"
 function llw() {
-  ls -al "$(which $1)"
+  filename=$(ls  "$(which $1)")
+  filetype=$(file $filename)
+  echo "$filename $filetype"
+}
+function llwf() {
+  file $(llw $1 | awk '{print $9}')
 }
 #show only folders
 # alias lsd="ls -lF ${colorflag} | grep '^d'"
@@ -277,3 +282,10 @@ alias ogr='open $(git remote get-url origin)'
 alias ogr='open $(git remote get-url origin)'
 # print remote url
 alias pgr='echo $(git remote get-url origin)'
+
+function setpowermode() {
+    echo performance | sudo tee /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
+}
+
+
+alias pips='pip_search -s released '
