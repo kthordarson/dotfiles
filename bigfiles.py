@@ -68,7 +68,7 @@ if __name__ == '__main__':
 	myparse.add_argument('-r','--reverse', help="reverse list", action='store_true', default=False, dest='reverselist')
 	args = myparse.parse_args()
 	if not args.excludes:
-		EXCLUDES = []
+		pass #EXCLUDES = []
 	maxfiles = args.maxfiles
 	#input_path = args.path
 	# filelist = []

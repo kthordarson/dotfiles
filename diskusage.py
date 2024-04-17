@@ -8,6 +8,8 @@ from glob import glob
 from dataclasses import dataclass, field
 import operator
 
+EXCLUDES = ['.git', '__pycache__', '.idea', '.vscode', '.ipynb_checkpoints']
+
 @dataclass(order=True, frozen=False)
 class FileItem:
 	sort_index: int = field(init=False, repr=False)
@@ -117,9 +119,9 @@ if __name__ == '__main__':
 	myparse.add_argument('-r','--reverse', help="reverse list", action='store_true', default=False, dest='reverselist')
 	args = myparse.parse_args()
 	if args.excludes:
-		EXCLUDES = ['.git', '__pycache__', '.idea', '.vscode', '.ipynb_checkpoints']
+		pass # EXCLUDES = ['.git', '__pycache__', '.idea', '.vscode', '.ipynb_checkpoints']
 	else:
-		EXCLUDES = []
+		pass # EXCLUDES = []
 	input_path = Path(args.path)
 	limit = args.number
 	getbigfiles = False

@@ -7,4 +7,5 @@ sudo systemctl stop cups-browsed
 sudo systemctl disable avahi-daemon.socket avahi-daemon.service
 sudo systemctl stop avahi-daemon.socket avahi-daemon.service
 
-
+#wifi fix
+sudo apt purge backport-iwlwifi-dkms
