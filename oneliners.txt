@@ -1,3 +1,6 @@
+# find gits and pull
+for gitdir in $(find . -maxdepth 2 -type d -name .git); do cd $gitdir; cd ..;remoteurl=$(git remote get-url --all origin); echo "in folder $(pwd) giturl: $remoteurl";git pull;   cd;done;
+
 # find print file size
 find /home/kth/temp/gta/ -type f -name *.exe -exec ls -lh "{}" \;
 
