@@ -108,17 +108,23 @@ if __name__ == '__main__':
 		print(f'{Fore.RED} usrpack Error:{Fore.LIGHTRED_EX} {p}{Style.RESET_ALL}')
 	for p in lp_errors:
 		print(f'{Fore.RED}localpack Error:{Fore.LIGHTRED_EX} {p}{Style.RESET_ALL}')
+	usr_outdated = []
+	local_outdated = []
 	for pack in usrnames:
 		installed_version = get_installed_version(pack)
 		latest_version = get_latest_version_cache(pack, validusrpacks)
 		if installed_version != latest_version:
+			usr_outdated.append({'pack': pack, 'installed_version': installed_version, 'latest_version': latest_version, 'location': 'usr'})
 			print(f'{Fore.BLUE}usrpacks{Fore.CYAN} Name: {pack} localversion: {Fore.RED} {installed_version} {Fore.BLUE} latestversion: {Fore.LIGHTGREEN_EX} {latest_version}{Style.RESET_ALL}')
 		else:
 			print(f'{Fore.BLUE}usrpacks{Fore.CYAN} Name: {pack} localversion: {Fore.GREEN} {installed_version} {Fore.BLUE} latestversion: {Fore.LIGHTGREEN_EX} {latest_version}{Style.RESET_ALL}')
+	print(f'{Fore.RED}usrpacks usr_outdated:{Fore.LIGHTRED_EX} {len(usr_outdated)} {Style.RESET_ALL}')
 	for pack in localnames:
 		installed_version = get_installed_version(pack)
 		latest_version = get_latest_version_cache(pack, validlocalpackjson)
 		if installed_version != latest_version:
+			local_outdated.append({'pack': pack, 'installed_version': installed_version, 'latest_version': latest_version, 'location': 'home'})
 			print(f'{Fore.BLUE}localpacks{Fore.CYAN} Name: {pack} localversion: {Fore.RED} {installed_version} {Fore.BLUE} latestversion: {Fore.LIGHTGREEN_EX} {latest_version}{Style.RESET_ALL}')
 		else:
 			print(f'{Fore.BLUE}localpacks{Fore.CYAN} Name: {pack} localversion: {Fore.GREEN} {installed_version} {Fore.BLUE} latestversion: {Fore.LIGHTGREEN_EX} {latest_version}{Style.RESET_ALL}')
+	print(f'{Fore.RED}usr_outdated:{Fore.LIGHTRED_EX} {len(usr_outdated)} {Fore.RED}local_outdated:{Fore.LIGHTRED_EX} {len(local_outdated)} {Style.RESET_ALL}')
