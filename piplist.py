@@ -7,6 +7,8 @@ import importlib_metadata
 import xmlrpc.client
 from loguru import logger
 import time
+from colorama import Fore, Back, Style
+
 def get_modules():
 	allpacks = [k for k in set([k for k in importlib_metadata.entry_points() ])]
 	usrpacks = [k for k in set([k for k in importlib_metadata.entry_points() if str(k.dist._path).startswith('/usr')])]
@@ -92,35 +94,31 @@ if __name__ == '__main__':
 	dupe_packs = [k for k in usrpacks if k.dist.name in localnames]
 	usrpacklinks = [make_json_link(k) for k in usrnames]
 	lockalpacklinks = [make_json_link(k) for k in localnames]
-	logger.info(f'total: {len(usrnames) + len(localnames)} / {len(usrpacks)+len(localpacks)} allpacks={len(allpacks)} usr: {len(usrpacks)} local: {len(localpacks)} dupe: {len(dupe_packs)} usrpacklinks: {len(usrpacklinks)} localpacklinks: {len(lockalpacklinks)}')
-	logger.debug(f'downloading usrpackjson')
+	print(f'{Fore.LIGHTBLUE_EX}total:{Fore.CYAN} {len(usrnames) + len(localnames)} / {len(usrpacks)+len(localpacks)} {Fore.LIGHTBLUE_EX}allpacks={Fore.CYAN}{len(allpacks)} {Fore.LIGHTBLUE_EX}usr:{Fore.CYAN} {len(usrpacks)} {Fore.LIGHTBLUE_EX}local:{Fore.CYAN} {len(localpacks)} {Fore.LIGHTBLUE_EX}dupe:{Fore.CYAN} {len(dupe_packs)} {Fore.LIGHTBLUE_EX}usrpacklinks:{Fore.CYAN} {len(usrpacklinks)} {Fore.LIGHTBLUE_EX}localpacklinks:{Fore.CYAN} {len(lockalpacklinks)}{Style.RESET_ALL}')
 	usrpackinfojson = [get_pypi_json(k) for k in usrpacklinks ]
 	validusrpacks = [k for k in usrpackinfojson if len(k.keys())==5]
 	up_errors = [k for k in usrpackinfojson if 'error' in k.keys()]
 
-	logger.debug(f'downloading localpackjson')
 	localpackjson = [get_pypi_json(k) for k in lockalpacklinks]
 	lp_errors = [k for k in localpackjson if 'error' in k.keys()]
 	validlocalpackjson = [k for k in localpackjson if len(k.keys())==5]
 
-	logger.info(f'usrpackinfojson: {len(usrpackinfojson)} errors: {len(up_errors)} localpackjson: {len(localpackjson)} errors: {len(lp_errors)}')
+	print(f'{Fore.BLUE}usrpackinfojson: {Fore.CYAN}{len(usrpackinfojson)} {Fore.RED}errors:{Fore.LIGHTRED_EX} {len(up_errors)} {Fore.BLUE} localpackjson: {Fore.CYAN} {len(localpackjson)} {Fore.RED}errors: {Fore.LIGHTRED_EX} {len(lp_errors)} {Style.RESET_ALL}')
 	for p in up_errors:
-		logger.warning(f'usrpack Error: {p}')
+		print(f'{Fore.RED} usrpack Error:{Fore.LIGHTRED_EX} {p}{Style.RESET_ALL}')
 	for p in lp_errors:
-		logger.warning(f'localpack Error: {p}')
-	logger.info(f'checking usrpacks')
+		print(f'{Fore.RED}localpack Error:{Fore.LIGHTRED_EX} {p}{Style.RESET_ALL}')
 	for pack in usrnames:
 		installed_version = get_installed_version(pack)
 		latest_version = get_latest_version_cache(pack, validusrpacks)
 		if installed_version != latest_version:
-			logger.warning(f'Name: {pack} localversion: {installed_version} latestversion: {latest_version}')
+			print(f'{Fore.BLUE}usrpacks{Fore.CYAN} Name: {pack} localversion: {Fore.RED} {installed_version} {Fore.BLUE} latestversion: {Fore.LIGHTGREEN_EX} {latest_version}{Style.RESET_ALL}')
 		else:
-			logger.info(f'Name: {pack} localversion: {installed_version} latestversion: {latest_version}')
-	logger.info(f'checking localpacks')
+			print(f'{Fore.BLUE}usrpacks{Fore.CYAN} Name: {pack} localversion: {Fore.GREEN} {installed_version} {Fore.BLUE} latestversion: {Fore.LIGHTGREEN_EX} {latest_version}{Style.RESET_ALL}')
 	for pack in localnames:
 		installed_version = get_installed_version(pack)
 		latest_version = get_latest_version_cache(pack, validlocalpackjson)
 		if installed_version != latest_version:
-			logger.warning(f'Name: {pack} localversion: {installed_version} latestversion: {latest_version}')
+			print(f'{Fore.BLUE}localpacks{Fore.CYAN} Name: {pack} localversion: {Fore.RED} {installed_version} {Fore.BLUE} latestversion: {Fore.LIGHTGREEN_EX} {latest_version}{Style.RESET_ALL}')
 		else:
-			logger.info(f'Name: {pack} localversion: {installed_version} latestversion: {latest_version}')
+			print(f'{Fore.BLUE}localpacks{Fore.CYAN} Name: {pack} localversion: {Fore.GREEN} {installed_version} {Fore.BLUE} latestversion: {Fore.LIGHTGREEN_EX} {latest_version}{Style.RESET_ALL}')
