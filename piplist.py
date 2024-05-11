@@ -38,7 +38,7 @@ def get_pypi_json(module):
 	else:
 		logger.error(f'moduleerror {module["modulename"]} {url} response: {r.status_code}')
 		jsondata = {'error': f'{r.status_code} Error','url': url, 'module': module['modulename']}
-	time.sleep(0.2) # sleep for 200ms for rate limiting
+	#time.sleep(0.2) # sleep for 200ms for rate limiting
 	return jsondata
 
 def get_installed_version(packname):
@@ -67,6 +67,7 @@ def get_latest_version_online(packname):
 
 def get_latest_version_cache(packname, cachedata):
 	latest_version = '0.0.0'
+	jsoninfo = {}
 	try:
 		jsoninfo = [k for k in cachedata if k.get('info').get('name') == packname][0]
 	except Exception as e:
@@ -92,11 +93,12 @@ if __name__ == '__main__':
 	usrpacklinks = [make_json_link(k) for k in usrnames]
 	lockalpacklinks = [make_json_link(k) for k in localnames]
 	logger.info(f'total: {len(usrnames) + len(localnames)} / {len(usrpacks)+len(localpacks)} allpacks={len(allpacks)} usr: {len(usrpacks)} local: {len(localpacks)} dupe: {len(dupe_packs)} usrpacklinks: {len(usrpacklinks)} localpacklinks: {len(lockalpacklinks)}')
-
+	logger.debug(f'downloading usrpackjson')
 	usrpackinfojson = [get_pypi_json(k) for k in usrpacklinks ]
 	validusrpacks = [k for k in usrpackinfojson if len(k.keys())==5]
 	up_errors = [k for k in usrpackinfojson if 'error' in k.keys()]
 
+	logger.debug(f'downloading localpackjson')
 	localpackjson = [get_pypi_json(k) for k in lockalpacklinks]
 	lp_errors = [k for k in localpackjson if 'error' in k.keys()]
 	validlocalpackjson = [k for k in localpackjson if len(k.keys())==5]
@@ -109,10 +111,16 @@ if __name__ == '__main__':
 	logger.info(f'checking usrpacks')
 	for pack in usrnames:
 		installed_version = get_installed_version(pack)
-		latest_version = get_latest_version_cache(pack, usrpackinfojson)
-		logger.info(f'Name: {pack} localversion: {installed_version} latestversion: {latest_version}')
+		latest_version = get_latest_version_cache(pack, validusrpacks)
+		if installed_version != latest_version:
+			logger.warning(f'Name: {pack} localversion: {installed_version} latestversion: {latest_version}')
+		else:
+			logger.info(f'Name: {pack} localversion: {installed_version} latestversion: {latest_version}')
 	logger.info(f'checking localpacks')
 	for pack in localnames:
 		installed_version = get_installed_version(pack)
-		latest_version = get_latest_version_cache(pack, localpackjson)
-		logger.info(f'Name: {pack} localversion: {installed_version} latestversion: {latest_version}')
+		latest_version = get_latest_version_cache(pack, validlocalpackjson)
+		if installed_version != latest_version:
+			logger.warning(f'Name: {pack} localversion: {installed_version} latestversion: {latest_version}')
+		else:
+			logger.info(f'Name: {pack} localversion: {installed_version} latestversion: {latest_version}')
