@@ -8,6 +8,9 @@ import importlib_metadata
 from loguru import logger
 import time
 from colorama import Fore, Back, Style
+from pathlib import Path
+import glob
+
 
 def get_modules():
 	usrpacks = []
@@ -111,20 +114,7 @@ def get_latest_version_cache(packname, cachedata):
 		latest_version = 'Error: No info in jsoninfo'
 	return latest_version
 
-if __name__ == '__main__':
-	argparser = argparse.ArgumentParser(description='Check installed packages against pypi')
-	argparser.add_argument('-v', '--verbose', help='verbose output', action='store_true', default=False, dest='verbose')
-	argparser.add_argument('--config',action='store', default='piplist.json', dest='config', type=str, help='config file with module paths to search in')
-	argparser.add_argument('--count', action='store_true', default=False, dest='count', help='count installed modules')
-	argparser.add_argument('--update-check', action='store_true', default=False, dest='update', help='check for updates')
-	args = argparser.parse_args()
-	if args.count:
-		allpacks, usrpacks, localpacks = get_modules()
-		print(f'{Fore.LIGHTBLUE_EX}total:{Fore.CYAN} {len(usrpacks)+len(localpacks)} {Fore.LIGHTBLUE_EX}usr:{Fore.CYAN} {len(usrpacks)} {Fore.LIGHTBLUE_EX}local:{Fore.CYAN} {len(localpacks)}{Style.RESET_ALL}')
-		sys.exit(0)
-	if args.update:
-		allpacks, usrpacks, localpacks = get_modules()
-		all_installed_names = [k for k in set(k.dist.name for k in allpacks)]
+def update_check(allpacks, usrpacks, localpacks):
 		usrnames = [k for k in set([k.dist.name for k in usrpacks])]
 		localnames = [k for k in set([k.dist.name for k in localpacks])]
 		dupe_packs = [k for k in usrpacks if k.dist.name in localnames]
@@ -176,3 +166,42 @@ if __name__ == '__main__':
 			else:
 				print(f'{Fore.BLUE}localpacks{Fore.CYAN} Name: {pack} localversion: {Fore.GREEN} {installed_version} {Fore.BLUE} latestversion: {Fore.LIGHTGREEN_EX} {latest_version}{Style.RESET_ALL}')
 		print(f'{Fore.RED}usr_outdated:{Fore.LIGHTRED_EX} {len(usr_outdated)} {Fore.RED}local_outdated:{Fore.LIGHTRED_EX} {len(local_outdated)} {Style.RESET_ALL}')
+
+def check_folders(allpacks, usrpacks, localpacks):
+	search_paths = [k for k in sys.path if Path(k).exists() and Path(k).is_dir() and k != '']
+	found_folders = []
+	for idx,p in enumerate(search_paths):
+		print(f'{Fore.LIGHTBLUE_EX}Searching:{Fore.BLUE}{p}{Style.RESET_ALL}')
+		for sub_path in Path(p).glob('*'):
+			if 'dist-info' in str(sub_path):
+				break
+			elif sub_path.exists() and sub_path.is_dir():
+				found_folders.append(sub_path)
+				print(f'{Fore.LIGHTBLUE_EX}[{idx}/{len(search_paths)}] {Fore.CYAN}{sub_path}{Style.RESET_ALL}')
+
+if __name__ == '__main__':
+	argparser = argparse.ArgumentParser(description='Check installed packages against pypi')
+	argparser.add_argument('-v', '--verbose', help='verbose output', action='store_true', default=False, dest='verbose')
+	argparser.add_argument('--config',action='store', default='piplist.json', dest='config', type=str, help='config file with module paths to search in')
+	argparser.add_argument('--count', action='store_true', default=False, dest='count', help='count installed modules')
+	argparser.add_argument('--update-check', action='store_true', default=False, dest='update', help='check for updates')
+	argparser.add_argument('--check-folders', action='store_true', default=False, dest='update', help='search for modules in folders (including orphan folders without dist-info)')
+	args = argparser.parse_args()
+	allpacks, usrpacks, localpacks = get_modules()
+	if args.count:
+		print(f'{Fore.LIGHTBLUE_EX}total:{Fore.CYAN} {len(usrpacks)+len(localpacks)} {Fore.LIGHTBLUE_EX}usr:{Fore.CYAN} {len(usrpacks)} {Fore.LIGHTBLUE_EX}local:{Fore.CYAN} {len(localpacks)}{Style.RESET_ALL}')
+		sys.exit(0)
+	elif args.update:
+		print(f'{Fore.LIGHTBLUE_EX}Starting update check{Style.RESET_ALL}')
+		try:
+			update_check(allpacks, usrpacks, localpacks)
+		except Exception as e:
+			logger.error(f'unhandled exception: {e} {type(e)}')
+		sys.exit(0)
+	elif args.check_folders:
+		print(f'{Fore.LIGHTBLUE_EX}Checking folders{Style.RESET_ALL}')
+		try:
+			check_folders(allpacks, usrpacks, localpacks)
+		except Exception as e:
+			logger.error(f'unhandled exception: {e} {type(e)}')
+		sys.exit(0)

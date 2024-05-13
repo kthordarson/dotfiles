@@ -74,7 +74,7 @@ def get_directory_size(directory):
 			elif entry.is_dir():
 				try:
 					total += get_directory_size(entry.path)
-				except FileNotFoundError:
+				except FileNotFoundError as e:
 					print(f'[err] dir:{directory} {e}')
 	except NotADirectoryError:
 		return os.path.getsize(directory)
