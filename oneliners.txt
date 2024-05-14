@@ -116,3 +116,9 @@ git diff --no-index dir2/ dir2/
 # bluetooth mouse fix
 sudo modprobe uhid
 
+# Print all columns:
+awk '{print $0}' somefile
+# Print all but the first column:
+awk '{$1=""; print $0}' somefile
+# Print all but the first two columns:
+awk '{$1=$2=""; print $0}' somefile
