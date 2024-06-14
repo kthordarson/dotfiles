@@ -1,3 +1,4 @@
+import asyncio
 import os
 import sys
 import argparse
@@ -179,14 +180,7 @@ def check_folders(allpacks, usrpacks, localpacks):
 				found_folders.append(sub_path)
 				print(f'{Fore.LIGHTBLUE_EX}[{idx}/{len(search_paths)}] {Fore.CYAN}{sub_path}{Style.RESET_ALL}')
 
-if __name__ == '__main__':
-	argparser = argparse.ArgumentParser(description='Check installed packages against pypi')
-	argparser.add_argument('-v', '--verbose', help='verbose output', action='store_true', default=False, dest='verbose')
-	argparser.add_argument('--config',action='store', default='piplist.json', dest='config', type=str, help='config file with module paths to search in')
-	argparser.add_argument('--count', action='store_true', default=False, dest='count', help='count installed modules')
-	argparser.add_argument('--update-check', action='store_true', default=False, dest='update', help='check for updates')
-	argparser.add_argument('--check-folders', action='store_true', default=False, dest='update', help='search for modules in folders (including orphan folders without dist-info)')
-	args = argparser.parse_args()
+async def main(args):
 	allpacks, usrpacks, localpacks = get_modules()
 	if args.count:
 		print(f'{Fore.LIGHTBLUE_EX}total:{Fore.CYAN} {len(usrpacks)+len(localpacks)} {Fore.LIGHTBLUE_EX}usr:{Fore.CYAN} {len(usrpacks)} {Fore.LIGHTBLUE_EX}local:{Fore.CYAN} {len(localpacks)}{Style.RESET_ALL}')
@@ -205,3 +199,13 @@ if __name__ == '__main__':
 		except Exception as e:
 			logger.error(f'unhandled exception: {e} {type(e)}')
 		sys.exit(0)
+
+if __name__ == '__main__':
+	argparser = argparse.ArgumentParser(description='Check installed packages against pypi')
+	argparser.add_argument('-v', '--verbose', help='verbose output', action='store_true', default=False, dest='verbose')
+	argparser.add_argument('--config',action='store', default='piplist.json', dest='config', type=str, help='config file with module paths to search in')
+	argparser.add_argument('--count', action='store_true', default=False, dest='count', help='count installed modules')
+	argparser.add_argument('--update-check', action='store_true', default=False, dest='update', help='check for updates')
+	argparser.add_argument('--check-folders', action='store_true', default=False, dest='update', help='search for modules in folders (including orphan folders without dist-info)')
+	args = argparser.parse_args()
+	asyncio.run(main(args))

@@ -1,8 +1,16 @@
+# Recursively find and replace in files
+find . -type f -name "*.txt" -print0 | xargs -0 sed -i '' -e 's/foo/bar/g'
+
+# get filesize by extension
+{ find $(pwd) -type f -name "*.pack" -printf "%s+"; echo 0;} | bc
+
 # grep ipaddress regex
 cat links3ips.txt | grep -E '(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)' -o > links3onlyips.txt
 
 # find gits and pull
 for gitdir in $(find . -maxdepth 2 -type d -name .git); do cd $gitdir; cd ..;remoteurl=$(git remote get-url --all origin); echo "in folder $(pwd) giturl: $remoteurl";git pull;   cd;done;
+for gitdir in $(find . -maxdepth 2 -type d -name .git); do olddir=$(pwd); cd $gitdir; cd ..;remoteurl=$(git remote get-url --all origin); echo "in folder $(pwd) giturl: $remoteurl";git pull;   cd $olddir ;done;
+for gitdir in $(find . -maxdepth 2 -type d -name .git); do pushd $(pwd); cd $gitdir; cd ..;remoteurl=$(git remote get-url --all origin); echo "in folder $(pwd) giturl: $remoteurl";git pull;   popd ;done;
 
 # find print file size
 find /home/kth/temp/gta/ -type f -name *.exe -exec ls -lh "{}" \;

@@ -67,8 +67,10 @@ def get_directory_size(directory):
 	total = 0
 	try:
 		for entry in os.scandir(directory):
-			if entry.is_symlink():
-				break
+			if Path(entry).is_symlink():
+				if Path(entry).is_file():
+					print(f'[!] {entry.name} is symlink to {Path(entry).resolve()}')
+				continue
 			if entry.is_file():
 				total += entry.stat().st_size
 			elif entry.is_dir():
@@ -76,7 +78,9 @@ def get_directory_size(directory):
 					total += get_directory_size(entry.path)
 				except FileNotFoundError as e:
 					print(f'[err] dir:{directory} {e}')
-	except NotADirectoryError:
+					continue
+	except NotADirectoryError as e:
+		print(f'[err] dir:{directory} {e}')
 		return os.path.getsize(directory)
 	except (PermissionError, FileNotFoundError) as e:
 		print(f'[err] dir:{directory} {e}')
