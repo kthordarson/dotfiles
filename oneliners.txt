@@ -2,7 +2,7 @@
 find . -type f -name "*.txt" -print0 | xargs -0 sed -i '' -e 's/foo/bar/g'
 
 # get filesize by extension
-{ find $(pwd) -type f -name "*.pack" -printf "%s+"; echo 0;} | bc
+{ find $(pwd) -type f -name "*.pack" -printf "%s+"; echo 0;} | bc | numfmt --to=si --suffix=B
 
 # grep ipaddress regex
 cat links3ips.txt | grep -E '(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)' -o > links3onlyips.txt

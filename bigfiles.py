@@ -39,12 +39,13 @@ def humanbytes(B):
 	elif TB <= B:
 		return '{0:.0f} TB'.format(B / TB)
 
-def filelist_generator(startpath):
+def filelist_generator(args):
 	# foo
 	#filelist_ = [Path(k) for k in glob.glob(str(Path(path))+'/**',recursive=True, include_hidden=True) if k not in EXCLUDES]
+	startpath = args.path
 	startpath = Path(startpath)
 	# filelist_ = [Path(k) for k in glob.glob(str(startpath),recursive=True, include_hidden=True)]
-	filelist_ = [k for k in startpath.rglob('*')]
+	filelist_ = [k for k in startpath.rglob(f'{args.wildcard}')]
 	logger.debug(f'[flg] :{len(filelist_)}')
 	for file in filelist_:
 		try:
@@ -63,17 +64,19 @@ if __name__ == '__main__':
 	_default = str(Path(myparse.prog).parent)
 	# myparse.add_argument('--path', metavar='path', type=str, help="Path to search", nargs='?', const='.', action='store_const')
 	myparse.add_argument('path', nargs='?', type=str, default=_default,	 metavar='input_path')
+	myparse.add_argument('-wc','--wildcard', required=False, metavar='wildcard', nargs='?', type=str, help="search by wildcard", default='*')
 	myparse.add_argument('-m','--maxfiles', metavar='maxfiles', type=int, help="Limit to x results", default=30)
 	myparse.add_argument('-e', '--excludes', help="use exclude list", action='store_true', default=False)
 	myparse.add_argument('-r','--reverse', help="reverse list", action='store_true', default=False, dest='reverselist')
 	args = myparse.parse_args()
+	print(f'args:  {args}')
 	if not args.excludes:
 		pass #EXCLUDES = []
 	maxfiles = args.maxfiles
 	#input_path = args.path
 	# filelist = []
 	# filelist = [Path(k) for k in glob.glob(str(Path(args.path))+'/**',recursive=True, include_hidden=True)]
-	reslist = [k for k in filelist_generator(args.path)]
+	reslist = [k for k in filelist_generator(args)]
 	reslist.sort(key=lambda x: x[1], reverse=args.reverselist)
 	#logger.debug(f'[done]  r:{len(reslist)}')
 	print(f'{"size":<15} {"path":<30}')
