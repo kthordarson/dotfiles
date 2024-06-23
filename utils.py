@@ -55,7 +55,7 @@ def filelist_generator(args, EXCLUDES):
 
 
 @dataclass(order=True, frozen=False)
-class FileItem:
+class FileItemx:
 	sort_index: int = field(init=False, repr=False)
 	name: Path
 	size: int =0
