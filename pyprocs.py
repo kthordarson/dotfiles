@@ -2,12 +2,12 @@
 
 import psutil
 
-#p = [f'pid:{k.pid} status:{k.status} {psutil.Process(k.pid).name()}' for k in psutil.net_connections(kind='all')]
-#[k for k in p]
+# p = [f'pid:{k.pid} status:{k.status} {psutil.Process(k.pid).name()}' for k in psutil.net_connections(kind='all')]
+# [k for k in p]
 def get_conns():
 	conns = psutil.net_connections(kind='inet')
 	for k in conns:
-		if k.status == 'LISTEN' or k.status =='ESTABLISHED' or k.status == 'CLOSE_WAIT' or k.status == 'NONE':
+		if k.status == 'LISTEN' or k.status == 'ESTABLISHED' or k.status == 'CLOSE_WAIT' or k.status == 'NONE':
 			if k.status == 'ESTABLISHED':
 				kraddr = k.raddr.ip
 			else:
@@ -25,9 +25,9 @@ def get_conns():
 
 def get_listeners():
 	conns = psutil.net_connections(kind='inet')
-	return sorted(set([(k.laddr.port, k.pid, k.laddr.ip, psutil.Process(k.pid).name()) for k in conns if k.status=='LISTEN']))
+	return sorted(set([(k.laddr.port, k.pid, k.laddr.ip, psutil.Process(k.pid).name()) for k in conns if k.status == 'LISTEN']))
 
 if __name__ == '__main__':
-	l = get_listeners()
-	for k in l:
+	listeners = get_listeners()
+	for k in listeners:
 		print(f'port: {k}')

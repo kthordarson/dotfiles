@@ -1,11 +1,10 @@
 #!/usr/bin/python3
 import os
 import sys
-import time
 import argparse
 from pathlib import Path
 from glob import glob
-from colorama import Fore, Back, Style
+from colorama import Fore, Style
 from loguru import logger
 
 
@@ -24,7 +23,7 @@ def fix_symlink(symlink, target, dryrun=False):
 if __name__ == '__main__':
 	myparse = argparse.ArgumentParser(description="check symlinks")
 	_default = str(Path(myparse.prog).parent)
-	myparse.add_argument('path', nargs='?', type=str, default=_default,	 metavar='args.path')
+	myparse.add_argument('path', nargs='?', type=str, default=_default, metavar='args.path')
 	myparse.add_argument('-t','--type', help="Searchtype, d for dirs, f for files, a for both. ", action='store', default='a', dest='searchtype')
 	myparse.add_argument('-sa','--showall', help="Show all links", action='store_true', default=False, dest='showall')
 	myparse.add_argument('-sb','--showbroken', help="Show broken links", action='store_true', default=False, dest='showbroken')
@@ -37,34 +36,33 @@ if __name__ == '__main__':
 	log_level = "DEBUG"
 	log_format = "<green>{time:DD-MM-YYYYY HH:mm:ss.SSS }</green> | <level>{level: <6}</level> | <yellow>Line {line: >3} ({file}):</yellow> <b>{message}</b>"
 	logger.add(sys.stderr, level=log_level, format=log_format, colorize=True, backtrace=True, diagnose=True)
-	#logger.remove()
 	logger.add(args.logfile, level=log_level, format=log_format, colorize=False, backtrace=True, diagnose=True)
 
 	if not args.path.endswith('/'):
 		args.path += '/'
-	if args.searchtype == 'd': # todo fix
+	if args.searchtype == 'd':  # todo fix
 		print(f'{Fore.LIGHTBLUE_EX}Searching for dirs in {Fore.CYAN}{args.path}{Style.RESET_ALL}')
 		symlinks = [k for k in os.scandir(args.path) if k.is_symlink() and k.is_dir() and os.path.exists(os.path.realpath(k))]
 		broken_symlinks = [k for k in os.scandir(args.path) if k.is_symlink() and k.is_dir() and not os.path.exists(os.path.realpath(k))]
-	if args.searchtype == 'f': # todo fix
+	if args.searchtype == 'f':  # todo fix
 		print(f'{Fore.LIGHTBLUE_EX}Searching for files in {Fore.CYAN}{args.path}{Style.RESET_ALL}')
 		symlinks = [k for k in os.scandir(args.path) if k.is_symlink() and k.is_file() and os.path.exists(os.path.realpath(k))]
 		broken_symlinks = [k for k in os.scandir(args.path) if k.is_symlink() and k.is_file() and not os.path.exists(os.path.realpath(k))]
 	if args.searchtype == 'a':
 		print(f'{Fore.LIGHTBLUE_EX}Searching {Fore.CYAN}{args.path}{Style.RESET_ALL}')
-		#symlinks = [k for k in os.scandir(args.path) if k.is_symlink()  and os.path.exists(os.path.realpath(k))]
+		# symlinks = [k for k in os.scandir(args.path) if k.is_symlink()  and os.path.exists(os.path.realpath(k))]
 		symlinks = [k for k in glob(pathname=args.path+'*', recursive=True) if Path(k).is_symlink()]
-		broken_symlinks = [k for k in os.scandir(args.path) if k.is_symlink()  and not os.path.exists(os.path.realpath(k))]
+		broken_symlinks = [k for k in os.scandir(args.path) if k.is_symlink() and not os.path.exists(os.path.realpath(k))]
 	print(f'{Fore.LIGHTBLUE_EX}Found {Fore.CYAN}{len(symlinks)} {Fore.LIGHTBLUE_EX}working and {Fore.CYAN}{len(broken_symlinks)} {Fore.LIGHTBLUE_EX}broken symlinks in {Fore.CYAN}{args.path}{Style.RESET_ALL}')
 	if args.findbroken:
 		# attempt to find broken links
 		for idx, sl_ in enumerate(broken_symlinks):
 			sl = Path(sl_)
 			print(f'{Fore.LIGHTBLUE_EX}[{idx}/{len(broken_symlinks)}] Searching {args.path} for {Fore.LIGHTGREEN_EX}{sl.name} {Style.RESET_ALL}')
-			candidates = [k for k in glob(args.path+'/**',recursive=True) if sl.name in k and os.path.exists(k) and os.path.isfile(k) and not os.path.islink(k) ]
+			candidates = [k for k in glob(args.path+'/**',recursive=True) if sl.name in k and os.path.exists(k) and os.path.isfile(k) and not os.path.islink(k)]
 			spath = str(Path(os.path.realpath(sl)).parent)+'/**'
 			print(f'{Fore.LIGHTBLUE_EX}[{idx}/{len(broken_symlinks)}] Searching {spath} for {Fore.LIGHTGREEN_EX}{sl.name} {Style.RESET_ALL}')
-			candidates2 = [k for k in glob(spath,recursive=True) if sl.name in k and os.path.exists(k) and os.path.isfile(k) and not os.path.islink(k) ]
+			candidates2 = [k for k in glob(spath,recursive=True) if sl.name in k and os.path.exists(k) and os.path.isfile(k) and not os.path.islink(k)]
 			print(f' found {Fore.CYAN}{len(candidates)}  +  {len(candidates2)} {Fore.LIGHTBLUE_EX}candidates for {Fore.CYAN}{sl} {Style.RESET_ALL}')
 			for c in candidates:
 				print(f'\t{Fore.LIGHTGREEN_EX}{c}{Style.RESET_ALL}')
@@ -84,7 +82,7 @@ if __name__ == '__main__':
 			sl = Path(sl_)
 			print(f'{Fore.LIGHTBLUE_EX}[{idx}/{len(broken_symlinks)}] Searching for {Fore.LIGHTGREEN_EX}{sl} {Style.RESET_ALL}')
 			# candidates = [k for k in glob(str(args.path)+'/**',recursive=True) if broken in k and os.path.exists(k)]
-			candidates = [k for k in glob(str(args.path)+'/**',recursive=True) if sl.name in k and os.path.exists(k) and os.path.isfile(k) and not os.path.islink(k) ]
+			candidates = [k for k in glob(str(args.path)+'/**',recursive=True) if sl.name in k and os.path.exists(k) and os.path.isfile(k) and not os.path.islink(k)]
 			if len(candidates) == 0:
 				print(f'  {Fore.RED}no candidates for {Fore.LIGHTGREEN_EX}{sl} {Style.RESET_ALL}')
 			elif len(candidates) == 1:
