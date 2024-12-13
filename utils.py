@@ -119,21 +119,21 @@ def get_directory_size(directory, wildcard='*'):
 		for entry in os.scandir(directory):
 			if Path(entry).is_symlink():
 				if Path(entry).is_file():
-					print(f'[!] {entry.name} is symlink to {Path(entry).resolve()}')
-				continue
+					# print(f'[!] {entry.name} is symlink to {Path(entry).resolve()}')
+					continue
 			if entry.is_file() and Path(entry).match(wildcard):
 				total += entry.stat().st_size
 			elif entry.is_dir():
 				try:
 					total += get_directory_size(entry.path, wildcard)
 				except FileNotFoundError as e:
-					print(f'[err] dir:{directory} {e}')
+					logger.error(f'[err] dir:{directory} {e}')
 					continue
 	except NotADirectoryError as e:
-		print(f'[err] dir:{directory} {e}')
+		logger.error(f'[err] dir:{directory} {e}')
 		return os.path.getsize(directory)
 	except (PermissionError, FileNotFoundError) as e:
-		print(f'[err] dir:{directory} {e}')
+		logger.error(f'[err] dir:{directory} {e}')
 		return 0
 	return total
 
@@ -141,7 +141,7 @@ def get_subfilecount(directory):
 	try:
 		filecount = len([k for k in directory.glob('**/*') if k.is_file()])
 	except PermissionError as e:
-		print(f'[err] {e} d:{directory}')
+		logger.error(f'[err] {e} d:{directory}')
 		return 0
 	return filecount
 
@@ -150,7 +150,7 @@ def get_subdircount(directory):
 	try:
 		dc = len([k for k in directory.glob('**/*') if k.is_dir()])
 	except (PermissionError,FileNotFoundError) as e:
-		print(f'[err] {e} d:{directory}')
+		logger.error(f'[err] {e} d:{directory}')
 	return dc
 
 def format_bytes(size):

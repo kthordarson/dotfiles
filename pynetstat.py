@@ -7,7 +7,6 @@ from socket import SOCK_STREAM
 
 import psutil
 
-
 AD = "-"
 AF_INET6 = getattr(socket, 'AF_INET6', object())
 proto_map = {
@@ -16,7 +15,6 @@ proto_map = {
     (AF_INET, SOCK_DGRAM): 'udp',
     (AF_INET6, SOCK_DGRAM): 'udp6',
 }
-
 
 def main():
     templ = "%-5s %-30s %-30s %-13s %-6s %s"
@@ -40,7 +38,6 @@ def main():
             c.pid or AD,
             name[:15],
         ))
-
 
 if __name__ == '__main__':
     main()
