@@ -1,3 +1,4 @@
+*.tmp
 olddtrx
 *.json
 scripts/__pycache__
