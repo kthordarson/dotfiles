@@ -1,35 +1,8 @@
-import re
 import os
-import time
-import json
-import random
 from loguru import logger
-from argparse import Namespace
-from dataclasses import InitVar, dataclass
-from datetime import datetime
-from typing import Generator, Union
-from urllib.parse import urljoin
-import httpx
 import requests
 from requests.auth import HTTPBasicAuth
 from bs4 import BeautifulSoup
-
-import socket
-from urllib3.connection import HTTPConnection
-
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-from selenium.common.exceptions import WebDriverException
-import selenium.webdriver.support.expected_conditions as EC  # noqa
-from selenium.webdriver.support.wait import WebDriverWait
-import undetected_chromedriver as uc
-
-# curl -L
-#   -H "Accept: application/vnd.github+json"
-#   -H "Authorization: Bearer <YOUR-TOKEN>"
-#   -H "X-GitHub-Api-Version: 2022-11-28"
-#   https://api.github.com/user/starred
 
 def get_git_stars(auth, max=None, use_cache=False):
 	"""
@@ -185,6 +158,8 @@ def get_auth_param():
 
 if __name__ == '__main__':
 	# todo add argparse
+	# todo handle cache better
+
 	use_cache = True
 	max_items = 4
 
@@ -197,4 +172,3 @@ if __name__ == '__main__':
 	# _ = [print(f'id: {k['id']} {k['name']} {k['updated_at']}') for k in starred_repos]
 	# _ = [print(k.get('name')  in ''.join([''.join(lists[k].get('hrefs')) for k in lists]))  for k in starred_repos ]
 	# _ = [print(f"{k.get('name')} listed: {k.get('name')  in ''.join([''.join(lists[k].get('hrefs')) for k in lists])}")  for k in starred_repos ]
-
