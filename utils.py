@@ -115,20 +115,26 @@ class DirItem:
 
 def get_directory_size(directory, wildcard='*'):
 	total = 0
+	entry = None
 	try:
 		for entry in os.scandir(directory):
-			if Path(entry).is_symlink():
-				if Path(entry).is_file():
+			try:
+				if Path(entry).is_symlink():
+					if Path(entry).is_file():
 					# print(f'[!] {entry.name} is symlink to {Path(entry).resolve()}')
-					continue
-			if entry.is_file() and Path(entry).match(wildcard):
-				total += entry.stat().st_size
-			elif entry.is_dir():
-				try:
-					total += get_directory_size(entry.path, wildcard)
-				except FileNotFoundError as e:
-					logger.error(f'[err] dir:{directory} {e}')
-					continue
+						continue
+				if entry.is_file() and Path(entry).match(wildcard):
+					total += entry.stat().st_size
+				elif entry.is_dir():
+					try:
+						total += get_directory_size(entry.path, wildcard)
+					except FileNotFoundError as e:
+						logger.error(f'[err] {e} entry:{entry}')
+						continue
+			except OSError as e:
+				logger.warning(f'[err]  {entry} {e}')
+				return total
+			#return os.path.getsize(directory)
 	except NotADirectoryError as e:
 		logger.error(f'[err] dir:{directory} {e}')
 		return os.path.getsize(directory)

@@ -77,6 +77,7 @@ def get_git_lists(auth:HTTPBasicAuth, use_cache=False) -> dict:
 	returns dict of lists
 	"""
 	# todo handle pagination better ....
+	# todo handle cache better
 	listurl = f'https://github.com/{auth.username}?tab=stars'
 	headers = {'Authorization': f'Bearer {auth.password}','X-GitHub-Api-Version': '2022-11-28'}
 	session = requests.session()
@@ -122,6 +123,8 @@ def get_info_for_list(link, session, use_cache):
 	param auth: HTTPBasicAuth
 	"""
 	# todo handle pagination
+	# todo maybe pull more info here
+	# todo handle cache better
 	link_fn = link.split('/')[-1] + '.tmp'
 	soup = None
 	if use_cache:
@@ -144,7 +147,7 @@ def get_info_for_list(link, session, use_cache):
 	logger.debug(f'list_hrefs: {len(list_hrefs)} for {link}')
 	return list_hrefs
 
-def get_updated_at_sort(x):
+def get_updated_at_sort(x) -> HTTPBasicAuth:
 	return x['updated_at']
 
 def get_auth_param():
