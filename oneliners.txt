@@ -1,5 +1,5 @@
 # find and remove empty dirs...
-for emptydir in $(du . -b -h -d 1 | grep -E '^0\s+' | awk '{print $2}');do echo "dir $emptydir";rm -fr $emptydir;done;
+  for emptydir in $(du . -b -h -d 1 | grep -E '^0\s+' | awk '{print $2}');do echo "dir $emptydir";rm -fr $emptydir;done;
 
 # Recursively find and replace in files
 find . -type f -name "*.txt" -print0 | xargs -0 sed -i '' -e 's/foo/bar/g'

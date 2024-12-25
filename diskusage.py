@@ -1,20 +1,16 @@
 #!/usr/bin/python3
 
-import os
-import time
 import argparse
 from pathlib import Path
-from glob import glob
-from dataclasses import dataclass, field
 import operator
-from utils import get_size_format, EXCLUDES, FileItem, DirItem
+from utils import get_size_format, EXCLUDES, DirItem
 
 
 if __name__ == '__main__':
 	myparse = argparse.ArgumentParser(description="show folder sizes and things..")
 	_default = str(Path(myparse.prog).parent)
 	# myparse.add_argument('--path', metavar='path', type=str, help="Path to search", default=".")
-	myparse.add_argument('path', nargs='?', type=str, default=_default,	 metavar='input_path')
+	myparse.add_argument('path', nargs='?', type=str, default=_default, metavar='input_path')
 	myparse.add_argument('--number', metavar='filenum', type=int, help="Limit to x results", default=10)
 	myparse.add_argument('--sort', metavar='sort', type=str, help="sort by size/files/dirs", default='size')
 	myparse.add_argument('--maxfiles', metavar='maxfiles', type=int, help="include X biggest file(s)", default='0')
@@ -31,12 +27,12 @@ if __name__ == '__main__':
 	getbigfiles = False
 	if args.maxfiles >= 1:
 		getbigfiles = True
-		#print(f'[d] getbigfiles:{getbigfiles} args.topfiles:{args.maxfiles}')
+		# print(f'[d] getbigfiles:{getbigfiles} args.topfiles:{args.maxfiles}')
 	filelist = []
 	itemlist = []
 	folderlist = [k for k in input_path.glob('*') if not k.is_file() and k.name not in exclude_list]
 	try:
-		#itemlist = [DirItem(name=k, getbigfiles=getbigfiles, maxfiles=args.maxfiles) for k in folderlist]
+		# itemlist = [DirItem(name=k, getbigfiles=getbigfiles, maxfiles=args.maxfiles) for k in folderlist]
 		for k in folderlist:
 			di = DirItem(name=k, getbigfiles=getbigfiles, maxfiles=args.maxfiles, wildcard=args.wildcard)
 			itemlist.append(di)
@@ -51,7 +47,7 @@ if __name__ == '__main__':
 	if args.sort == 'files':
 		sorteditems = sorted(itemlist, key=operator.attrgetter("subfilecount"), reverse=args.reverselist)
 	if args.sort == 'dirs':
-		sorteditems =  sorted(itemlist, key=operator.attrgetter("subdircount"), reverse=args.reverselist)
+		sorteditems = sorted(itemlist, key=operator.attrgetter("subdircount"), reverse=args.reverselist)
 	print(f'[size] {" "*5}[name]{" "*15}[items] [files] [folders]')
 	print(f'{"-"*60}')
 	for item in sorteditems:
@@ -63,6 +59,6 @@ if __name__ == '__main__':
 		total_items += item.subitemcount
 		total_files += item.subfilecount
 		total_dirs += item.subdircount
-	#print(f'[t] {get_size_format(b=total_size, suffix="B")} {" "*34} {total_files:,} {total_dirs:,}')
+	# print(f'[t] {get_size_format(b=total_size, suffix="B")} {" "*34} {total_files:,} {total_dirs:,}')
 	print(f'{"-"*60}')
 	print(f'{get_size_format(b=total_size, suffix="B")} {" "*23}{total_items:<7} {total_files:<7} {total_dirs:<7}')

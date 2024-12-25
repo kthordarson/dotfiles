@@ -16,7 +16,7 @@ import glob
 def get_modules():
 	usrpacks = []
 	localpacks = []
-	allpacks = [k for k in set([k for k in importlib_metadata.entry_points() ])]
+	allpacks = [k for k in set([k for k in importlib_metadata.entry_points()])]
 	logger.debug(f'Found {len(allpacks)} modules')
 	# cache all module names
 	# usrdistmods = [k for k in set( [k.dist.name for k in allpacks if str(k.dist._path).startswith('/usr')])]
@@ -33,9 +33,9 @@ def get_modules():
 			localpacks.append(p)
 			localdistmods.append(p.dist.name)
 		else:
-			pass #logger.warning(f'[{idx}/{len(allpacks)} {len(usrpacks)}/{len(localpacks)}] unhandled package {p.dist.name} path: {p.dist._path}')
-	#usrpacks = [k for k in set([k for k in importlib_metadata.entry_points() if str(k.dist._path).startswith('/usr')])]
-	#localpacks = [k for k in set([k for k in importlib_metadata.entry_points() if str(k.dist._path).startswith('/home/')])]
+			pass  # logger.warning(f'[{idx}/{len(allpacks)} {len(usrpacks)}/{len(localpacks)}] unhandled package {p.dist.name} path: {p.dist._path}')
+	# usrpacks = [k for k in set([k for k in importlib_metadata.entry_points() if str(k.dist._path).startswith('/usr')])]
+	# localpacks = [k for k in set([k for k in importlib_metadata.entry_points() if str(k.dist._path).startswith('/home/')])]
 	return allpacks, usrpacks, localpacks
 
 def make_json_link(modulename):
@@ -67,7 +67,7 @@ def get_pypi_json(module):
 	else:
 		logger.error(f'moduleerror {module["modulename"]} {url} response: {r.status_code}')
 		jsondata = {'error': f'{r.status_code} Error','url': url, 'module': module['modulename']}
-	#time.sleep(0.2) # sleep for 200ms for rate limiting
+	# time.sleep(0.2) # sleep for 200ms for rate limiting
 	return jsondata
 
 def get_installed_version(packname):
@@ -116,57 +116,57 @@ def get_latest_version_cache(packname, cachedata):
 	return latest_version
 
 def update_check(allpacks, usrpacks, localpacks):
-		usrnames = [k for k in set([k.dist.name for k in usrpacks])]
-		localnames = [k for k in set([k.dist.name for k in localpacks])]
-		dupe_packs = [k for k in usrpacks if k.dist.name in localnames]
-		usrpacklinks = [make_json_link(k) for k in usrnames]
-		lockalpacklinks = [make_json_link(k) for k in localnames]
-		print(f'{Fore.LIGHTBLUE_EX}total:{Fore.CYAN} {len(usrnames) + len(localnames)} / {len(usrpacks)+len(localpacks)} {Fore.LIGHTBLUE_EX}allpacks={Fore.CYAN}{len(allpacks)} {Fore.LIGHTBLUE_EX}usr:{Fore.CYAN} {len(usrpacks)} {Fore.LIGHTBLUE_EX}local:{Fore.CYAN} {len(localpacks)} {Fore.LIGHTBLUE_EX}dupe:{Fore.CYAN} {len(dupe_packs)} {Fore.LIGHTBLUE_EX}usrpacklinks:{Fore.CYAN} {len(usrpacklinks)} {Fore.LIGHTBLUE_EX}localpacklinks:{Fore.CYAN} {len(lockalpacklinks)}{Style.RESET_ALL}')
+	usrnames = [k for k in set([k.dist.name for k in usrpacks])]
+	localnames = [k for k in set([k.dist.name for k in localpacks])]
+	dupe_packs = [k for k in usrpacks if k.dist.name in localnames]
+	usrpacklinks = [make_json_link(k) for k in usrnames]
+	lockalpacklinks = [make_json_link(k) for k in localnames]
+	print(f'{Fore.LIGHTBLUE_EX}total:{Fore.CYAN} {len(usrnames) + len(localnames)} / {len(usrpacks)+len(localpacks)} {Fore.LIGHTBLUE_EX}allpacks={Fore.CYAN}{len(allpacks)} {Fore.LIGHTBLUE_EX}usr:{Fore.CYAN} {len(usrpacks)} {Fore.LIGHTBLUE_EX}local:{Fore.CYAN} {len(localpacks)} {Fore.LIGHTBLUE_EX}dupe:{Fore.CYAN} {len(dupe_packs)} {Fore.LIGHTBLUE_EX}usrpacklinks:{Fore.CYAN} {len(usrpacklinks)} {Fore.LIGHTBLUE_EX}localpacklinks:{Fore.CYAN} {len(lockalpacklinks)}{Style.RESET_ALL}')
 
-		logger.debug(f'loading usrpackinfojson {len(usrpacklinks)}')
-		usrpackinfojson = [get_pypi_json(k) for k in usrpacklinks ]
-		validusrpacks = [k for k in usrpackinfojson if len(k.keys())==5]
-		up_errors = [k for k in usrpackinfojson if 'error' in k.keys()]
+	logger.debug(f'loading usrpackinfojson {len(usrpacklinks)}')
+	usrpackinfojson = [get_pypi_json(k) for k in usrpacklinks]
+	validusrpacks = [k for k in usrpackinfojson if len(k.keys()) == 5]
+	up_errors = [k for k in usrpackinfojson if 'error' in k.keys()]
 
-		logger.debug(f'loading validlocalpackjson {len(lockalpacklinks)} upj:{len(usrpackinfojson)} vup:{len(validusrpacks)} ue:{len(up_errors)}')
-		localpackjson = [get_pypi_json(k) for k in lockalpacklinks]
-		lp_errors = [k for k in localpackjson if 'error' in k.keys()]
-		validlocalpackjson = [k for k in localpackjson if len(k.keys())==5]
+	logger.debug(f'loading validlocalpackjson {len(lockalpacklinks)} upj:{len(usrpackinfojson)} vup:{len(validusrpacks)} ue:{len(up_errors)}')
+	localpackjson = [get_pypi_json(k) for k in lockalpacklinks]
+	lp_errors = [k for k in localpackjson if 'error' in k.keys()]
+	validlocalpackjson = [k for k in localpackjson if len(k.keys()) == 5]
 
-		print(f'{Fore.BLUE}usrpackinfojson: {Fore.CYAN}{len(usrpackinfojson)} {Fore.RED}errors:{Fore.LIGHTRED_EX} {len(up_errors)} {Fore.BLUE} localpackjson: {Fore.CYAN} {len(localpackjson)} {Fore.RED} errors: {Fore.LIGHTRED_EX} {len(lp_errors)} {Style.RESET_ALL}')
+	print(f'{Fore.BLUE}usrpackinfojson: {Fore.CYAN}{len(usrpackinfojson)} {Fore.RED}errors:{Fore.LIGHTRED_EX} {len(up_errors)} {Fore.BLUE} localpackjson: {Fore.CYAN} {len(localpackjson)} {Fore.RED} errors: {Fore.LIGHTRED_EX} {len(lp_errors)} {Style.RESET_ALL}')
 
-		for p in up_errors:
-			print(f'{Fore.RED}usrpack Error:{Fore.LIGHTRED_EX} {p}{Style.RESET_ALL}')
-		for p in lp_errors:
-			print(f'{Fore.RED}localpack Error:{Fore.LIGHTRED_EX} {p}{Style.RESET_ALL}')
-		usr_outdated = []
-		local_outdated = []
-		for pack in usrnames:
-			installed_version = get_installed_version(pack)
-			try:
-				latest_version = get_latest_version_cache(pack, validusrpacks)
-			except AttributeError as e:
-				logger.error(f'Exception: {e} {type(e)} for {pack}')
-				latest_version = 'Error'
-			if installed_version != latest_version:
-				usr_outdated.append({'pack': pack, 'installed_version': installed_version, 'latest_version': latest_version, 'location': 'usr'})
-				print(f'{Fore.BLUE}usrpacks{Fore.CYAN} Name: {pack} localversion: {Fore.RED} {installed_version} {Fore.BLUE} latestversion: {Fore.LIGHTGREEN_EX} {latest_version}{Style.RESET_ALL}')
-			else:
-				print(f'{Fore.BLUE}usrpacks{Fore.CYAN} Name: {pack} localversion: {Fore.GREEN} {installed_version} {Fore.BLUE} latestversion: {Fore.LIGHTGREEN_EX} {latest_version}{Style.RESET_ALL}')
-		print(f'{Fore.RED}usrpacks usr_outdated:{Fore.LIGHTRED_EX} {len(usr_outdated)} {Style.RESET_ALL}')
-		for pack in localnames:
-			installed_version = get_installed_version(pack)
-			try:
-				latest_version = get_latest_version_cache(pack, validlocalpackjson)
-			except AttributeError as e:
-				logger.error(f'Exception: {e} {type(e)} for {pack}')
-				latest_version = 'Error'
-			if installed_version != latest_version:
-				local_outdated.append({'pack': pack, 'installed_version': installed_version, 'latest_version': latest_version, 'location': 'home'})
-				print(f'{Fore.BLUE}localpacks{Fore.CYAN} Name: {pack} localversion: {Fore.RED} {installed_version} {Fore.BLUE} latestversion: {Fore.LIGHTGREEN_EX} {latest_version}{Style.RESET_ALL}')
-			else:
-				print(f'{Fore.BLUE}localpacks{Fore.CYAN} Name: {pack} localversion: {Fore.GREEN} {installed_version} {Fore.BLUE} latestversion: {Fore.LIGHTGREEN_EX} {latest_version}{Style.RESET_ALL}')
-		print(f'{Fore.RED}usr_outdated:{Fore.LIGHTRED_EX} {len(usr_outdated)} {Fore.RED}local_outdated:{Fore.LIGHTRED_EX} {len(local_outdated)} {Style.RESET_ALL}')
+	for p in up_errors:
+		print(f'{Fore.RED}usrpack Error:{Fore.LIGHTRED_EX} {p}{Style.RESET_ALL}')
+	for p in lp_errors:
+		print(f'{Fore.RED}localpack Error:{Fore.LIGHTRED_EX} {p}{Style.RESET_ALL}')
+	usr_outdated = []
+	local_outdated = []
+	for pack in usrnames:
+		installed_version = get_installed_version(pack)
+		try:
+			latest_version = get_latest_version_cache(pack, validusrpacks)
+		except AttributeError as e:
+			logger.error(f'Exception: {e} {type(e)} for {pack}')
+			latest_version = 'Error'
+		if installed_version != latest_version:
+			usr_outdated.append({'pack': pack, 'installed_version': installed_version, 'latest_version': latest_version, 'location': 'usr'})
+			print(f'{Fore.BLUE}usrpacks{Fore.CYAN} Name: {pack} localversion: {Fore.RED} {installed_version} {Fore.BLUE} latestversion: {Fore.LIGHTGREEN_EX} {latest_version}{Style.RESET_ALL}')
+		else:
+			print(f'{Fore.BLUE}usrpacks{Fore.CYAN} Name: {pack} localversion: {Fore.GREEN} {installed_version} {Fore.BLUE} latestversion: {Fore.LIGHTGREEN_EX} {latest_version}{Style.RESET_ALL}')
+	print(f'{Fore.RED}usrpacks usr_outdated:{Fore.LIGHTRED_EX} {len(usr_outdated)} {Style.RESET_ALL}')
+	for pack in localnames:
+		installed_version = get_installed_version(pack)
+		try:
+			latest_version = get_latest_version_cache(pack, validlocalpackjson)
+		except AttributeError as e:
+			logger.error(f'Exception: {e} {type(e)} for {pack}')
+			latest_version = 'Error'
+		if installed_version != latest_version:
+			local_outdated.append({'pack': pack, 'installed_version': installed_version, 'latest_version': latest_version, 'location': 'home'})
+			print(f'{Fore.BLUE}localpacks{Fore.CYAN} Name: {pack} localversion: {Fore.RED} {installed_version} {Fore.BLUE} latestversion: {Fore.LIGHTGREEN_EX} {latest_version}{Style.RESET_ALL}')
+		else:
+			print(f'{Fore.BLUE}localpacks{Fore.CYAN} Name: {pack} localversion: {Fore.GREEN} {installed_version} {Fore.BLUE} latestversion: {Fore.LIGHTGREEN_EX} {latest_version}{Style.RESET_ALL}')
+	print(f'{Fore.RED}usr_outdated:{Fore.LIGHTRED_EX} {len(usr_outdated)} {Fore.RED}local_outdated:{Fore.LIGHTRED_EX} {len(local_outdated)} {Style.RESET_ALL}')
 
 def check_folders(allpacks, usrpacks, localpacks):
 	search_paths = [k for k in sys.path if Path(k).exists() and Path(k).is_dir() and k != '']

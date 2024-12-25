@@ -1,12 +1,8 @@
 #!/usr/bin/python3
 
-import os
-import time
 import argparse
 from pathlib import Path
-from loguru import logger
 from datetime import datetime
-import glob
 import operator
 from utils import filelist_generator, get_size_format, FileItem, EXCLUDES
 
