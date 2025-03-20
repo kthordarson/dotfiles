@@ -1,3 +1,6 @@
+# run strings on all files recursivly
+for f in $(find . -type f); do s=$(strings $f | grep -i findme); if [[ $s ]] then echo "file $f s=$s";fi;done;
+
 # find and remove empty dirs...
   for emptydir in $(du . -b -h -d 1 | grep -E '^0\s+' | awk '{print $2}');do echo "dir $emptydir";rm -fr $emptydir;done;
 
