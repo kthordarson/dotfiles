@@ -120,9 +120,9 @@ def get_directory_size(directory, wildcard='*'):
 		for entry in os.scandir(directory):
 			try:
 				if Path(entry).is_symlink():
-					if Path(entry).is_file():
+					# if Path(entry).is_file():
 					# print(f'[!] {entry.name} is symlink to {Path(entry).resolve()}')
-						continue
+				    continue
 				if entry.is_file() and Path(entry).match(wildcard):
 					total += entry.stat().st_size
 				elif entry.is_dir():

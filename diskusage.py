@@ -30,7 +30,7 @@ if __name__ == '__main__':
 		# print(f'[d] getbigfiles:{getbigfiles} args.topfiles:{args.maxfiles}')
 	filelist = []
 	itemlist = []
-	folderlist = [k for k in input_path.glob('*') if not k.is_file() and k.name not in exclude_list]
+	folderlist = [k for k in input_path.glob('*') if not k.is_file() and not Path(k).is_symlink() and k.name not in exclude_list]
 	try:
 		# itemlist = [DirItem(name=k, getbigfiles=getbigfiles, maxfiles=args.maxfiles) for k in folderlist]
 		for k in folderlist:
