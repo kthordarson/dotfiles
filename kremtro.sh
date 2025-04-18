@@ -347,4 +347,4 @@ function get_github_repo_size() {
 # PS1 with repo name when in a Git repository
 # PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\] $(git_remote_prompt) \[\033[01;33m\]$(git_repo_name)\[\033[00m\] \$ '
 # PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\W\[\033[00m\]$(git_remote_prompt)\033[01;33m\]$(git_repo_name)\[\033[00m \$ '
-PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\W\[\033[00m\]\033[01;33m\]$(git_remote_prompt_url)\[\033[00m \$ '
+# PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\W\[\033[00m\]\033[01;33m\]$(git_remote_prompt_url)\[\033[00m \$ '
