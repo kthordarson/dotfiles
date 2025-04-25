@@ -1,3 +1,6 @@
+# netwatcher 
+watch -n 1 "sudo netstat -npae | grep -v -E 'unix|127.0.0.1' | grep nmap | grep -v SYN"
+
 # get github repo size
 curl -s https://api.github.com/repos/torvalds/linux | jq '.size' | numfmt --to=iec --from-unit=1024
 
