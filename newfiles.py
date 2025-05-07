@@ -60,7 +60,7 @@ if __name__ == '__main__':
 	myparse.add_argument('-wc','--wildcard', required=False, metavar='wildcard', type=str, nargs=1, help="search by wildcard", default='*')
 	myparse.add_argument('--maxfiles', '-m', metavar='maxfiles', type=int, help="Limit to x results", default=30)
 	myparse.add_argument('--reverse','-r', help="reverse", action='store_true', dest='reverse', default=False)
-	myparse.add_argument('--excludes', '-e', help="use exclude list", action='store_true', default=True)
+	myparse.add_argument('--excludes', '-e', help="use exclude list", action='store_true', default=False)
 	myparse.add_argument('--sort', '-s', metavar='sort', type=str, help="sort by ctime/mtime/atime", default='ctime')
 	args = myparse.parse_args()
 	if args.excludes:
@@ -75,6 +75,7 @@ if __name__ == '__main__':
 	filelist = []
 	# reslist = [k for k in filelist_generator(args.path)]
 	filelist = [k for k in filelist_generator(args, exclude_list)]
+	print(f'[info] {len(filelist)} files found')
 	# filelist = [FileItem(Path(k)) for k in glob.glob(startpath,recursive=True, include_hidden=True)]
 	printlist(filelist, args)
 

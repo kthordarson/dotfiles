@@ -41,13 +41,13 @@ def get_size_format(b, factor=1024, suffix="B"):
 		b /= factor
 	return f"{b:.2f} {suffix}"
 
-def filelist_generator(args, EXCLUDES):
+def filelist_generator(args, exlist=EXCLUDES):
 	startpath = Path(args.path)
 	filelist_ = [k for k in startpath.rglob(f'{args.wildcard}')]
 	logger.debug(f'[flg] :{len(filelist_)}')
 	for file in filelist_:
 		try:
-			if Path(file).is_file() and len([p for p in file.parts if p in EXCLUDES]) == 0:
+			if Path(file).is_file() and len([p for p in file.parts if p in exlist]) == 0:
 				yield (FileItem(file))
 				# yield((Path(file), Path(file).stat().st_size, Path(file).stat().st_ctime))
 		except PermissionError as e:

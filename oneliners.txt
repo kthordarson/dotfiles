@@ -1,5 +1,17 @@
-# netwatcher 
+# netwatcher
 watch -n 1 "sudo netstat -npae | grep -v -E 'unix|127.0.0.1' | grep nmap | grep -v SYN"
+
+# find sort by date/size
+find . -type f -printf "%-50p %10s %t\n" | sort -k3 -r | column -t
+# by size reversed
+find . -type f -printf "%-50p %10s %t\n" | sort -k2 -nr | column -t
+find ~/revstuff/ -type f -iname '*.exe' -printf "%-50p %10s %t\n" | sort -k2 -nr | column -t
+
+# exclude
+find ~/ -type f -not -path '*firefox*'  -name '*.sqlite*' -printf "%-50p %10s %t\n" | sort -k3 -r | column -t
+
+# get core count
+cores=$(lscpu | awk -F': +' '/^CPU\(s\):/ {cpus=$2};/^Thread\(s\) per core:/ {tpc=$2}; END { print int(cpus / tpc) }')
 
 # get github repo size
 curl -s https://api.github.com/repos/torvalds/linux | jq '.size' | numfmt --to=iec --from-unit=1024
