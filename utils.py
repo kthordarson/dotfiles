@@ -1,4 +1,5 @@
 import os
+import fnmatch
 from pathlib import Path
 from loguru import logger
 from dataclasses import dataclass, field
@@ -9,12 +10,13 @@ EXCLUDES = ['.git', '__pycache__', '.idea', '.vscode', '.ipynb_checkpoints']
 class FileItem:
 	sort_index: int = field(init=False, repr=False)
 	name: Path
-	size: int
-	st_atime: int
-	st_mtime: int
-	st_ctime: int
+	size: int = 0
+	st_atime: float = 0.0
+	st_mtime: float = 0.0
+	st_ctime: float = 0.0
 
 	def __init__(self, name:Path):
+		object.__setattr__(self, 'sort_index', self.size)
 		self.name = Path(name)
 		self.filename = str(name)
 		try:
@@ -27,6 +29,10 @@ class FileItem:
 		self.st_atime = self.name.stat().st_atime
 		self.st_mtime = self.name.stat().st_mtime
 		self.st_ctime = self.name.stat().st_ctime
+
+	def __post_init__(self):
+		# Set sort_index to size for proper ordering
+		object.__setattr__(self, 'sort_index', self.size)
 
 	def __str__(self):
 		return f'{self.name}'
@@ -41,13 +47,39 @@ def get_size_format(b, factor=1024, suffix="B"):
 		b /= factor
 	return f"{b:.2f} {suffix}"
 
-def filelist_generator(args, EXCLUDES):
+# This would go in your utils.py file
+def filelist_generator(args, exclude_list, specific_dir=None, root_only=False):
+	path = specific_dir or Path(args.path)
+	wildcard = args.wildcard
+
+	# Use scandir instead of Path.glob for better performance
+	if root_only:
+		for entry in os.scandir(path):
+			if entry.is_file() and not entry.name.startswith('.') and entry.name not in exclude_list:
+				if fnmatch.fnmatch(entry.name, wildcard):
+					stat = entry.stat()
+					yield FileItem(name=Path(entry.path))
+	else:
+		for root, dirs, files in os.walk(path):
+			# Skip excluded directories
+			dirs[:] = [d for d in dirs if d not in exclude_list]
+
+			for file in files:
+				if file not in exclude_list and fnmatch.fnmatch(file, wildcard):
+					full_path = os.path.join(root, file)
+					try:
+						size = os.path.getsize(full_path)
+						yield FileItem(name=Path(full_path))
+					except (FileNotFoundError, PermissionError):
+						continue
+
+def xfilelist_generator(args, excludes):
 	startpath = Path(args.path)
 	filelist_ = [k for k in startpath.rglob(f'{args.wildcard}')]
 	logger.debug(f'[flg] :{len(filelist_)}')
 	for file in filelist_:
 		try:
-			if Path(file).is_file() and len([p for p in file.parts if p in EXCLUDES]) == 0:
+			if Path(file).is_file() and len([p for p in file.parts if p in excludes]) == 0:
 				yield (FileItem(file))
 				# yield((Path(file), Path(file).stat().st_size, Path(file).stat().st_ctime))
 		except PermissionError as e:
@@ -122,7 +154,7 @@ def get_directory_size(directory, wildcard='*'):
 				if Path(entry).is_symlink():
 					# if Path(entry).is_file():
 					# print(f'[!] {entry.name} is symlink to {Path(entry).resolve()}')
-				    continue
+					continue
 				if entry.is_file() and Path(entry).match(wildcard):
 					total += entry.stat().st_size
 				elif entry.is_dir():
@@ -134,7 +166,7 @@ def get_directory_size(directory, wildcard='*'):
 			except OSError as e:
 				logger.warning(f'[err]  {entry} {e}')
 				return total
-			#return os.path.getsize(directory)
+			# return os.path.getsize(directory)
 	except NotADirectoryError as e:
 		logger.error(f'[err] dir:{directory} {e}')
 		return os.path.getsize(directory)
@@ -169,21 +201,21 @@ def format_bytes(size):
 		n += 1
 	return size, power_labels[n]+'bytes'
 
-def humanbytes(B):
+def humanbytes(bytesinput):
 	"""Return the given bytes as a human friendly KB, MB, GB, or TB string."""
-	B = float(B)
-	KB = float(1024)
-	MB = float(KB ** 2)  # 1,048,576
-	GB = float(KB ** 3)  # 1,073,741,824
-	TB = float(KB ** 4)  # 1,099,511,627,776
+	bytesinput = float(bytesinput)
+	kilobytes = float(1024)
+	megabytes = float(kilobytes ** 2)  # 1,048,576
+	gigabytes = float(kilobytes ** 3)  # 1,073,741,824
+	terabytes = float(kilobytes ** 4)  # 1,099,511,627,776
 
-	if B < KB:
-		return f'{B:.0f} B'  # return f'{0} {1}'.format(B,'B' if 0 == B > 1 else 'B')
-	elif KB <= B < MB:
-		return '{0:.0f} KB'.format(B / KB)
-	elif MB <= B < GB:
-		return '{0:.0f} MB'.format(B / MB)
-	elif GB <= B < TB:
-		return '{0:.0f} GB'.format(B / GB)
-	elif TB <= B:
-		return '{0:.0f} TB'.format(B / TB)
+	if bytesinput < kilobytes:
+		return f'{bytesinput:.0f} B'  # return f'{0} {1}'.format(B,'B' if 0 == B > 1 else 'B')
+	elif kilobytes <= bytesinput < megabytes:
+		return '{0:.0f} KB'.format(bytesinput / kilobytes)
+	elif megabytes <= bytesinput < gigabytes:
+		return '{0:.0f} MB'.format(bytesinput / megabytes)
+	elif gigabytes <= bytesinput < terabytes:
+		return '{0:.0f} GB'.format(bytesinput / gigabytes)
+	elif terabytes <= bytesinput:
+		return '{0:.0f} TB'.format(bytesinput / terabytes)
