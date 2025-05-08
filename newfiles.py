@@ -1,10 +1,16 @@
 #!/usr/bin/python3
+import os
+from functools import partial
 
+import multiprocessing
 import argparse
 from pathlib import Path
 from datetime import datetime
 import operator
 from utils import filelist_generator, get_size_format, FileItem, EXCLUDES
+
+def process_directory(directory, args, exclude_list):
+	return list(filelist_generator(args, exclude_list, specific_dir=directory))
 
 def debugprintlist(filelist):
 	# reslist.sort(key=lambda x: x[1], reverse=args.reverse)
@@ -74,7 +80,19 @@ if __name__ == '__main__':
 		reverse = False
 	filelist = []
 	# reslist = [k for k in filelist_generator(args.path)]
-	filelist = [k for k in filelist_generator(args, exclude_list)]
+	# filelist = [k for k in filelist_generator(args, exclude_list)]
+	input_path = Path(args.path)
+	top_dirs = [d for d in input_path.iterdir() if d.is_dir() and d.name not in exclude_list]
+
+	with multiprocessing.Pool(processes=os.cpu_count()) as pool:
+		results = pool.map(partial(process_directory, args=args, exclude_list=exclude_list), top_dirs)
+
+	filelist = [item for sublist in results for item in sublist]
+
+	# Add files in the root directory
+	root_files = list(filelist_generator(args, exclude_list, specific_dir=input_path, root_only=True))
+	filelist.extend(root_files)
+
 	# filelist = [FileItem(Path(k)) for k in glob.glob(startpath,recursive=True, include_hidden=True)]
 	printlist(filelist, args)
 
