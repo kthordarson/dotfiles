@@ -19,7 +19,7 @@ sudo dpkg -i ~/apps_dl/git-delta_0.8.0_amd64.deb
 # https://github.com/bootandy/dust
 # wget https://github.com/bootandy/dust/archive/refs/tags/v0.6.0.tar.gz -O ~/apps_dl/dust.tar.gz
 wget https://github.com/bootandy/dust/releases/download/v0.6.0/dust-v0.6.0-x86_64-unknown-linux-gnu.tar.gz -O ~/apps_dl/dust.tar.gz
-cd ~/apps_dl/
+cd ~/apps_dl/ || exit
 dtrx.py -n -o ~/apps_dl/dust.tar.gz
 mv ~/apps_dl/dust/dust-v0.6.0-x86_64-unknown-linux-gnu/dust ~/.local/bin
 

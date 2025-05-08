@@ -38,12 +38,20 @@ alias ll="ls -la --color=auto"
 #alias ll="ls -lah"
 alias llr="ll -tr"
 function llw() {
+
     filename=$(ls "$(which $1)")
+
+    if [ -h "$filename" ]; then
+        echo "$filename is a symlink to $(readlink -f "$filename")"
+        filename=$(readlink -f "$filename")
+    fi
+
     filetype=$(file $filename)
-    echo "$filename $filetype"
+    echo "$filename - $filetype"
 }
 function llwf() {
-    file $(llw $1 | awk '{print $9}')
+    # file $(llw $1 | awk '{print $9}')
+    file "$(llw $1 | awk '{print $9}')"
 }
 #show only folders
 # alias lsd="ls -lF ${colorflag} | grep '^d'"
