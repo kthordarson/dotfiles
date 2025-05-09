@@ -1,9 +1,14 @@
 #!/usr/bin/python3
-
+import os
+import datetime
 import argparse
 from pathlib import Path
 import operator
 from utils import get_size_format, EXCLUDES, DirItem
+from multiprocessing import Pool
+
+def process_directory(k):
+	return DirItem(name=k, getbigfiles=getbigfiles, maxfiles=args.maxfiles, wildcard=args.wildcard)
 
 
 if __name__ == '__main__':
@@ -30,12 +35,12 @@ if __name__ == '__main__':
 		# print(f'[d] getbigfiles:{getbigfiles} args.topfiles:{args.maxfiles}')
 	filelist = []
 	itemlist = []
+	itemlist2 = []
 	folderlist = [k for k in input_path.glob('*') if not k.is_file() and not Path(k).is_symlink() and k.name not in exclude_list]
 	try:
 		# itemlist = [DirItem(name=k, getbigfiles=getbigfiles, maxfiles=args.maxfiles) for k in folderlist]
-		for k in folderlist:
-			di = DirItem(name=k, getbigfiles=getbigfiles, maxfiles=args.maxfiles, wildcard=args.wildcard)
-			itemlist.append(di)
+		with Pool(processes=os.cpu_count()) as pool:
+			itemlist = pool.map(process_directory, folderlist)
 	except KeyboardInterrupt as e:
 		print(f'[KeyboardInterrupt] il:{len(itemlist)} fl:{len(folderlist)}')
 	total_size = 0

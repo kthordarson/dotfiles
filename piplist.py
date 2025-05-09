@@ -53,7 +53,7 @@ def get_pypi_json(module):
 		r = requests.get(url)
 	except Exception as e:
 		logger.error(f'Unhandled Exception: {e} {type(e)} {module=} for {url} for module: {module["modulename"]}')
-		jsondata = {'error': e, 'status_code': r.status_code, 'url': url, 'module': module['modulename']}
+		jsondata = {'error': e, 'url': url, 'module': module['modulename']}
 		# Error: <Fault -32500: 'HTTPTooManyRequests: The action could not be performed because there were too many requests by the client.'> <class 'xmlrpc.client.Fault'> https://pypi.org/pypi/pyroute2.ipdb/json
 	if r.status_code == 200:
 		try:
@@ -106,13 +106,14 @@ def get_latest_version_cache(packname, cachedata):
 	except Exception as e:
 		logger.error(f'Unhandled Exception: {e} {type(e)} for {packname}')
 		latest_version = f'Error {e}'
-	if 'info' in jsoninfo.keys():
-		if 'version' in jsoninfo.get('info').keys():
-			latest_version = jsoninfo.get('info').get('version')
+	if isinstance(jsoninfo, dict):
+		if 'info' in jsoninfo.keys():
+			if 'version' in jsoninfo.get('info').keys():
+				latest_version = jsoninfo.get('info').get('version')
+			else:
+				latest_version = 'Error: No version in info'
 		else:
-			latest_version = 'Error: No version in info'
-	else:
-		latest_version = 'Error: No info in jsoninfo'
+			latest_version = 'Error: No info in jsoninfo'
 	return latest_version
 
 def update_check(allpacks, usrpacks, localpacks):

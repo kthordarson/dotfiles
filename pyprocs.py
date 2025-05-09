@@ -9,7 +9,7 @@ def get_conns():
 	for k in conns:
 		if k.status == 'LISTEN' or k.status == 'ESTABLISHED' or k.status == 'CLOSE_WAIT' or k.status == 'NONE':
 			if k.status == 'ESTABLISHED':
-				kraddr = k.raddr.ip
+				kraddr = k.raddr.ip  # type: ignore
 			else:
 				kraddr = '-'
 			procname = psutil.Process(k.pid).name()
@@ -17,15 +17,15 @@ def get_conns():
 				kpid = '-'
 			else:
 				kpid = k.pid
-			if k.laddr.ip == '::':
+			if k.laddr.ip == '::':  # type: ignore
 				kladdrip = '0.0.0.0'
 			else:
-				kladdrip = k.laddr.ip
-			print(f'l:{kladdrip:<13}:{k.laddr.port:<5} {procname} pid:{kpid} s:{k.status} {kraddr}')
+				kladdrip = k.laddr.ip  # type: ignore
+			print(f'l:{kladdrip:<13}:{k.laddr.port:<5} {procname} pid:{kpid} s:{k.status} {kraddr}')  # type: ignore
 
 def get_listeners():
 	conns = psutil.net_connections(kind='inet')
-	return sorted(set([(k.laddr.port, k.pid, k.laddr.ip, psutil.Process(k.pid).name()) for k in conns if k.status == 'LISTEN']))
+	return sorted(set([(k.laddr.port, k.pid, k.laddr.ip, psutil.Process(k.pid).name()) for k in conns if k.status == 'LISTEN']))  # type: ignore
 
 if __name__ == '__main__':
 	listeners = get_listeners()

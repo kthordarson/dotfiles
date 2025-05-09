@@ -1,7 +1,7 @@
 #!/bin/bash
-cd ~
+cd ~ || exit
 git clone https://github.com/ReFirmLabs/binwalk.git
-cd binwalk
+cd binwalk || exit
 sudo ./deps.sh
 sudo python ./setup.py install
 sudo -H pip install git+https://github.com/ahupp/python-magic

@@ -38,12 +38,20 @@ alias ll="ls -la --color=auto"
 #alias ll="ls -lah"
 alias llr="ll -tr"
 function llw() {
+
     filename=$(ls "$(which $1)")
+
+    if [ -h "$filename" ]; then
+        echo "$filename is a symlink to $(readlink -f "$filename")"
+        filename=$(readlink -f "$filename")
+    fi
+
     filetype=$(file $filename)
-    echo "$filename $filetype"
+    echo "$filename - $filetype"
 }
 function llwf() {
-    file $(llw $1 | awk '{print $9}')
+    # file $(llw $1 | awk '{print $9}')
+    file "$(llw $1 | awk '{print $9}')"
 }
 #show only folders
 # alias lsd="ls -lF ${colorflag} | grep '^d'"
@@ -93,8 +101,6 @@ alias ipad="curl https://ipinfo.io/ip"
 #alias port4='netstat -an | grep ESTABLISHED | awk '{print $5}' | awk -F: '{print (}' | sort | uniq -c | awk '{ printf("%s\t%s\t",[,() ; for (i = 0; i < (; i++) {printf("*")}; print "" }'))])'
 alias arpdump="arp -avn  | grep -vE 'incomplete|Entries' | awk '{print $4}'"
 
-alias arpdump="arp -avn  | grep -vE 'incomplete|Entries' | awk '{print $4}'"
-
 ## get top process eating memory
 alias psmem='ps auxf | sort -nr -k 4'
 alias psmem10='ps auxf | sort -nr -k 4 | head -10'
@@ -120,8 +126,9 @@ alias biggest="find . -name .git -prune -o -name '*' -printf '%s %p\n'| sort -nr
 # find -name "*.js" -not -path "./directory/*"
 alias foldersize="du -sch $1"
 
-sbs() { du -b --max-depth 1 | sort -nr | perl -pe 's{([0-9]+)}{sprintf "%.1f%s", (>=2**30? ((/2**30, "G"): (>=2**20? ((/2**20, "M"): (>=2**10? ((/2**10, "K"): ((, "")}e'; }
+sbs() { du $1 -b --max-depth 1 | sort -nr |perl -pe 's{([0-9]+)}{sprintf "%.1f%s", $1>=2**30 ? ($1/2**30, "G") : $1>=2**20 ? ($1/2**20, "M") : $1>=2**10 ? ($1/2**10, "K") : ($1, "")}e'; }
 
+# perl -pe 's{([0-9]+)}{sprintf "%.1f%s", (>=2**30? ((/2**30, "G"): (>=2**20? ((/2**20, "M"): (>=2**10? ((/2**10, "K"): ((, "")}e';
 # find stuff
 # alias newest="find . -type f -printf '%TY-%Td-%Tm %.8TT %p\n' | sort -rn | head -n 10"
 function newest() { find "$1" -type f -mtime -2 -printf '%TY-%Td-%Tm %.8TT %p\n' | sort | tail -n 30; }
