@@ -22,9 +22,9 @@ def fix_symlink(symlink, target, dryrun=False):
 
 if __name__ == '__main__':
 	myparse = argparse.ArgumentParser(description="check symlinks")
-	_default = str(Path(myparse.prog).parent)
+	_default = os.getcwd()  # str(Path(myparse.prog).parent)
 	myparse.add_argument('path', nargs='?', type=str, default=_default, metavar='args.path')
-	myparse.add_argument('-t','--type', help="Searchtype, d for dirs, f for files, a for both. ", action='store', default='a', dest='searchtype')
+	myparse.add_argument('-t','--searchtype', help="Searchtype, d for dirs, f for files, a for both. ", action='store', default='a', dest='searchtype')
 	myparse.add_argument('-sa','--showall', help="Show all links", action='store_true', default=False, dest='showall')
 	myparse.add_argument('-sb','--showbroken', help="Show broken links", action='store_true', default=False, dest='showbroken')
 	myparse.add_argument('-fb', '--findbroken', help="Attempt to find broken links", action='store_true', default=False, dest='findbroken')
@@ -40,20 +40,25 @@ if __name__ == '__main__':
 
 	if not args.path.endswith('/'):
 		args.path += '/'
+
 	if args.searchtype == 'd':  # todo fix
 		print(f'{Fore.LIGHTBLUE_EX}Searching for dirs in {Fore.CYAN}{args.path}{Style.RESET_ALL}')
 		symlinks = [k for k in os.scandir(args.path) if k.is_symlink() and k.is_dir() and os.path.exists(os.path.realpath(k))]
 		broken_symlinks = [k for k in os.scandir(args.path) if k.is_symlink() and k.is_dir() and not os.path.exists(os.path.realpath(k))]
+
 	if args.searchtype == 'f':  # todo fix
 		print(f'{Fore.LIGHTBLUE_EX}Searching for files in {Fore.CYAN}{args.path}{Style.RESET_ALL}')
 		symlinks = [k for k in os.scandir(args.path) if k.is_symlink() and k.is_file() and os.path.exists(os.path.realpath(k))]
 		broken_symlinks = [k for k in os.scandir(args.path) if k.is_symlink() and k.is_file() and not os.path.exists(os.path.realpath(k))]
+
 	if args.searchtype == 'a':
 		print(f'{Fore.LIGHTBLUE_EX}Searching {Fore.CYAN}{args.path}{Style.RESET_ALL}')
 		# symlinks = [k for k in os.scandir(args.path) if k.is_symlink()  and os.path.exists(os.path.realpath(k))]
 		symlinks = [k for k in glob(pathname=args.path+'*', recursive=True) if Path(k).is_symlink()]
 		broken_symlinks = [k for k in os.scandir(args.path) if k.is_symlink() and not os.path.exists(os.path.realpath(k))]
+
 	print(f'{Fore.LIGHTBLUE_EX}Found {Fore.CYAN}{len(symlinks)} {Fore.LIGHTBLUE_EX}working and {Fore.CYAN}{len(broken_symlinks)} {Fore.LIGHTBLUE_EX}broken symlinks in {Fore.CYAN}{args.path}{Style.RESET_ALL}')
+
 	if args.findbroken:
 		# attempt to find broken links
 		for idx, sl_ in enumerate(broken_symlinks):
@@ -66,6 +71,7 @@ if __name__ == '__main__':
 			print(f' found {Fore.CYAN}{len(candidates)}  +  {len(candidates2)} {Fore.LIGHTBLUE_EX}candidates for {Fore.CYAN}{sl} {Style.RESET_ALL}')
 			for c in candidates:
 				print(f'\t{Fore.LIGHTGREEN_EX}{c}{Style.RESET_ALL}')
+
 	elif args.removebroken:
 		# attempt to remove broken links, log operations to file
 		for idx, sl_ in enumerate(broken_symlinks):
@@ -76,6 +82,7 @@ if __name__ == '__main__':
 				os.unlink(sl)
 			except Exception as e:
 				logger.error(f'unhandled {e} {type(e)} {sl=}')
+
 	elif args.fixbroken:
 		# attempt to find and fix broken links, log operations to file
 		for idx, sl_ in enumerate(broken_symlinks):
@@ -97,11 +104,17 @@ if __name__ == '__main__':
 				print(f'  found {Fore.CYAN}{len(candidates)} {Fore.LIGHTBLUE_EX}for {Fore.CYAN}{sl} {Style.RESET_ALL}')
 				for c in candidates:
 					print(f'{Fore.LIGHTGREEN_EX}\t{c}{Style.RESET_ALL}')
+
 	elif args.showbroken:
 		for idx, sl_ in enumerate(broken_symlinks):
 			sl = Path(sl_)
 			print(f'{Fore.LIGHTBLUE_EX}[{idx}/{len(broken_symlinks)}] {Fore.BLUE}{sl} -> {Fore.CYAN}{os.path.realpath(sl)} {Style.RESET_ALL}')
+
 	elif args.showall:
 		for idx, sl_ in enumerate(symlinks):
 			sl = Path(sl_)
 			print(f'{Fore.LIGHTBLUE_EX}[{idx}/{len(symlinks)}] {Fore.BLUE}{sl} -> {Fore.CYAN}{os.path.realpath(sl)} {Style.RESET_ALL}')
+		print(f'{Fore.RED}Broken symlinks in: {Fore.CYAN}{args.path}{Style.RESET_ALL}')
+		for idx, sl_ in enumerate(broken_symlinks):
+			sl = Path(sl_)
+			print(f'{Fore.LIGHTBLUE_EX}[{idx}/{len(broken_symlinks)}] {Fore.BLUE}{sl} -> {Fore.RED}{os.path.realpath(sl)} {Style.RESET_ALL}')
