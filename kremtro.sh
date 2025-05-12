@@ -342,11 +342,21 @@ function get_github_repo_size() {
         # If not a GitHub URL, use the provided argument as is
         repo_name=$1
     fi
-    # curl -s https://api.github.com/repos/torvalds/linux | jq '.size' | numfmt --to=iec --from-unit=1024
-    reposize=$(curl -s https://api.github.com/repos/$repo_name | jq '.size' | numfmt --to=iec --from-unit=1024)
-    # reposize=$(curl -s $1 | jq '.size' | numfmt --to=iec --from-unit=1024)
-    echo "Repo $repo_name size: $reposize"
-}
+    repo_status=$(curl -s -H "Authorization: token $get_github_repo_size_token" https://api.github.com/repos/$repo_name -o /dev/null -w "%{http_code}")
+    if [[ "$repo_status" -ge 200 && "$repo_status" -lt 300 ]]; then
+    reposize=$(curl -s -H "Authorization: token $get_github_repo_size_token" https://api.github.com/repos/$repo_name | jq '.size' | numfmt --to=iec --from-unit=1024)
+    echo "repo: $repo_name size: $reposize"
+    elif [[ "$repo_status" -ge 300 && "$repo_status" -lt 400 ]]; then
+    echo "Request was redirected (3xx range) for $repo_name."
+    elif [[ "$repo_status" -ge 400 && "$repo_status" -lt 500 ]]; then
+    echo "Client error (4xx range) for $repo_name."
+    elif [[ "$repo_status" -ge 500 ]]; then
+    echo "Server error (5xx range) for $repo_name."
+    else
+    echo "Could not determine status code for $repo_name."
+    fi
+
+    }
 
 # Default PS1 (without repo name)
 # DEFAULT_PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\] \$ '
