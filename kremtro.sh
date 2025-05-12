@@ -347,7 +347,7 @@ function get_github_repo_size() {
     reposize=$(curl -s -H "Authorization: token $get_github_repo_size_token" https://api.github.com/repos/$repo_name | jq '.size' | numfmt --to=iec --from-unit=1024)
     echo "repo: $repo_name size: $reposize"
     elif [[ "$repo_status" -ge 300 && "$repo_status" -lt 400 ]]; then
-    echo "Request was redirected (3xx range) for $repo_name."
+    echo "error Request was redirected (3xx range) for $repo_name."
     elif [[ "$repo_status" -ge 400 && "$repo_status" -lt 500 ]]; then
     echo "Client error (4xx range) for $repo_name."
     elif [[ "$repo_status" -ge 500 ]]; then
