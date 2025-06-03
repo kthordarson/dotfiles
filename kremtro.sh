@@ -244,6 +244,105 @@ man() {
         man "$@"
 }
 
+same_size_dirs() {
+    # Check if path argument is provided
+    if [ -z "$1" ]; then
+        echo "Error: Please provide a path"
+        return 1
+    fi
+
+    # Check if path exists and is a directory
+    if [ ! -d "$1" ]; then
+        echo "Error: '$1' is not a valid directory"
+        return 1
+    fi
+
+    # Find directories and their sizes, sort by size, and group
+    find "$1" -maxdepth 1 -type d -exec du -s {} \; | 
+    sort -n | 
+    awk '{
+        size=$1;
+        $1="";
+        sub(/^ /, "");
+        dirs[size] = (dirs[size] ? dirs[size] ", " : "") $0
+    } 
+    END {
+        for (size in dirs) {
+            if (split(dirs[size], arr, ", ") > 1) {
+                print "Size: " size "KB"
+                print dirs[size]
+                print ""
+            }
+        }
+    }'
+}
+
+# find_duplicate_files /path/to/directory 10240  # Find duplicates larger than 10KB
+find_duplicate_files() {
+    # Check if path argument is provided
+    if [ -z "$1" ]; then
+        echo "Error: Please provide a path"
+        return 1
+    fi
+
+    # Check if path exists and is a directory
+    if [ ! -d "$1" ]; then
+        echo "Error: '$1' is not a valid directory"
+        return 1
+    fi
+
+    # Default minimum size (in bytes) if not specified (e.g., 1024 bytes = 1KB)
+    local min_size=${2:-1024}
+
+    # Temporary file for storing file info
+    local temp_file=$(mktemp)
+
+    # Find files, calculate size and MD5, and filter by size
+    find "$1" -type f -size +${min_size}c -exec ls -l {} \; -exec md5sum {} \; | 
+    awk '{
+        if (NR % 2 == 1) {
+            size=$5; 
+            file=$9
+        } else {
+            md5=$1; 
+            print size ":" md5 ":" file
+        }
+    }' | 
+    sort -t':' -k1,1n -k2,2 | 
+    awk -F':' '
+    {
+        key=$1":"$2
+        if (key in files) {
+            files[key] = files[key] "\n" $3
+            count[key]++
+        } else {
+            files[key] = $3
+            count[key] = 1
+        }
+    }
+    END {
+        for (key in files) {
+            if (count[key] > 1) {
+                split(key, arr, ":")
+                print "Size: " arr[1] " bytes, MD5: " arr[2]
+                print files[key]
+                print ""
+            }
+        }
+    }' > "$temp_file"
+
+    # Display results if duplicates found
+    if [ -s "$temp_file" ]; then
+        cat "$temp_file"
+    else
+        echo "No duplicate files found over ${min_size} bytes."
+    fi
+
+    # Clean up
+    rm -f "$temp_file"
+}
+
+
 function findupefiles() {
     awk -F'/' '{
   f = $NF
@@ -342,11 +441,21 @@ function get_github_repo_size() {
         # If not a GitHub URL, use the provided argument as is
         repo_name=$1
     fi
-    # curl -s https://api.github.com/repos/torvalds/linux | jq '.size' | numfmt --to=iec --from-unit=1024
-    reposize=$(curl -s https://api.github.com/repos/$repo_name | jq '.size' | numfmt --to=iec --from-unit=1024)
-    # reposize=$(curl -s $1 | jq '.size' | numfmt --to=iec --from-unit=1024)
-    echo "Repo $repo_name size: $reposize"
-}
+    repo_status=$(curl -s -H "Authorization: token $get_github_repo_size_token" https://api.github.com/repos/$repo_name -o /dev/null -w "%{http_code}")
+    if [[ "$repo_status" -ge 200 && "$repo_status" -lt 300 ]]; then
+    reposize=$(curl -s -H "Authorization: token $get_github_repo_size_token" https://api.github.com/repos/$repo_name | jq '.size' | numfmt --to=iec --from-unit=1024)
+    echo "repo: $repo_name size: $reposize"
+    elif [[ "$repo_status" -ge 300 && "$repo_status" -lt 400 ]]; then
+    echo "error Request was redirected (3xx range) for $repo_name."
+    elif [[ "$repo_status" -ge 400 && "$repo_status" -lt 500 ]]; then
+    echo "Client error (4xx range) for $repo_name."
+    elif [[ "$repo_status" -ge 500 ]]; then
+    echo "Server error (5xx range) for $repo_name."
+    else
+    echo "Could not determine status code for $repo_name."
+    fi
+
+    }
 
 # Default PS1 (without repo name)
 # DEFAULT_PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\] \$ '
