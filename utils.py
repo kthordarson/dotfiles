@@ -55,7 +55,7 @@ def filelist_generator(args, exclude_list, specific_dir=None, root_only=False):
 	# Use scandir instead of Path.glob for better performance
 	if root_only:
 		for entry in os.scandir(path):
-			if entry.is_file() and not entry.name.startswith('.') and entry.name not in exclude_list:
+			if entry.is_file() and not entry.name.startswith('.') and entry.name not in exclude_list and entry.stat().st_size > 0:
 				if fnmatch.fnmatch(entry.name, wildcard):
 					stat = entry.stat()
 					yield FileItem(name=Path(entry.path))
@@ -69,7 +69,8 @@ def filelist_generator(args, exclude_list, specific_dir=None, root_only=False):
 					full_path = os.path.join(root, file)
 					try:
 						size = os.path.getsize(full_path)
-						yield FileItem(name=Path(full_path))
+						if size > 0:  # Only yield files with size > 0
+							yield FileItem(name=Path(full_path))
 					except (FileNotFoundError, PermissionError):
 						continue
 
