@@ -244,6 +244,48 @@ man() {
         man "$@"
 }
 
+function findupesdirs() {
+    if [ $# -ne 2 ]; then
+        echo "Error: Please provide exactly two paths"
+        return 1
+    fi
+    if [ ! -d "$1" ] || [ ! -d "$2" ]; then
+        echo "Error: Both arguments must be valid directories"
+        return 1
+    fi
+    awk '{
+        key = $1 "," $2  # Combine size and file count as key
+        a[key] = key in a ? a[key] RS $3 : $3
+        b[key]++
+    }
+    END {
+        for(x in b)
+            if(b[x] > 1) {
+                split(x, arr, ",")
+                printf "Duplicate Directories (Size: %s Bytes, File Count: %s):\n%s\n", arr[1], arr[2], a[x]
+            }
+    }' <(find "$1" "$2" -type d -exec du -sb {} \; -exec sh -c 'find "{}" -type f | wc -l' \; -exec echo {} \; | awk '{print $1 "," $2 "," $3}')
+}
+
+function findupesdirs_v1() {
+    if [ -z "$1" ]; then
+        echo "Error: Please provide a path"
+        return 1
+    fi
+    awk '{
+        key = $1 "," $2  # Combine size and file count as key
+        a[key] = key in a ? a[key] RS $3 : $3
+        b[key]++
+    }
+    END {
+        for(x in b)
+            if(b[x] > 1) {
+                split(x, arr, ",")
+                printf "Duplicate Directories (Size: %s Bytes, File Count: %s):\n%s\n", arr[1], arr[2], a[x]
+            }
+    }' <(find "$1" -type d -exec du -sb {} \; -exec sh -c 'find "{}" -type f | wc -l' \; -exec echo {} \; | awk '{print $1 "," $2 "," $3}')
+}
+
 function findupefiles() {
     awk -F'/' '{
   f = $NF
