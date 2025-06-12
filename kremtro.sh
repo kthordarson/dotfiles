@@ -167,7 +167,7 @@ export HISTSIZE=-1                            # big big history (default is 500)
 export HISTFILESIZE=$HISTSIZE                 # big big history
 export HISTIGNORE="ls:ll:history:df"          # ignores
 type shopt &>/dev/null && shopt -s histappend # append to history, don't overwrite it
-# PROMPT_COMMAND="history -a; history -n"
+export PROMPT_COMMAND="history -a; history -n"
 # export PROMPT_COMMAND="history -a; $PROMPT_COMMAND"
 # export PROMPT_COMMAND='history -a;history -c;history -r'
 # export PROMPT_COMMAND='history -a;history -r;history -n'
@@ -343,9 +343,10 @@ function get_github_repo_size() {
         repo_name=$1
     fi
     # curl -s https://api.github.com/repos/torvalds/linux | jq '.size' | numfmt --to=iec --from-unit=1024
-    reposize=$(curl -s https://api.github.com/repos/$repo_name | jq '.size' | numfmt --to=iec --from-unit=1024)
+    raw_reposize=$(curl -s https://api.github.com/repos/$repo_name | jq '.size')
+    reposize=$(echo $raw_reposize | numfmt --to=iec --from-unit=1024)
     # reposize=$(curl -s $1 | jq '.size' | numfmt --to=iec --from-unit=1024)
-    echo "Repo $repo_name size: $reposize"
+    echo "Repo $repo_name size: $raw_reposize - $reposize"
 }
 
 # Default PS1 (without repo name)
