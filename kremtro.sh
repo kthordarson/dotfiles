@@ -253,37 +253,32 @@ function findupesdirs() {
         echo "Error: Both arguments must be valid directories"
         return 1
     fi
-    awk '{
-        key = $1 "," $2  # Combine size and file count as key
-        a[key] = key in a ? a[key] RS $3 : $3
+    # Create a temporary file to store find output
+    tmpfile=$(mktemp)
+    # Run find and store output, handling spaces correctly
+    find "$1" "$2" -type d -not -path '*/\.*' -exec du -sb -- "{}" \; > "$tmpfile"
+    while IFS= read -r line; do
+        # Extract size and path
+        size=$(echo "$line" | awk '{print $1}')
+        path=$(echo "$line" | awk '{$1=""; sub(/^ /, ""); print}' | sed 's/"/\\"/g')
+        # Compute file count with proper quoting
+        file_count=$(find "$path" -type f -not -path '*/\.*' -exec ls -l "{}" \; | wc -l)
+        echo "$size,$file_count,$path"
+    done < "$tmpfile" | \
+    awk -F, 'NF == 3 && $1 ~ /^[0-9]+$/ && $2 ~ /^[0-9]+$/ {
+        key = $1 "," $2
+        a[key] = key in a ? a[key] "\n" $3 : $3
         b[key]++
     }
     END {
-        for(x in b)
-            if(b[x] > 1) {
+        for (x in b)
+            if (b[x] > 1) {
                 split(x, arr, ",")
-                printf "Duplicate Directories (Size: %s Bytes, File Count: %s):\n%s\n", arr[1], arr[2], a[x]
+                printf "Duplicate Directories (Size: %s Bytes, File Count: %s):\n%s\n\n", arr[1], arr[2], a[x]
             }
-    }' <(find "$1" "$2" -type d -exec du -sb {} \; -exec sh -c 'find "{}" -type f | wc -l' \; -exec echo {} \; | awk '{print $1 "," $2 "," $3}')
-}
-
-function findupesdirs_v1() {
-    if [ -z "$1" ]; then
-        echo "Error: Please provide a path"
-        return 1
-    fi
-    awk '{
-        key = $1 "," $2  # Combine size and file count as key
-        a[key] = key in a ? a[key] RS $3 : $3
-        b[key]++
-    }
-    END {
-        for(x in b)
-            if(b[x] > 1) {
-                split(x, arr, ",")
-                printf "Duplicate Directories (Size: %s Bytes, File Count: %s):\n%s\n", arr[1], arr[2], a[x]
-            }
-    }' <(find "$1" -type d -exec du -sb {} \; -exec sh -c 'find "{}" -type f | wc -l' \; -exec echo {} \; | awk '{print $1 "," $2 "," $3}')
+    }' | grep -v '^$'
+    # Clean up temporary file
+    rm -f "$tmpfile"
 }
 
 function findupefiles() {
