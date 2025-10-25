@@ -87,7 +87,7 @@ def findupesdirs_v1(path1, path2, max_depth=1):
     for base_path in [path1, path2]:
         # Get immediate subdirectories (depth 1)
         try:
-            subdirs = [d for d in os.listdir(base_path) if os.path.isdir(os.path.join(base_path, d)) and not d.startswith('.')]
+            subdirs = [d for d in os.listdir(base_path)if os.path.isdir(os.path.join(base_path, d)) and not d.startswith('.')]
         except (OSError, PermissionError):
             print(f"Error: Cannot access {base_path}")
             continue

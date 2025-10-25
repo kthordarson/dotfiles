@@ -12,21 +12,22 @@ function addkrem() {
     echo "addkrem"
     if [ -f ~/dotfiles/kremtro.sh ]; then
         echo "kremtro exists"
-        source ~/dotfiles/kremtro.sh
+        # shellcheck source=/dev/null
+        source "$HOME"/dotfiles/kremtro.sh
         addkremtobashrc
     else
         echo "kremtro not found"
     fi
 }
 
-if grep -q kremtro "~/.bashrc"; then
+if grep -q kremtro "$HOME/.bashrc"; then
     echo "kremtro already installed... skipping"
 else
     echo "kremtro not installed, adding to .bashrc"
     addkrem
 fi
-source ~/.bashrc
-
+# shellcheck source=/dev/null
+source "$HOME/.bashrc"
 # nerdtree
 if [ -f ~/.vim/bundle/nerdtree ]; then
     echo "nertree exists"
@@ -75,7 +76,7 @@ function install-ycm() {
         echo "ycm alread installed"
     else
         git clone --recursive https://github.com/ycm-core/YouCompleteMe ~/.vim/plugged/YouCompleteMe
-        cd ~/.vim/plugged/YouCompleteMe
+        cd ~/.vim/plugged/YouCompleteMe || exit
         git submodule update --init --recursive
         python3 ./install.py --all
 
@@ -88,7 +89,7 @@ ln -s ~/dotfiles/dtrx.py ~/bin/dtrx
 
 # install requirements
 sudo apt install -y python3.8-dev python3.8-full nmap wireshark python3-impacket
-sudo apt install  -y build-essential cmake make automake autoconf python3-dev mono-complete golang nodejs npm 
+sudo apt install  -y build-essential cmake make automake autoconf python3-dev mono-complete golang nodejs npm
 
 sudo update-alternatives --install /usr/bin/python pythn /usr/bin/python3.8 1
 

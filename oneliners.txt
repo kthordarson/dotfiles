@@ -1,3 +1,6 @@
+# find graylog invalid fields
+cat  /var/log/graylog-server/server.log | awk '/\[Message\] Ignoring invalid or reserved key/ {sub(/.*\[Message\] Ignoring invalid or reserved key /, ""); sub(/ for message.*/, ""); print}' | sort | uniq
+
 # netwatcher
 watch -n 1 "sudo netstat -npae | grep -v -E 'unix|127.0.0.1' | grep nmap | grep -v SYN"
 
