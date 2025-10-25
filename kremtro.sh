@@ -39,19 +39,19 @@ alias ll="ls -la --color=auto"
 alias llr="ll -tr"
 function llw() {
 
-    filename=$(ls "$(which $1)")
+    filename=$(ls "$(which "$1")")
 
     if [ -h "$filename" ]; then
         echo "$filename is a symlink to $(readlink -f "$filename")"
         filename=$(readlink -f "$filename")
     fi
 
-    filetype=$(file $filename)
+    filetype=$(file "$filename")
     echo "$filename - $filetype"
 }
 function llwf() {
     # file $(llw $1 | awk '{print $9}')
-    file "$(llw $1 | awk '{print $9}')"
+    file "$(llw "$1" | awk '{print $9}')"
 }
 #show only folders
 # alias lsd="ls -lF ${colorflag} | grep '^d'"
@@ -65,7 +65,8 @@ function newtree() { tree "$1" --noreport -tiaFD | tail; }
 function aptbig {
     dpkg-query -W --showformat='''${Installed-Size;10}\t${Package}\n''' | sort -k1,1n
 }
-alias apt-biggest="sudo dpkg-query -Wf '\${Installed-Size}\t\${Package}\n' | sort -n"
+# shellcheck disable=SC2154
+alias apt-biggest="dpkg-query -Wf '\${Installed-Size}\t\${Package}\n' | sort -n"
 
 #nicer output
 alias path='echo -e ${PATH//:/\\n}'
@@ -79,7 +80,8 @@ alias nocomment='grep -Ev '\''^(#|$)'\'''
 #misc
 #alias alljobs='for user in $(cut -f1 -d: /etc/passwd); do sudo crontab -u $user -l; done'
 function alljobs() {
-    for user in $(cut -f1 -d: /etc/passwd); do sudo crontab -u $user -l; done
+    # shellcheck disable=SC2013
+    for user in $(cut -f1 -d: /etc/passwd); do sudo crontab -u "$user" -l; done
 }
 #alias findit="find . -type f -name"
 alias sourceme="source ~/dotfiles/kremtro.sh"
@@ -99,8 +101,10 @@ alias allips="ifconfig -a | grep -o 'inet6\? \(addr:\)\?\s\?\(\(\([0-9]\+\.\)\{3
 # alias ipad="dig +short myip.opendns.com @resolver1.opendns.com"
 alias ipad="curl https://ipinfo.io/ip"
 #alias port4='netstat -an | grep ESTABLISHED | awk '{print $5}' | awk -F: '{print (}' | sort | uniq -c | awk '{ printf("%s\t%s\t",[,() ; for (i = 0; i < (; i++) {printf("*")}; print "" }'))])'
-alias arpdump="arp -avn  | grep -vE 'incomplete|Entries' | awk '{print $4}'"
-
+# alias arpdump="arp -avn  | grep -vE 'incomplete|Entries' | awk '{print $4}'"
+function arpdump() {
+    arp -avn | grep -vE 'incomplete|Entries' | awk '{print $4}'
+}
 ## get top process eating memory
 alias psmem='ps auxf | sort -nr -k 4'
 alias psmem10='ps auxf | sort -nr -k 4 | head -10'
@@ -115,7 +119,7 @@ alias pscpu10='ps auxf | sort -nr -k 3 | head -10'
 #diskspace
 # alias most='du -hsx * | sort -rh | head -10'
 function most() {
-    du -hsx $1* | sort -rh | head -20
+    du -hsx "$1"* | sort -rh | head -20
 }
 
 alias usage="du -h --max-depth=1 | sort -rh"
@@ -124,9 +128,13 @@ alias biggest="find . -name .git -prune -o -name '*' -printf '%s %p\n'| sort -nr
 # alias biggest="find . -path ./.git -prune -o -printf '%s %p\n'| sort -nr | head -20"
 # find . -path ./misc -prune -o -name '*.txt' -print
 # find -name "*.js" -not -path "./directory/*"
-alias foldersize="du -sch $1"
+#alias foldersize='du -sch \$1'
 
-sbs() { du $1 -b --max-depth 1 | sort -nr |perl -pe 's{([0-9]+)}{sprintf "%.1f%s", $1>=2**30 ? ($1/2**30, "G") : $1>=2**20 ? ($1/2**20, "M") : $1>=2**10 ? ($1/2**10, "K") : ($1, "")}e'; }
+function foldersize() {
+    du -sch "$1"
+}
+
+sbs() { du "$1" -b --max-depth 1 | sort -nr |perl -pe 's{([0-9]+)}{sprintf "%.1f%s", $1>=2**30 ? ($1/2**30, "G") : $1>=2**20 ? ($1/2**20, "M") : $1>=2**10 ? ($1/2**10, "K") : ($1, "")}e'; }
 
 # perl -pe 's{([0-9]+)}{sprintf "%.1f%s", (>=2**30? ((/2**30, "G"): (>=2**20? ((/2**20, "M"): (>=2**10? ((/2**10, "K"): ((, "")}e';
 # find stuff
@@ -149,17 +157,17 @@ alias svim='sudo vim'
 alias catcolor='pygmentize -O style=monokai -f console256 -g'
 
 # Color man pages
-man() {
-    env \
-        LESS_TERMCAP_mb="$(printf "\e[1;31m")" \
-        LESS_TERMCAP_md="$(printf "\e[1;31m")" \
-        LESS_TERMCAP_me="$(printf "\e[0m")" \
-        LESS_TERMCAP_se="$(printf "\e[0m")" \
-        LESS_TERMCAP_so="$(printf "\e[1;44;33m")" \
-        LESS_TERMCAP_ue="$(printf "\e[0m")" \
-        LESS_TERMCAP_us="$(printf "\e[1;32m")" \
-        man "$@"
-}
+# man() {
+#     env \
+#         LESS_TERMCAP_mb="$(printf "\e[1;31m")" \
+#         LESS_TERMCAP_md="$(printf "\e[1;31m")" \
+#         LESS_TERMCAP_me="$(printf "\e[0m")" \
+#         LESS_TERMCAP_se="$(printf "\e[0m")" \
+#         LESS_TERMCAP_so="$(printf "\e[1;44;33m")" \
+#         LESS_TERMCAP_ue="$(printf "\e[0m")" \
+#         LESS_TERMCAP_us="$(printf "\e[1;32m")" \
+#         man "$@"
+# }
 
 # history stuff
 export HISTCONTROL="erasedups:ignoreboth"     # no duplicate entries
@@ -307,7 +315,7 @@ find_duplicate_files() {
 
 
     # Find files, calculate size and MD5, and filter by size
-    find "$1" -type f -size +${min_size}c -exec ls -l {} \; -exec md5sum {} \; |
+    find "$1" -type f -size +"${min_size}"c -exec ls -l {} \; -exec md5sum {} \; |
     awk '{
         if (NR % 2 == 1) {
             size=$5;
@@ -444,7 +452,8 @@ alias pips='python3  ~/development/pip_search/pip_search/__main__.py  -s release
 # Function to get Git remote(s)
 git_remote_prompt() {
     if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-        local remotes=$(git remote | tr '\n' ',' | sed 's/,$//')
+        local remotes
+        remotes=$(git remote | tr '\n' ',' | sed 's/,$//')
         if [ -n "$remotes" ]; then
             echo "$remotes"
         else
@@ -480,30 +489,30 @@ git_repo_name() {
     fi
 }
 
-function get_github_repo_size() {
-    if [[ $1 == *"github.com"* ]]; then
-        # Extract the repository name from the URL
-        repo_name=$(echo "$1" | sed 's|https://github.com/||')
-        #| sed -E 's|.*github\.com[:/]|github.com/|; s|\.git$||')
-    else
-        # If not a GitHub URL, use the provided argument as is
-        repo_name=$1
-    fi
-    repo_status=$(curl -s -H "Authorization: token $get_github_repo_size_token" https://api.github.com/repos/$repo_name -o /dev/null -w "%{http_code}")
-    if [[ "$repo_status" -ge 200 && "$repo_status" -lt 300 ]]; then
-    reposize=$(curl -s -H "Authorization: token $get_github_repo_size_token" https://api.github.com/repos/$repo_name | jq '.size' | numfmt --to=iec --from-unit=1024)
-    echo "repo: $repo_name size: $reposize"
-    elif [[ "$repo_status" -ge 300 && "$repo_status" -lt 400 ]]; then
-    echo "error Request was redirected (3xx range) for $repo_name."
-    elif [[ "$repo_status" -ge 400 && "$repo_status" -lt 500 ]]; then
-    echo "Client error (4xx range) for $repo_name."
-    elif [[ "$repo_status" -ge 500 ]]; then
-    echo "Server error (5xx range) for $repo_name."
-    else
-    echo "Could not determine status code for $repo_name."
-    fi
+# function get_github_repo_size() {
+#     if [[ $1 == *"github.com"* ]]; then
+#         # Extract the repository name from the URL
+#         repo_name=$(echo "$1" | sed 's|https://github.com/||')
+#         #| sed -E 's|.*github\.com[:/]|github.com/|; s|\.git$||')
+#     else
+#         # If not a GitHub URL, use the provided argument as is
+#         repo_name=$1
+#     fi
+#     repo_status=$(curl -s -H "Authorization: token $get_github_repo_size_token" https://api.github.com/repos/"$repo_name" -o /dev/null -w "%{http_code}")
+#     if [[ "$repo_status" -ge 200 && "$repo_status" -lt 300 ]]; then
+#     reposize=$(curl -s -H "Authorization: token $get_github_repo_size_token" https://api.github.com/repos/"$repo_name" | jq '.size' | numfmt --to=iec --from-unit=1024)
+#     echo "repo: $repo_name size: $reposize"
+#     elif [[ "$repo_status" -ge 300 && "$repo_status" -lt 400 ]]; then
+#     echo "error Request was redirected (3xx range) for $repo_name."
+#     elif [[ "$repo_status" -ge 400 && "$repo_status" -lt 500 ]]; then
+#     echo "Client error (4xx range) for $repo_name."
+#     elif [[ "$repo_status" -ge 500 ]]; then
+#     echo "Server error (5xx range) for $repo_name."
+#     else
+#     echo "Could not determine status code for $repo_name."
+#     fi
 
-    }
+#     }
 
 # Default PS1 (without repo name)
 # DEFAULT_PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\] \$ '
