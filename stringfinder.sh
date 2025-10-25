@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 echo "search for string: $2 in folder: $1"
-for f in $(find $1 -type f -name '*.dll');
+find "$1" -type f -iname '*.dll' -print0 | while IFS= read -r -d '' f;
 do
-    s=$(strings $f | sort |uniq| grep -i $2)
-    if [[ $s ]] then
-        echo "strinsgs in file $f"
-        echo $s
+    s=$(strings "$f" | sort | uniq | grep -i "$2")
+    if [[ $s ]]; then
+        echo "strings in file $f"
+        echo "$s"
         echo "==================="
     fi
 done;

@@ -9,7 +9,7 @@ export IFS=$'\n'
 #leita af þessum tegundum...
 types=( avi mpg mpeg mkv mp4 )
 
-counter=0
+# counter=0
 
 # setup regex for types
 types_re="\\("${types[0]}
@@ -21,25 +21,15 @@ types_re="${types_re}\\)"
 
 for x in "${mediafolder[@]}"
   do
-    echo $x
-    for i in $(find $x -type f -regex ".*\.${types_re}")
-      do
+    echo "$x"
+#    for i in $(find "$x" -type f -regex ".*\.${types_re}")
+      #do
+    find "$x" -type f -regex ".*\.${types_re}" -print0 | while IFS= read -r -d '' i; do
         # echo "$x $counter $i"
         # echo -n "."
-        size=$(stat -c "%s" $i)
-        codec=$(ffprobe -print_format csv -v quiet -show_streams -select_streams v $i | awk -F',' '{print$3}' )
-        output=$(echo "$size $codec - $i")
-        echo $output
-
-        # extract header from first bytes of the file
-        # vid_header=`xxd -s 112 -l 4 $i`
-        # convert to lovercase
-        # vid_header=`echo $vid_header | tr [:upper:] [:lower:]`
-        # if [[ $vid_header == *div3* ]]; then
-        #        echo "$vid_header in $i"
-        #        filestoconvert[$counter]=$i
-        #        let counter=counter+1
-        # fi
+        size=$(stat -c "%s" "$i")
+        codec=$(ffprobe -print_format csv -v quiet -show_streams -select_streams v "$i" | awk -F',' '{print$3}' )
+        echo "$size $codec - $i"
       done
   done
 
