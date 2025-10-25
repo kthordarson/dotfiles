@@ -9,7 +9,7 @@ export IFS=$'\n'
 #leita af þessum tegundum...
 types=( avi mpg mpeg mkv mp4 )
 
-counter=0
+# counter=0
 
 # setup regex for types
 types_re="\\("${types[0]}
@@ -21,15 +21,15 @@ types_re="${types_re}\\)"
 
 for x in "${mediafolder[@]}"
   do
-    echo $x
-    for i in $(find $x -type f -regex ".*\.${types_re}")
+    echo "$x"
+    for i in $(find "$x" -type f -regex ".*\.${types_re}")
       do
         # echo "$x $counter $i"
         # echo -n "."
-        size=$(stat -c "%s" $i)
-        codec=$(ffprobe -print_format csv -v quiet -show_streams -select_streams v $i | awk -F',' '{print$3}' )
+        size=$(stat -c "%s" "$i")
+        codec=$(ffprobe -print_format csv -v quiet -show_streams -select_streams v "$i" | awk -F',' '{print$3}' )
         output=$(echo "$size $codec - $i")
-        echo $output
+        echo "$output"
 
         # extract header from first bytes of the file
         # vid_header=`xxd -s 112 -l 4 $i`

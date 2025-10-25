@@ -11,7 +11,7 @@ if [[ -z $1 ]]; then
 else
 	startdir=$1
 	# foundsymlinks=$(find "$startdir" -type l)
-	foundsymlinks=$(find $startdir -type l -xtype l -printf '%P\n' | grep -v -E 'docker|flatpak')
+	foundsymlinks=$(find "$startdir" -type l -xtype l -printf '%P\n' | grep -v -E 'docker|flatpak')
 	symlinkcount=$(echo "$foundsymlinks" | wc -l)
 	echo "Found $symlinkcount symlinks in $startdir"
 	for symlink in $foundsymlinks; do
