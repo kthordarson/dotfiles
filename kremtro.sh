@@ -295,7 +295,16 @@ find_duplicate_files() {
     local min_size=${2:-1024}
 
     # Temporary file for storing file info
-    local temp_file=$(mktemp)
+    local temp_file
+    # Then assign the value
+    temp_file=$(mktemp)
+
+    # Check if mktemp succeeded
+    if [ $? -ne 0 ]; then
+        echo "Error: Failed to create temporary file"
+        return 1
+    fi
+
 
     # Find files, calculate size and MD5, and filter by size
     find "$1" -type f -size +${min_size}c -exec ls -l {} \; -exec md5sum {} \; |
