@@ -4,9 +4,9 @@
 
 # Define hosts (replace with actual hostnames or IP addresses)
 HOSTS=(
-    "kth@frog"    # Replace with kth@frog.example.com or IP
-    "kth@fiskur"  # Replace with kth@fiskur.example.com or IP
-    "kth@zenbook" # Replace with kth@zenbook.example.com or IP
+	"kth@frog"    # Replace with kth@frog.example.com or IP
+	# "kth@fiskur"  # Replace with kth@fiskur.example.com or IP
+	# "kth@zenbook" # Replace with kth@zenbook.example.com or IP
 )
 
 # Output file for comparison
@@ -20,7 +20,7 @@ trap 'rm -rf "$TEMP_DIR"' EXIT # Clean up temp files on exit
 REMOTE_SCRIPT="$TEMP_DIR/remote_info.sh"
 
 # Create the remote script
-cat << 'EOF' > "$REMOTE_SCRIPT"
+cat <<'EOF' >"$REMOTE_SCRIPT"
 #!/bin/bash
 
 # Debugging: Log execution
@@ -72,53 +72,63 @@ chmod +x "$REMOTE_SCRIPT"
 
 # Function to gather system info from a single host
 gather_info() {
-    local host="$1"
-    local output_file="$2"
-    echo "Gathering info from $host..."
+	local host="$1"
+	local output_file="$2"
+	echo "Gathering info from $host..."
 
-    # Test SSH connectivity
-    ssh -o ConnectTimeout=5 -o BatchMode=yes "$host" true 2>/dev/null
-    if [ $? -ne 0 ]; then
-        echo "Error: Cannot connect to $host. Check SSH configuration or host availability." >> "$TEMP_DIR/error.log"
-        echo "Host: $host\nStatus: Unreachable\n" > "$output_file"
-        return 1
-    fi
+	# Test SSH connectivity
+	# ssh -o ConnectTimeout=5 -o BatchMode=yes "$host" true 2>/dev/null
+	# if [ $? -ne 0 ]; then
+    if ! ssh -o ConnectTimeout=5 -o BatchMode=yes "$host" true 2>/dev/null; then
+		echo "Error: Cannot connect to $host. Check SSH configuration or host availability." >>"$TEMP_DIR/error.log"
+		printf "Host: %s\nStatus: Unreachable\n" "$host" >"$output_file"
+		return 1
+	fi
 
-    # Copy the script to the remote host
-    scp -q "$REMOTE_SCRIPT" "$host:/tmp/remote_info.sh" 2>> "$TEMP_DIR/error.log"
-    if [ $? -ne 0 ]; then
-        echo "Error: Failed to copy script to $host." >> "$TEMP_DIR/error.log"
-        echo "Host: $host\nStatus: Script copy failed\n" > "$output_file"
-        return 1
-    fi
+	# Copy the script to the remote host
+	# scp -q "$REMOTE_SCRIPT" "$host:/tmp/remote_info.sh" 2>>"$TEMP_DIR/error.log"
+	# if [ $? -ne 0 ]; then
+    if ! scp -q "$REMOTE_SCRIPT" "$host:/tmp/remote_info.sh" 2>>"$TEMP_DIR/error.log"; then
+		echo "Error: Failed to copy script to $host." >>"$TEMP_DIR/error.log"
+		printf "Host: %s\nStatus: Script copy failed\n" "$host" >"$output_file"
+		return 1
+	fi
 
-    # Execute the script remotely and capture output
-    ssh -o ConnectTimeout=5 "$host" /bin/bash /tmp/remote_info.sh > "$output_file" 2>> "$TEMP_DIR/error.log"
-    if [ $? -ne 0 ]; then
-        echo "Error: Failed to execute script on $host." >> "$TEMP_DIR/error.log"
-        echo "Host: $host\nStatus: Script execution failed\n" > "$output_file"
-    fi
+	# Execute the script remotely and capture output
+	# ssh -o ConnectTimeout=5 "$host" /bin/bash /tmp/remote_info.sh >"$output_file" 2>>"$TEMP_DIR/error.log"
+	# if [ $? -ne 0 ]; then
+    if ! ssh -o ConnectTimeout=5 "$host" /bin/bash /tmp/remote_info.sh >"$output_file" 2>>"$TEMP_DIR/error.log"; then
+		echo "Error: Failed to execute script on $host." >>"$TEMP_DIR/error.log"
+		printf "Host: %s\nStatus: Script execution failed\n" "$host" >"$output_file"
+	fi
 
-    # Clean up the remote script
-    ssh -o ConnectTimeout=5 "$host" rm -f /tmp/remote_info.sh 2>> "$TEMP_DIR/error.log"
+	# Clean up the remote script
+	ssh -o ConnectTimeout=5 "$host" rm -f /tmp/remote_info.sh 2>>"$TEMP_DIR/error.log"
 }
 
 # Clear output file
-> "$OUTPUT_FILE"
+# >"$OUTPUT_FILE"
+echo -n "" > "$OUTPUT_FILE"
 
 # Gather info from each host
 for host in "${HOSTS[@]}"; do
-    temp_file="$TEMP_DIR/${host//[@.]/_}.txt"
-    gather_info "$host" "$temp_file"
-    echo "=== $host ===" >> "$OUTPUT_FILE"
-    cat "$temp_file" >> "$OUTPUT_FILE"
-    echo "" >> "$OUTPUT_FILE"
+	temp_file="$TEMP_DIR/${host//[@.]/_}.txt"
+	gather_info "$host" "$temp_file"
+    {
+	echo "=== $host ===" # >>"$OUTPUT_FILE"
+	cat "$temp_file" # >>"$OUTPUT_FILE"
+	echo "" # >>"$OUTPUT_FILE"
+    } >>"$OUTPUT_FILE"
 done
 
 # Append errors, if any
 if [ -s "$TEMP_DIR/error.log" ]; then
-    echo "=== Errors ===" >> "$OUTPUT_FILE"
-    cat "$TEMP_DIR/error.log" >> "$OUTPUT_FILE"
+    error_count=$(wc -l < "$TEMP_DIR/error.log")
+    if [ "$error_count" -gt 1 ]; then
+        printf "\nThere were %d errors during execution...\n" "$error_count"
+        echo "=== Errors ===" >>"$OUTPUT_FILE"
+        cat "$TEMP_DIR/error.log" >>"$OUTPUT_FILE"
+    fi
 fi
 
 # Display results
