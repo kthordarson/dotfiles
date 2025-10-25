@@ -5,13 +5,13 @@ pushd() {
 }
 
 popd() {
-    command popd "$@" >/dev/null || exit
+    command popd >/dev/null || exit
 }
 
 function scandirs() {
     startdir=$1
     echo "searching in $startdir"
-    for gitfolder in $(find "$startdir" -maxdepth 2 -type d -name .git -print); do
+    while IFS= read -r -d '' gitfolder; do
         pushd "$(pwd)" || exit
         cd "$gitfolder" || exit
         cd ../
@@ -52,7 +52,7 @@ function scandirs() {
         else
             if [[ $remoteurl == *"github.com"* ]]; then
                 # url looks ok, check http status
-                httpstatus=$(curl --write-out %{http_code} --silent --output /dev/null $remoteurl)
+                httpstatus=$(curl --write-out '%{http_code}' --silent --output /dev/null "$remoteurl")
                 if [[ $httpstatus == 200 ]]; then
                     # http status ok, continue
                     echo -e "\thttpstatus: $httpstatus update $(pwd) from $remoteurl"
@@ -70,7 +70,7 @@ function scandirs() {
         fi
     fi
     popd || exit
-    done
+    done < <(find "$startdir" -maxdepth 2 -type d -name .git -print0)
     # echo "c: $charcount l: $linecount"
     #done
 }
