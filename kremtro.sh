@@ -65,7 +65,7 @@ function newtree() { tree "$1" --noreport -tiaFD | tail; }
 function aptbig {
     dpkg-query -W --showformat='''${Installed-Size;10}\t${Package}\n''' | sort -k1,1n
 }
-alias apt-biggest="sudo dpkg-query -Wf '${Installed-Size}\t${Package}\n' | sort -n"
+alias apt-biggest="sudo dpkg-query -Wf '\${Installed-Size}\t\${Package}\n' | sort -n"
 
 #nicer output
 alias path='echo -e ${PATH//:/\\n}'
@@ -151,13 +151,13 @@ alias catcolor='pygmentize -O style=monokai -f console256 -g'
 # Color man pages
 man() {
     env \
-        LESS_TERMCAP_mb=$(printf "\e[1;31m") \
-        LESS_TERMCAP_md=$(printf "\e[1;31m") \
-        LESS_TERMCAP_me=$(printf "\e[0m") \
-        LESS_TERMCAP_se=$(printf "\e[0m") \
-        LESS_TERMCAP_so=$(printf "\e[1;44;33m") \
-        LESS_TERMCAP_ue=$(printf "\e[0m") \
-        LESS_TERMCAP_us=$(printf "\e[1;32m") \
+        LESS_TERMCAP_mb="$(printf "\e[1;31m")" \
+        LESS_TERMCAP_md="$(printf "\e[1;31m")" \
+        LESS_TERMCAP_me="$(printf "\e[0m")" \
+        LESS_TERMCAP_se="$(printf "\e[0m")" \
+        LESS_TERMCAP_so="$(printf "\e[1;44;33m")" \
+        LESS_TERMCAP_ue="$(printf "\e[0m")" \
+        LESS_TERMCAP_us="$(printf "\e[1;32m")" \
         man "$@"
 }
 
@@ -349,7 +349,8 @@ git_remote_prompt() {
 
 git_remote_prompt_url() {
     if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-        local origin_url=$(git remote get-url origin 2>/dev/null)
+        local origin_url
+        origin_url=$(git remote get-url origin 2>/dev/null)
         if [ -n "$origin_url" ]; then
             echo "[origin:$origin_url]"
         else
@@ -363,7 +364,8 @@ git_remote_prompt_url() {
 git_repo_name() {
     if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
         # Get the repository's root directory name
-        local repo_name=$(basename "$(git rev-parse --show-toplevel)")
+        local repo_name
+        repo_name=$(basename "$(git rev-parse --show-toplevel)")
         echo "[$repo_name]"
     else
         echo ""
