@@ -114,7 +114,7 @@ class DirItem:
 	subitemcount: int = 0
 	# bigfiles: list = []
 
-	def __init__(self, name:Path, getbigfiles=False, maxfiles=3, wildcard='*'):
+	def __init__(self, name:Path, get_bigfiles=False, maxfiles=3, wildcard='*'):
 		self.name = name
 		self.dirname = str(name.name)
 		self.maxfiles = maxfiles
@@ -125,7 +125,7 @@ class DirItem:
 		self.subitemcount = self.subfilecount + self.subdircount
 		self.bigfiles = []
 		self.filelist = []
-		if getbigfiles:
+		if get_bigfiles:
 			self.get_bigfiles()
 
 	def __post_init(self):
