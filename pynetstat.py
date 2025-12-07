@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-
+import sys
 import socket
 from socket import AF_INET
 from socket import SOCK_DGRAM
@@ -16,7 +16,7 @@ proto_map = {
     (AF_INET6, SOCK_DGRAM): 'udp6',
 }
 
-def get_res():
+def get_res(only_ipv4=False, only_ipv6=False):
     # templ = "%-5s %-30s %-30s %-13s %-6s %s"
     # print(templ % ("Proto", "Local address", "Remote address", "Status", "PID", "Program name"))
     proc_names = {}
@@ -30,12 +30,28 @@ def get_res():
             raddr = "%s:%s" % (c.raddr)
         name = proc_names.get(c.pid, '?') or ''
         # print(templ % (proto_map[(c.family, c.type)], laddr, raddr or AD, c.status, c.pid or AD, name[:15],))
-        item = {'proto': proto_map[(c.family, c.type)], 'laddr': laddr, 'raddr': raddr or AD, 'status': c.status, 'pid': c.pid or AD, 'name': name[:15]}
-        res.append(item)
+        proto = proto_map[(c.family, c.type)]
+        if only_ipv4 and proto == 'tcp' or proto == 'udp':
+            item = {'proto': proto, 'laddr': laddr, 'raddr': raddr or AD, 'status': c.status, 'pid': c.pid or AD, 'name': name[:15]}
+            res.append(item)
+        elif only_ipv6 and proto == 'tcp6' or proto == 'udp6':
+            item = {'proto': proto, 'laddr': laddr, 'raddr': raddr or AD, 'status': c.status, 'pid': c.pid or AD, 'name': name[:15]}
+            res.append(item)
+        elif not only_ipv4 and not only_ipv6:
+            item = {'proto': proto, 'laddr': laddr, 'raddr': raddr or AD, 'status': c.status, 'pid': c.pid or AD, 'name': name[:15]}
+            res.append(item)
     return res
 
 if __name__ == '__main__':
-    res = get_res()
+    # print(f'sys.argv: {sys.argv}')
+    if len(sys.argv) > 1 and sys.argv[1] == '4':
+        print("Only showing ipv4.")
+        res = get_res(only_ipv4=True)
+    elif len(sys.argv) > 1 and sys.argv[1] == '6':
+        print("Only showing ipv6.")
+        res = get_res(only_ipv6=True)
+    else:
+        res = get_res()
     listeners = [k for k in res if k['status'] == 'LISTEN']
     established = [k for k in res if k['status'] == 'ESTABLISHED']
     if established:
@@ -50,6 +66,6 @@ if __name__ == '__main__':
             print(f"\tproto: {k['proto']} addr: {k['laddr']} pid: {k['pid']} {k['name']}")
     else:
         print("No listening ports found.")
-    print("All connections:")
-    for k in res:
-        print(f"\tproto: {k['proto']} addr: {k['laddr']} raddr: {k['raddr']} pid: {k['pid']} {k['name']} {k['status']}")
+    # print("All connections:")
+    # for k in res:
+    #     print(f"\tproto: {k['proto']} addr: {k['laddr']} raddr: {k['raddr']} pid: {k['pid']} {k['name']} {k['status']}")
