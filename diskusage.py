@@ -50,11 +50,11 @@ if __name__ == '__main__':
 	print(f'[size] {" "*5}[name]{" "*15}[items] [files] [folders]')
 	print(f'{"-"*60}')
 	for item in sorteditems:
-		print(f'{item.get_size():<10}  {item.dirname[0:20]:<20} {item.subitemcount:<7} {item.subfilecount:<7} {item.subdircount:<7}')
+		print(f'{item.get_size():<10}  {item.dirname[0:20]:<20} {item.subitemcount:<7,} {item.subfilecount:<7,} {item.subdircount:<7,}')
 		total_size += item.totalsize
 		total_items += item.subitemcount
 		total_files += item.subfilecount
 		total_dirs += item.subdircount
 	# print(f'[t] {get_size_format(b=total_size, suffix="B")} {" "*34} {total_files:,} {total_dirs:,}')
 	print(f'{"-"*60}')
-	print(f'{get_size_format(b=total_size, suffix="B")} {" "*23}{total_items:<7} {total_files:<7} {total_dirs:<7}')
+	print(f'{get_size_format(b=total_size, suffix="B")} {" "*23}{total_items:<7,} {total_files:<7,} {total_dirs:<7,}')

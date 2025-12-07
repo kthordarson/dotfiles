@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 import os
 from functools import partial
-
+from loguru import logger
 import multiprocessing
 import argparse
 from pathlib import Path
@@ -25,7 +25,7 @@ def printlist(filelist, args):
 	maxlen = 0
 	for file in filelist[-args.maxfiles:]:
 		if len(str(file.name)) > maxlen:
-			maxlen = len(str(file.name))
+			maxlen = len(str(file.name)) + 3
 	# print(f'{"file":<maxlen}{args.sort:<21}')
 	# print(f'{"-"*90}')
 	s0 = 'file'.ljust(maxlen)+str(args.sort)
@@ -56,6 +56,7 @@ if __name__ == '__main__':
 	myparse.add_argument('--reverse','-r', help="reverse", action='store_true', dest='reverse', default=False)
 	myparse.add_argument('--excludes', '-e', help="use exclude list", action='store_true', default=False)
 	myparse.add_argument('--sort', '-s', metavar='sort', type=str, help="sort by ctime/mtime/atime", default='ctime')
+	myparse.add_argument('--debug', '-d', help="enable debug", action='store_true', default=False)
 	args = myparse.parse_args()
 	if args.excludes:
 		exclude_list = EXCLUDES
@@ -70,16 +71,19 @@ if __name__ == '__main__':
 	# filelist = [k for k in filelist_generator(args, exclude_list)]
 	input_path = Path(args.path)
 	top_dirs = [d for d in input_path.iterdir() if d.is_dir() and d.name not in exclude_list]
-
+	if args.debug:
+		logger.debug(f'[debug] top_dirs: {len(top_dirs)}')
 	with multiprocessing.Pool(processes=os.cpu_count()) as pool:
 		results = pool.map(partial(process_directory, args=args, exclude_list=exclude_list), top_dirs)
 
 	filelist = [item for sublist in results for item in sublist]
-
+	if args.debug:
+		logger.debug(f'[debug] filelist count: {len(filelist)}')
 	# Add files in the root directory
 	root_files = list(filelist_generator(args, exclude_list, specific_dir=input_path, root_only=True))
 	filelist.extend(root_files)
-
+	if args.debug:
+		logger.debug(f'[debug] added {len(root_files)} root files filelist count: {len(filelist)}')
 	# filelist = [FileItem(Path(k)) for k in glob.glob(startpath,recursive=True, include_hidden=True)]
 	printlist(filelist, args)
 

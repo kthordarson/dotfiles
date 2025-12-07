@@ -57,7 +57,7 @@ def filelist_generator(args, exclude_list, specific_dir=None, root_only=False):
 		for entry in os.scandir(path):
 			if entry.is_file() and not entry.name.startswith('.') and entry.name not in exclude_list:
 				if fnmatch.fnmatch(entry.name, wildcard):
-					stat = entry.stat()
+					# stat = entry.stat()
 					yield FileItem(name=Path(entry.path))
 	else:
 		for root, dirs, files in os.walk(path):
@@ -68,24 +68,10 @@ def filelist_generator(args, exclude_list, specific_dir=None, root_only=False):
 				if file not in exclude_list and fnmatch.fnmatch(file, wildcard):
 					full_path = os.path.join(root, file)
 					try:
-						size = os.path.getsize(full_path)
+						# size = os.path.getsize(full_path)
 						yield FileItem(name=Path(full_path))
 					except (FileNotFoundError, PermissionError):
 						continue
-
-def xfilelist_generator(args, excludes):
-	startpath = Path(args.path)
-	filelist_ = [k for k in startpath.rglob(f'{args.wildcard}')]
-	logger.debug(f'[flg] :{len(filelist_)}')
-	for file in filelist_:
-		try:
-			if Path(file).is_file() and len([p for p in file.parts if p in excludes]) == 0:
-				yield (FileItem(file))
-				# yield((Path(file), Path(file).stat().st_size, Path(file).stat().st_ctime))
-		except PermissionError as e:
-			logger.warning(f'[err] {e} file: {file}')
-		except TypeError as e:
-			logger.error(f'[err] {e} file: {file}')
 
 @dataclass(order=True, frozen=False)
 class FileItemx:
