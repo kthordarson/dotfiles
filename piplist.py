@@ -39,10 +39,10 @@ def get_modules():
 	return allpacks, usrpacks, localpacks
 
 def make_json_link(modulename):
-	if '_' in modulename:
-		on = modulename
-		modulename = modulename.replace('_','-')
-		logger.warning(f'fixing modulename {on} to {modulename}')
+	# if '_' in modulename:
+	# 	on = modulename
+	# 	modulename = modulename.replace('_','-')
+	# 	logger.warning(f'fixing modulename {on} to {modulename}')
 	info = {'modulename': modulename, 'url': f'https://pypi.org/pypi/{modulename}/json'}
 	return info
 
@@ -62,7 +62,7 @@ def get_pypi_json(module):
 			logger.error(f'Unhandled Exception: {e} {type(e)} for {url} response: {r.status_code}')
 			jsondata = {'error': e, 'status_code': r.status_code, 'url': url, 'module': module['modulename']}
 	elif r.status_code == 404:
-		logger.warning(f'modulenotfound {module["modulename"]} {url=} response: {r.status_code} ')
+		logger.warning(f'modulenotfound {module["modulename"]} {url=} response: {r.status_code} {module=}')
 		jsondata = {'error': '404 Not Found','url': url, 'module': module['modulename']}
 	else:
 		logger.error(f'moduleerror {module["modulename"]} {url} response: {r.status_code}')
@@ -98,10 +98,13 @@ def get_latest_version_cache(packname, cachedata):
 	latest_version = '0.0.0'
 	jsoninfo = {}
 	try:
-		jsoninfo = [k for k in cachedata if k.get('info').get('name') == packname][0]
+		jsoninfo = [k for k in cachedata if k.get('info',{}).get('name','') == packname][0]
 	except IndexError as e:
-		jsoninfo = [k for k in cachedata if k.get('info').get('name') == packname]
-		logger.warning(f'Error: {e} {type(e)} for {packname} jsoninfo:{jsoninfo}')
+		# jsoninfo = [k for k in cachedata if k.get('info').get('name') == packname]
+		# logger.warning(f'Error: {e} {type(e)} for {packname}')
+		latest_version = f'Error {e}'
+	except AttributeError as e:
+		logger.error(f'AttributeError: {e} {type(e)} for {packname}')
 		latest_version = f'Error {e}'
 	except Exception as e:
 		logger.error(f'Unhandled Exception: {e} {type(e)} for {packname}')
@@ -116,7 +119,21 @@ def get_latest_version_cache(packname, cachedata):
 			latest_version = 'Error: No info in jsoninfo'
 	return latest_version
 
-def update_check(allpacks, usrpacks, localpacks):
+def update_check_local(packs):
+	pack_names = [k for k in set([k.dist.name for k in packs])]
+	pack_links = [make_json_link(k) for k in pack_names]
+	packs_json = [get_pypi_json(k) for k in pack_links]
+	for pack in pack_names:
+		installed_version = get_installed_version(pack)
+		latest_version = get_latest_version_cache(pack, packs_json)
+		if 'Error' in latest_version:
+			print(f'{Fore.CYAN} Name: {pack} version: {Fore.YELLOW} {installed_version} {Fore.BLUE} latest version: {Fore.RED} {latest_version}{Style.RESET_ALL}')
+		elif installed_version != latest_version:
+			print(f'{Fore.CYAN} Name: {pack} version: {Fore.RED} {installed_version} {Fore.BLUE} latest version: {Fore.LIGHTGREEN_EX} {latest_version}{Style.RESET_ALL}')
+		else:
+			print(f'{Fore.CYAN} Name: {pack} version: {Fore.GREEN} {installed_version} {Fore.BLUE} latest version: {Fore.LIGHTGREEN_EX} {latest_version}{Style.RESET_ALL}')
+
+def old_update_check(allpacks, usrpacks, localpacks):
 	usrnames = [k for k in set([k.dist.name for k in usrpacks])]
 	localnames = [k for k in set([k.dist.name for k in localpacks])]
 	dupe_packs = [k for k in usrpacks if k.dist.name in localnames]
@@ -186,10 +203,10 @@ async def main(args):
 	if args.count:
 		print(f'{Fore.LIGHTBLUE_EX}total:{Fore.CYAN} {len(usrpacks)+len(localpacks)} {Fore.LIGHTBLUE_EX}usr:{Fore.CYAN} {len(usrpacks)} {Fore.LIGHTBLUE_EX}local:{Fore.CYAN} {len(localpacks)}{Style.RESET_ALL}')
 		sys.exit(0)
-	elif args.update:
-		print(f'{Fore.LIGHTBLUE_EX}Starting update check{Style.RESET_ALL}')
+	elif args.update_check_local:
+		print(f'{Fore.LIGHTBLUE_EX}Starting update check {Fore.LIGHTBLUE_EX} for {Fore.GREEN} {len(localpacks)}{Fore.BLUE} packs {Style.RESET_ALL}')
 		try:
-			update_check(allpacks, usrpacks, localpacks)
+			update_check_local(localpacks)
 		except Exception as e:
 			logger.error(f'unhandled exception: {e} {type(e)}')
 		sys.exit(0)
@@ -206,7 +223,7 @@ if __name__ == '__main__':
 	argparser.add_argument('-v', '--verbose', help='verbose output', action='store_true', default=False, dest='verbose')
 	argparser.add_argument('--config',action='store', default='piplist.json', dest='config', type=str, help='config file with module paths to search in')
 	argparser.add_argument('--count', action='store_true', default=False, dest='count', help='count installed modules')
-	argparser.add_argument('--update-check', action='store_true', default=False, dest='update', help='check for updates')
+	argparser.add_argument('--update-check-local', action='store_true', default=False, help='check localpacks for updates')
 	argparser.add_argument('--check-folders', action='store_true', default=False, dest='update', help='search for modules in folders (including orphan folders without dist-info)')
 	args = argparser.parse_args()
 	asyncio.run(main(args))
