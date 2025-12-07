@@ -24,7 +24,6 @@ if __name__ == '__main__':
 		exclude_list = EXCLUDES
 	else:
 		exclude_list = []
-	maxfiles = args.maxfiles
 	# reslist = [k for k in filelist_generator(args, exclude_list)]
 	# reslist.sort(key=lambda x: x.size, reverse=args.reverselist)
 
@@ -43,7 +42,7 @@ if __name__ == '__main__':
 	# reslist.extend(root_files)
 	largest_files = []
 	for file in filelist_generator(args, exclude_list):
-		if len(largest_files) < maxfiles:
+		if len(largest_files) < args.maxfiles:
 			heapq.heappush(largest_files, (file.size, file))
 		else:
 			if file.size > largest_files[0][0]:

@@ -12,18 +12,6 @@ from utils import filelist_generator, get_size_format, FileItem, EXCLUDES
 def process_directory(directory, args, exclude_list):
 	return list(filelist_generator(args, exclude_list, specific_dir=directory))
 
-def debugprintlist(filelist):
-	# reslist.sort(key=lambda x: x[1], reverse=args.reverse)
-	# logger.debug(f'[done] r:{len(reslist)}')
-	timefmt = '%d-%m-%Y %H:%M:%S'
-	print(f'{"file":<30}{"ctime":<21}{"mtime":<21}{"atime":<21}')
-	print(f'{"-"*90}')
-	for file in filelist[-maxfiles:]:
-		ct = datetime.fromtimestamp(file.st_ctime).strftime(timefmt)
-		mt = datetime.fromtimestamp(file.st_mtime).strftime(timefmt)
-		at = datetime.fromtimestamp(file.st_atime).strftime(timefmt)
-		print(f'{file.filename[:30]:30} | {ct} | {mt} | {at}')
-
 def printlist(filelist, args):
 	# reslist.sort(key=lambda x: x[1], reverse=args.reverse)
 	# logger.debug(f'[done] r:{len(reslist)}')
@@ -35,14 +23,14 @@ def printlist(filelist, args):
 		filelist = sorted(filelist, key=operator.attrgetter('st_mtime'), reverse=args.reverse)
 	timefmt = '%d-%m-%Y %H:%M:%S'
 	maxlen = 0
-	for file in filelist[-maxfiles:]:
+	for file in filelist[-args.maxfiles:]:
 		if len(str(file.name)) > maxlen:
 			maxlen = len(str(file.name))
 	# print(f'{"file":<maxlen}{args.sort:<21}')
 	# print(f'{"-"*90}')
 	s0 = 'file'.ljust(maxlen)+str(args.sort)
 	print(s0)
-	for file in filelist[-maxfiles:]:
+	for file in filelist[-args.maxfiles:]:
 		if args.sort == 'ctime':
 			datefield = datetime.fromtimestamp(file.st_ctime).strftime(timefmt)
 		elif args.sort == 'mtime':
@@ -73,7 +61,6 @@ if __name__ == '__main__':
 		exclude_list = EXCLUDES
 	else:
 		exclude_list = []
-	maxfiles = args.maxfiles
 	if args.reverse:
 		reverse = True
 	else:

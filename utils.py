@@ -114,7 +114,7 @@ class DirItem:
 	subitemcount: int = 0
 	# bigfiles: list = []
 
-	def __init__(self, name:Path, get_bigfiles=False, maxfiles=3, wildcard='*'):
+	def __init__(self, name:Path, maxfiles=3, wildcard='*'):
 		self.name = name
 		self.dirname = str(name.name)
 		self.maxfiles = maxfiles
@@ -125,8 +125,6 @@ class DirItem:
 		self.subitemcount = self.subfilecount + self.subdircount
 		self.bigfiles = []
 		self.filelist = []
-		if get_bigfiles:
-			self.get_bigfiles()
 
 	def __post_init(self):
 		object.__setattr__(self, 'sort_index', self.totalsize)
@@ -139,11 +137,6 @@ class DirItem:
 
 	def get_size(self):
 		return get_size_format(self.totalsize,suffix='B')
-
-	def get_bigfiles(self):
-		subfiles = [FileItem(k) for k in self.name.glob(f'**/{self.wildcard}') if k.is_file()]
-		self.bigfiles = sorted(subfiles, key=lambda d: d.size, reverse=True)[0:self.maxfiles]
-
 
 def get_directory_size(directory, wildcard='*'):
 	total = 0
