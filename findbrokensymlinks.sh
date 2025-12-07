@@ -22,7 +22,7 @@ else
 			broken=$((broken + 1))
 			destlink=$(readlink -m "$fullsympath")
 			echo "[$broken] removing broken symlink: $fullsympath -> $destlink $symlink"
-			# rm -f "$fullsympath"
+			#rm -f "$fullsympath"
 		fi
 	done
 fi
