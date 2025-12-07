@@ -67,8 +67,6 @@ if __name__ == '__main__':
 	else:
 		reverse = False
 	filelist = []
-	# reslist = [k for k in filelist_generator(args.path)]
-	# filelist = [k for k in filelist_generator(args, exclude_list)]
 	input_path = Path(args.path)
 	top_dirs = [d for d in input_path.iterdir() if d.is_dir() and d.name not in exclude_list]
 	if args.debug:
@@ -84,6 +82,5 @@ if __name__ == '__main__':
 	filelist.extend(root_files)
 	if args.debug:
 		logger.debug(f'[debug] added {len(root_files)} root files filelist count: {len(filelist)}')
-	# filelist = [FileItem(Path(k)) for k in glob.glob(startpath,recursive=True, include_hidden=True)]
 	printlist(filelist, args)
 

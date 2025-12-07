@@ -24,8 +24,6 @@ if __name__ == '__main__':
 		exclude_list = EXCLUDES
 	else:
 		exclude_list = []
-	# reslist = [k for k in filelist_generator(args, exclude_list)]
-	# reslist.sort(key=lambda x: x.size, reverse=args.reverselist)
 
 	input_path = Path(args.path)
 	top_dirs = [d for d in input_path.iterdir() if d.is_dir() and d.name not in exclude_list]
@@ -38,8 +36,6 @@ if __name__ == '__main__':
 	reslist = [file for sublist in results for file in sublist]
 
 	# Add files in the root directory
-	# root_files = list(filelist_generator(args, exclude_list, specific_dir=input_path, root_only=True))
-	# reslist.extend(root_files)
 	largest_files = []
 	for file in filelist_generator(args, exclude_list):
 		if len(largest_files) < args.maxfiles:
