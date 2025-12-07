@@ -6,6 +6,9 @@ import requests
 import json
 import importlib
 import importlib_metadata
+from importlib.metadata import PackageMetadata
+from importlib.metadata import packages_distributions
+from importlib.metadata import metadata, version, distribution, distributions
 from loguru import logger
 import time
 from colorama import Fore, Back, Style
@@ -13,30 +16,50 @@ from pathlib import Path
 import glob
 
 
-def get_modules():
-	usrpacks = []
-	localpacks = []
+def get_all_packs():
 	allpacks = [k for k in set([k for k in importlib_metadata.entry_points()])]
-	logger.debug(f'Found {len(allpacks)} modules')
-	# cache all module names
-	# usrdistmods = [k for k in set( [k.dist.name for k in allpacks if str(k.dist._path).startswith('/usr')])]
-	# logger.debug(f'Found {len(usrdistmods)} usrdistmods modules')
-	# localdistmods = [k for k in set( [k.dist.name for k in allpacks if str(k.dist._path).startswith('/home')])]
-	# logger.debug(f'Found {len(localdistmods)} localdistmods modules')
-	usrdistmods = []
-	localdistmods = []
+	allpack_names = list(set([k.name for k in importlib_metadata.entry_points()]))
+	allpack_dist_names = list(set([k.dist.name for k in importlib_metadata.entry_points()]))
+
+	logger.debug(f'Found {len(allpacks)} modules, unique names: {len(allpack_names)} allpack_dist_names: {len(allpack_dist_names)}')
+	distmods = []
+	packs = []
 	for idx,p in enumerate(allpacks):
-		if str(p.dist._path).startswith('/usr') and p.dist.name not in usrdistmods:
-			usrpacks.append(p)
-			usrdistmods.append(p.dist.name)
-		elif str(p.dist._path).startswith('/home/') and p.dist.name not in localdistmods:
-			localpacks.append(p)
-			localdistmods.append(p.dist.name)
+		if p.dist.name not in distmods and p.name not in distmods:
+			packs.append(p)
+			distmods.append(p.dist.name)
+			distmods.append(p.name)
 		else:
-			pass  # logger.warning(f'[{idx}/{len(allpacks)} {len(usrpacks)}/{len(localpacks)}] unhandled package {p.dist.name} path: {p.dist._path}')
-	# usrpacks = [k for k in set([k for k in importlib_metadata.entry_points() if str(k.dist._path).startswith('/usr')])]
-	# localpacks = [k for k in set([k for k in importlib_metadata.entry_points() if str(k.dist._path).startswith('/home/')])]
-	return allpacks, usrpacks, localpacks
+			pass  # logger.warning(f'[{idx}/{len(allpacks)} {len(packs)}] dupe package {p.dist.name} path: {p.dist._path}')
+	return packs
+
+def get_local_packs():
+	allpacks = [k for k in set([k for k in importlib_metadata.entry_points()])]
+	distmods = []
+	packs = []
+	for idx,p in enumerate(allpacks):
+		if p.dist.name not in distmods and str(p.dist._path).startswith('/home/'):
+			packs.append(p)
+			distmods.append(p.dist.name)
+	logger.debug(f'Found {len(packs)} modules')
+	return packs
+
+def get_usr_packs():
+	allpacks = [k for k in set([k for k in importlib_metadata.entry_points()])]
+	distmods = []
+	packs = []
+	for idx,p in enumerate(allpacks):
+		if p.dist.name in distmods:
+			pass  # logger.warning(f'[{idx}/{len(allpacks)} {len(packs)}] dupe package {p.dist.name} path: {p.dist._path}')
+		elif str(p.dist._path).startswith('/usr/') and p.dist.name not in distmods:
+			packs.append(p)
+			distmods.append(p.dist.name)
+		elif str(p.dist._path).startswith('/home/') and p.dist.name not in distmods:
+			pass
+		else:
+			logger.warning(f'[{idx}/{len(allpacks)} {len(packs)}] unhandled package {p.dist.name} path: {p.dist._path}')
+	logger.debug(f'Found {len(packs)} modules')
+	return packs
 
 def make_json_link(modulename):
 	# if '_' in modulename:
@@ -190,27 +213,35 @@ def check_folders():
 	search_paths = [k for k in sys.path if Path(k).exists() and Path(k).is_dir() and k != '' and not Path(k).is_symlink()]
 	found_folders = []
 	for idx,p in enumerate(search_paths):
-		sub_paths = [k for k in Path(p).glob('*')]
+		sub_paths = [k for k in Path(p).glob('*') if k.is_dir()]
 		symlink_sub_paths = [k for k in Path(p).glob('*') if k.is_symlink()]
 		print(f'{Fore.LIGHTBLUE_EX}[{idx}/{len(search_paths)}] {Fore.LIGHTBLUE_EX}Searching:{Fore.BLUE}{p}{Fore.GREEN} sub_paths: {len(sub_paths)}{Fore.BLUE} symlink_sub_paths: {len(symlink_sub_paths)}{Style.RESET_ALL}')
 		for sub_idx,sub_path in enumerate(sub_paths):
-			if Path(sub_path).is_symlink() and Path(sub_path).resolve().exists():
+			if sub_path.exists() and sub_path.is_file():
+				print(f'{Fore.RED}[{sub_idx}/{len(sub_paths)}] {Fore.CYAN}{sub_path} skipping file!{Style.RESET_ALL}')
+				continue
+			elif Path(sub_path).is_symlink() and Path(sub_path).resolve().exists():
 				print(f'{Fore.YELLOW}[{sub_idx}/{len(sub_paths)}] symlink: {Fore.CYAN}{sub_path} target: {Path(sub_path).resolve()} {Style.RESET_ALL}')
 			elif Path(sub_path).is_symlink() and not Path(sub_path).resolve().exists():
 				print(f'{Fore.RED}[{sub_idx}/{len(sub_paths)}] symlink: {Fore.CYAN}{sub_path} target not found: {Path(sub_path).resolve()} {Style.RESET_ALL}')
-			if 'dist-info' in str(sub_path) or 'egg-info' in str(sub_path):
+			elif 'dist-info' in str(sub_path) or 'egg-info' in str(sub_path):
 				print(f'{Fore.BLUE}[{sub_idx}/{len(sub_paths)}] {Fore.CYAN}{sub_path}{Style.RESET_ALL}')
 				# break
 			elif sub_path.exists() and sub_path.is_dir():
 				found_folders.append(sub_path)
 				print(f'{Fore.LIGHTBLUE_EX}[{sub_idx}/{len(sub_paths)}] {Fore.CYAN}{sub_path}{Style.RESET_ALL}')
+			else:
+				print(f'{Fore.RED}[{sub_idx}/{len(sub_paths)}] {Fore.CYAN}{sub_path} not found!{Style.RESET_ALL}')
 
 async def main(args):
-	allpacks, usrpacks, localpacks = get_modules()
+	allpacks = get_all_packs()
 	if args.count:
+		localpacks = get_local_packs()
+		usrpacks = get_usr_packs()
 		print(f'{Fore.LIGHTBLUE_EX}total:{Fore.CYAN} {len(usrpacks)+len(localpacks)} {Fore.LIGHTBLUE_EX}usr:{Fore.CYAN} {len(usrpacks)} {Fore.LIGHTBLUE_EX}local:{Fore.CYAN} {len(localpacks)}{Style.RESET_ALL}')
 		sys.exit(0)
 	elif args.update_check_local:
+		localpacks = get_local_packs()
 		print(f'{Fore.LIGHTBLUE_EX}Starting update check {Fore.LIGHTBLUE_EX} for {Fore.GREEN} {len(localpacks)}{Fore.BLUE} packs {Style.RESET_ALL}')
 		try:
 			update_check(localpacks)
