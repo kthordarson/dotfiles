@@ -119,7 +119,7 @@ def get_latest_version_cache(packname, cachedata):
 			latest_version = 'Error: No info in jsoninfo'
 	return latest_version
 
-def update_check_local(packs):
+def update_check(packs):
 	pack_names = [k for k in set([k.dist.name for k in packs])]
 	pack_links = [make_json_link(k) for k in pack_names]
 	packs_json = [get_pypi_json(k) for k in pack_links]
@@ -186,17 +186,24 @@ def old_update_check(allpacks, usrpacks, localpacks):
 			print(f'{Fore.BLUE}localpacks{Fore.CYAN} Name: {pack} localversion: {Fore.GREEN} {installed_version} {Fore.BLUE} latestversion: {Fore.LIGHTGREEN_EX} {latest_version}{Style.RESET_ALL}')
 	print(f'{Fore.RED}usr_outdated:{Fore.LIGHTRED_EX} {len(usr_outdated)} {Fore.RED}local_outdated:{Fore.LIGHTRED_EX} {len(local_outdated)} {Style.RESET_ALL}')
 
-def check_folders(allpacks, usrpacks, localpacks):
-	search_paths = [k for k in sys.path if Path(k).exists() and Path(k).is_dir() and k != '']
+def check_folders():
+	search_paths = [k for k in sys.path if Path(k).exists() and Path(k).is_dir() and k != '' and not Path(k).is_symlink()]
 	found_folders = []
 	for idx,p in enumerate(search_paths):
-		print(f'{Fore.LIGHTBLUE_EX}Searching:{Fore.BLUE}{p}{Style.RESET_ALL}')
-		for sub_path in Path(p).glob('*'):
-			if 'dist-info' in str(sub_path):
-				break
+		sub_paths = [k for k in Path(p).glob('*')]
+		symlink_sub_paths = [k for k in Path(p).glob('*') if k.is_symlink()]
+		print(f'{Fore.LIGHTBLUE_EX}[{idx}/{len(search_paths)}] {Fore.LIGHTBLUE_EX}Searching:{Fore.BLUE}{p}{Fore.GREEN} sub_paths: {len(sub_paths)}{Fore.BLUE} symlink_sub_paths: {len(symlink_sub_paths)}{Style.RESET_ALL}')
+		for sub_idx,sub_path in enumerate(sub_paths):
+			if Path(sub_path).is_symlink() and Path(sub_path).resolve().exists():
+				print(f'{Fore.YELLOW}[{sub_idx}/{len(sub_paths)}] symlink: {Fore.CYAN}{sub_path} target: {Path(sub_path).resolve()} {Style.RESET_ALL}')
+			elif Path(sub_path).is_symlink() and not Path(sub_path).resolve().exists():
+				print(f'{Fore.RED}[{sub_idx}/{len(sub_paths)}] symlink: {Fore.CYAN}{sub_path} target not found: {Path(sub_path).resolve()} {Style.RESET_ALL}')
+			if 'dist-info' in str(sub_path) or 'egg-info' in str(sub_path):
+				print(f'{Fore.BLUE}[{sub_idx}/{len(sub_paths)}] {Fore.CYAN}{sub_path}{Style.RESET_ALL}')
+				# break
 			elif sub_path.exists() and sub_path.is_dir():
 				found_folders.append(sub_path)
-				print(f'{Fore.LIGHTBLUE_EX}[{idx}/{len(search_paths)}] {Fore.CYAN}{sub_path}{Style.RESET_ALL}')
+				print(f'{Fore.LIGHTBLUE_EX}[{sub_idx}/{len(sub_paths)}] {Fore.CYAN}{sub_path}{Style.RESET_ALL}')
 
 async def main(args):
 	allpacks, usrpacks, localpacks = get_modules()
@@ -206,14 +213,21 @@ async def main(args):
 	elif args.update_check_local:
 		print(f'{Fore.LIGHTBLUE_EX}Starting update check {Fore.LIGHTBLUE_EX} for {Fore.GREEN} {len(localpacks)}{Fore.BLUE} packs {Style.RESET_ALL}')
 		try:
-			update_check_local(localpacks)
+			update_check(localpacks)
+		except Exception as e:
+			logger.error(f'unhandled exception: {e} {type(e)}')
+		sys.exit(0)
+	elif args.update_check_usr:
+		print(f'{Fore.LIGHTBLUE_EX}Starting update check {Fore.LIGHTBLUE_EX} for {Fore.GREEN} {len(usrpacks)}{Fore.BLUE} packs {Style.RESET_ALL}')
+		try:
+			update_check(usrpacks)
 		except Exception as e:
 			logger.error(f'unhandled exception: {e} {type(e)}')
 		sys.exit(0)
 	elif args.check_folders:
 		print(f'{Fore.LIGHTBLUE_EX}Checking folders{Style.RESET_ALL}')
 		try:
-			check_folders(allpacks, usrpacks, localpacks)
+			check_folders()
 		except Exception as e:
 			logger.error(f'unhandled exception: {e} {type(e)}')
 		sys.exit(0)
@@ -223,7 +237,8 @@ if __name__ == '__main__':
 	argparser.add_argument('-v', '--verbose', help='verbose output', action='store_true', default=False, dest='verbose')
 	argparser.add_argument('--config',action='store', default='piplist.json', dest='config', type=str, help='config file with module paths to search in')
 	argparser.add_argument('--count', action='store_true', default=False, dest='count', help='count installed modules')
-	argparser.add_argument('--update-check-local', action='store_true', default=False, help='check localpacks for updates')
-	argparser.add_argument('--check-folders', action='store_true', default=False, dest='update', help='search for modules in folders (including orphan folders without dist-info)')
+	argparser.add_argument('--update-check-local', action='store_true', default=False, help='check local packs for updates')
+	argparser.add_argument('--update-check-usr', action='store_true', default=False, help='check usr packs for updates')
+	argparser.add_argument('--check-folders', action='store_true', default=False, help='search for modules in folders (including orphan folders without dist-info)')
 	args = argparser.parse_args()
 	asyncio.run(main(args))
