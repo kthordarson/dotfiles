@@ -3,10 +3,11 @@
 import argparse
 import json
 import subprocess
-import urllib.error
+from typing import Optional
+from urllib.error import HTTPError
 import urllib.parse
 import urllib.request
-
+from loguru import logger
 
 def find_forks(remote):
     """
@@ -14,34 +15,37 @@ def find_forks(remote):
     """
     resp_json = []
 
-    repo_url = subprocess.run(
-        ["git", "remote", "get-url", remote],
-        stdout=subprocess.PIPE
-    )
-
+    repo_url = subprocess.run(["git", "remote", "get-url", remote], stdout=subprocess.PIPE)
     repo_url_stdout = repo_url.stdout.decode()
-
-    (username, project) = parse_git_remote_output(repo_url_stdout)
-
+    try:
+        (username, project) = parse_git_remote_output(repo_url_stdout)
+    except TypeError as e:
+        logger.error(f'[err] {e} repo_url_stdout:{repo_url_stdout} repo_url:{repo_url}')
+        return
     GITHUB_FORK_URL = u"https://api.github.com/repos/{username}/{project}/forks"
 
     try:
         resp = urllib.request.urlopen(GITHUB_FORK_URL.format(username=username, project=project))
-    except urllib.error.HTTPError as e:
+    except HTTPError as e:
+        logger.warning(f'[err] {e} Repository not found: {username}/{project}')
         if e.code == 404:
-            raise StopIteration
+            return  # stop the generator cleanly
+        raise
 
     resp_json += json.loads(resp.read())
 
-    while github_resp_next_page(resp):
-        resp = urllib.request.urlopen(github_resp_next_page(resp))
+    # Narrow Optional[str] before passing to urlopen
+    next_url = github_resp_next_page(resp)
+    while next_url:
+        resp = urllib.request.urlopen(next_url)
         resp_json += json.loads(resp.read())
+        next_url = github_resp_next_page(resp)
 
     for fork in resp_json:
         yield (fork['owner']['login'], fork['ssh_url'])
 
 
-def github_resp_next_page(resp):
+def github_resp_next_page(resp) -> Optional[str]:
     """
     Check to see if the GitHub response has a next link.
 

@@ -159,7 +159,7 @@ def get_directory_size(directory, wildcard='*',maxdepth=20, exclude_list=[]):
 						current_depth += 1
 			except OSError as e:
 				logger.warning(f'[err]  {entry} {e}')
-	except (PermissionError, FileNotFoundError) as e:
+	except (PermissionError, FileNotFoundError, NotADirectoryError) as e:
 		logger.error(f'[err] dir:{directory} {e}')
 	return total
 
