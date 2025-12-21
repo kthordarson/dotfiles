@@ -112,7 +112,7 @@ def get_conns():
 def get_listeners():
 	conn_list = []
 	conns = psutil.net_connections(kind='inet4')
-	conn_list_temp = sorted(set([(k.laddr.port, k.pid, k.laddr.ip, psutil.Process(k.pid).name()) for k in conns if k.status == 'LISTEN' and isinstance(k.family, type(socket.AF_INET)) ]))  # type: ignore
+	conn_list_temp = sorted(set([(k.laddr.port, k.pid, k.laddr.ip, psutil.Process(k.pid).name()) for k in conns if k.status == 'LISTEN' and isinstance(k.family, type(socket.AF_INET))]))  # type: ignore
 	for c in conn_list_temp:
 		port = c[0]
 		ip = c[2]
