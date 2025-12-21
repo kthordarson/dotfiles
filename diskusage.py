@@ -8,8 +8,7 @@ from utils import get_size_format, EXCLUDES, DirItem
 from multiprocessing import Pool
 
 def process_directory(k):
-	return DirItem(name=k, getbigfiles=getbigfiles, maxfiles=args.maxfiles, wildcard=args.wildcard)
-
+	return DirItem(name=k)
 
 if __name__ == '__main__':
 	myparse = argparse.ArgumentParser(description="show folder sizes and things..")
@@ -29,16 +28,11 @@ if __name__ == '__main__':
 		exclude_list = []
 	input_path = Path(args.path)
 	limit = args.number
-	getbigfiles = False
-	if args.maxfiles >= 1:
-		getbigfiles = True
-		# print(f'[d] getbigfiles:{getbigfiles} args.topfiles:{args.maxfiles}')
 	filelist = []
 	itemlist = []
 	itemlist2 = []
 	folderlist = [k for k in input_path.glob('*') if not k.is_file() and not Path(k).is_symlink() and k.name not in exclude_list]
 	try:
-		# itemlist = [DirItem(name=k, getbigfiles=getbigfiles, maxfiles=args.maxfiles) for k in folderlist]
 		with Pool(processes=os.cpu_count()) as pool:
 			itemlist = pool.map(process_directory, folderlist)
 	except KeyboardInterrupt as e:
@@ -57,9 +51,6 @@ if __name__ == '__main__':
 	print(f'{"-"*60}')
 	for item in sorteditems:
 		print(f'{item.get_size():<10}  {item.dirname[0:20]:<20} {item.subitemcount:<7} {item.subfilecount:<7} {item.subdircount:<7}')
-		if getbigfiles:
-			for bigitem in item.bigfiles:
-				print(f'\t[bi] {bigitem.filename[0:20]:<20} {bigitem.get_size():>10}')
 		total_size += item.totalsize
 		total_items += item.subitemcount
 		total_files += item.subfilecount
