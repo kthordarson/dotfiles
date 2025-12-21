@@ -6,9 +6,15 @@ from pathlib import Path
 import operator
 from utils import get_size_format, EXCLUDES, DirItem
 from multiprocessing import Pool
+from loguru import logger
 
-def process_directory(k):
-	return DirItem(name=k)
+def process_directory(task_item):
+	args, dirname = task_item
+	if str(dirname) in EXCLUDES or '.git' in str(dirname):
+		if args.debug:
+			logger.warning(f'[debug] skipping excluded dir: {dirname}')
+		return None
+	return DirItem(name=dirname, maxdepth=args.maxdepth, exclude_list=args.exclude_list)
 
 if __name__ == '__main__':
 	myparse = argparse.ArgumentParser(description="show folder sizes and things..")
@@ -17,44 +23,57 @@ if __name__ == '__main__':
 	myparse.add_argument('path', nargs='?', type=str, default=_default, metavar='input_path')
 	myparse.add_argument('--number', metavar='filenum', type=int, help="Limit to x results", default=10)
 	myparse.add_argument('--sort', metavar='sort', type=str, help="sort by size/files/dirs", default='size')
-	myparse.add_argument('--maxfiles', metavar='maxfiles', type=int, help="include X biggest file(s)", default='0')
+	myparse.add_argument('--maxfiles', metavar='maxfiles', type=int, help="include X biggest file(s)", default=0)
+	myparse.add_argument('--maxdepth', metavar='maxdepth', type=int, help="limit to maxdepth dirs", default=-1)
 	myparse.add_argument('-e','--excludes', help="use exclude list", action='store_true', default=False)
+	myparse.add_argument('--exclude_list', help="exclude_list", action='store', default=[], nargs='*')
 	myparse.add_argument('-r','--reverse', help="reverse list", action='store_true', default=False, dest='reverselist')
 	myparse.add_argument('-wc','--wildcard', required=False, metavar='wildcard', nargs='?', type=str, help="search by wildcard", default='*')
+	myparse.add_argument('--debug', '-d', help="enable debug", action='store_true', default=False)
 	args = myparse.parse_args()
 	if args.excludes:
-		exclude_list = EXCLUDES
-	else:
-		exclude_list = []
+		args.exclude_list = EXCLUDES
 	input_path = Path(args.path)
 	limit = args.number
 	filelist = []
 	itemlist = []
-	itemlist2 = []
-	folderlist = [k for k in input_path.glob('*') if not k.is_file() and not Path(k).is_symlink() and k.name not in exclude_list]
+	folder_task_list = [(args,k) for k in input_path.glob('*') if not k.is_file() and not Path(k).is_symlink() and k.name not in args.exclude_list]
+	folder_task_list_excluded = [(args,k) for k in input_path.glob('*') if not k.is_file() and not Path(k).is_symlink() and k.name in args.exclude_list]
+	if args.debug:
+		logger.debug(f'[debug] folder_task_list: {len(folder_task_list)} folder_task_list_excluded: {len(folder_task_list_excluded)}')
 	try:
 		with Pool(processes=os.cpu_count()) as pool:
-			itemlist = pool.map(process_directory, folderlist)
+			itemlist = pool.map(process_directory, folder_task_list)
 	except KeyboardInterrupt as e:
-		print(f'[KeyboardInterrupt] il:{len(itemlist)} fl:{len(folderlist)}')
+		print(f'[KeyboardInterrupt] il:{len(itemlist)} fl:{len(folder_task_list)}')
 	total_size = 0
 	total_items = 0
 	total_files = 0
 	total_dirs = 0
-	if args.sort == 'size':
-		sorteditems = sorted(itemlist, key=operator.attrgetter("totalsize"), reverse=args.reverselist)
-	if args.sort == 'files':
-		sorteditems = sorted(itemlist, key=operator.attrgetter("subfilecount"), reverse=args.reverselist)
-	if args.sort == 'dirs':
-		sorteditems = sorted(itemlist, key=operator.attrgetter("subdircount"), reverse=args.reverselist)
+	itemlist = [k for k in itemlist if k is not None]
+	try:
+		if args.sort == 'size':
+			sorteditems = sorted(itemlist, key=operator.attrgetter("totalsize"), reverse=args.reverselist)
+		elif args.sort == 'files':
+			sorteditems = sorted(itemlist, key=operator.attrgetter("subfilecount"), reverse=args.reverselist)
+		elif args.sort == 'dirs':
+			sorteditems = sorted(itemlist, key=operator.attrgetter("subdircount"), reverse=args.reverselist)
+	except AttributeError as e:
+		logger.error(f'[err] {e} itemlist:{itemlist}')
+		sorteditems = itemlist
 	print(f'[size] {" "*5}[name]{" "*15}[items] [files] [folders]')
 	print(f'{"-"*60}')
 	for item in sorteditems:
-		print(f'{item.get_size():<10}  {item.dirname[0:20]:<20} {item.subitemcount:<7} {item.subfilecount:<7} {item.subdircount:<7}')
-		total_size += item.totalsize
-		total_items += item.subitemcount
-		total_files += item.subfilecount
-		total_dirs += item.subdircount
+		if item:
+			try:
+				print(f'{item.get_size():<10}  {item.dirname[0:20]:<20} {item.subitemcount:<7,} {item.subfilecount:<7,} {item.subdircount:<7,}')
+				total_size += item.totalsize
+				total_items += item.subitemcount
+				total_files += item.subfilecount
+				total_dirs += item.subdircount
+			except AttributeError as e:
+				logger.warning(f'[debug] skipping None item in sorteditems')
+				continue
 	# print(f'[t] {get_size_format(b=total_size, suffix="B")} {" "*34} {total_files:,} {total_dirs:,}')
 	print(f'{"-"*60}')
-	print(f'{get_size_format(b=total_size, suffix="B")} {" "*23}{total_items:<7} {total_files:<7} {total_dirs:<7}')
+	print(f'{get_size_format(b=total_size, suffix="B")} {" "*23}{total_items:<7,} {total_files:<7,} {total_dirs:<7,}')

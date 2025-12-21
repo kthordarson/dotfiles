@@ -1,10 +1,185 @@
 import os
+import aiohttp
+import asyncio
+from dataclasses import dataclass
+from datetime import datetime
 from loguru import logger
 import requests
 from requests.auth import HTTPBasicAuth
 from bs4 import BeautifulSoup
 
 CACHE_DIR = os.path.join(os.path.expanduser('~'), '.cache', 'gitstars')
+
+@dataclass
+class RateLimit:
+	limit: int
+	used: int
+	remaining: int
+	reset: int
+
+	@property
+	def reset_time(self) -> datetime:
+		return datetime.fromtimestamp(self.reset)
+
+	@property
+	def is_exceeded(self) -> bool:
+		return self.remaining <= 0
+
+	def __str__(self) -> str:
+		return f"RateLimit(remaining={self.remaining}/{self.limit}, resets={self.reset_time})"
+
+
+async def get_rate_limit_async(session: aiohttp.ClientSession) -> dict[str, RateLimit]:
+	"""Get current rate limit status asynchronously"""
+	url = 'https://api.github.com/rate_limit'
+	async with session.get(url) as r:
+		if r.status != 200:
+			logger.error(f"Failed to get rate limit: {r.status}")
+			return {}
+		data = await r.json()
+		limits = {}
+		for resource, values in data.get('resources', {}).items():
+			limits[resource] = RateLimit(
+				limit=values['limit'],
+				used=values['used'],
+				remaining=values['remaining'],
+				reset=values['reset']
+			)
+		return limits
+
+
+def get_rate_limit(auth: HTTPBasicAuth) -> dict[str, RateLimit]:
+	"""Get current rate limit status synchronously"""
+	url = 'https://api.github.com/rate_limit'
+	headers = {
+		'Accept': 'application/vnd.github+json',
+		'Authorization': f'Bearer {auth.password}',
+		'X-GitHub-Api-Version': '2022-11-28'
+	}
+	try:
+		r = requests.get(url, headers=headers)
+		if r.status_code != 200:
+			logger.error(f"Failed to get rate limit: {r.status_code}")
+			return {}
+		data = r.json()
+		limits = {}
+		for resource, values in data.get('resources', {}).items():
+			limits[resource] = RateLimit(
+				limit=values['limit'],
+				used=values['used'],
+				remaining=values['remaining'],
+				reset=values['reset']
+			)
+		return limits
+	except Exception as e:
+		logger.error(f"Failed to get rate limit: {e}")
+		return {}
+
+
+async def check_rate_limit_async(session: aiohttp.ClientSession, resource: str = 'core', min_remaining: int = 10) -> bool:
+	"""
+	Check if we have enough rate limit remaining
+	Returns True if OK to proceed, False if rate limited
+	"""
+	limits = await get_rate_limit_async(session)
+	if not limits:
+		logger.warning("Could not fetch rate limits, proceeding anyway")
+		return True
+
+	if resource not in limits:
+		logger.warning(f"Unknown resource '{resource}', proceeding anyway")
+		return True
+
+	limit = limits[resource]
+	logger.debug(f"Rate limit for {resource}: {limit}")
+
+	if limit.remaining < min_remaining:
+		wait_seconds = limit.reset - int(datetime.now().timestamp())
+		if wait_seconds > 0:
+			logger.warning(f"Rate limit low ({limit.remaining} remaining). Resets in {wait_seconds}s at {limit.reset_time}")
+			return False
+
+	return True
+
+
+async def wait_for_rate_limit_async(session: aiohttp.ClientSession, resource: str = 'core') -> None:
+	"""Wait until rate limit resets if exceeded"""
+	limits = await get_rate_limit_async(session)
+	if not limits or resource not in limits:
+		return
+
+	limit = limits[resource]
+	if limit.is_exceeded:
+		wait_seconds = limit.reset - int(datetime.now().timestamp()) + 1
+		if wait_seconds > 0:
+			logger.warning(f"Rate limit exceeded. Waiting {wait_seconds}s until {limit.reset_time}")
+			await asyncio.sleep(wait_seconds)
+
+
+async def get_git_stars_async(auth, max=None):
+	"""Get all starred repos asynchronously"""
+	jsonbuffer = []
+	stars_dict = {}
+	apiurl = 'https://api.github.com/user/starred'
+	headers = {
+		'Accept': 'application/vnd.github+json',
+		'Authorization': f'Bearer {auth.password}',
+		'X-GitHub-Api-Version': '2022-11-28'
+	}
+
+	async with aiohttp.ClientSession(headers=headers) as session:
+		# Check rate limit before starting
+		if not await check_rate_limit_async(session, 'core', min_remaining=10):
+			await wait_for_rate_limit_async(session, 'core')
+
+		# Get first page to find total pages
+		async with session.get(apiurl) as r:
+			if r.status == 403:
+				logger.error("Rate limit exceeded")
+				await wait_for_rate_limit_async(session, 'core')
+				return [], {}
+			if r.status != 200:
+				logger.error(f"[r] {r.status}")
+				return [], {}
+
+			data = await r.json()
+			jsonbuffer.extend(data)
+			for s in data:
+				stars_dict[s['id']] = s
+
+			if 'link' not in r.headers:
+				return jsonbuffer, stars_dict
+
+			# Parse last page number
+			links = r.headers['link'].split(',')
+			lasturl = [k for k in links if 'last' in k][0].split('>')[0].replace('<', '')
+			last_page = int(lasturl.split('=')[-1])
+
+		# Check if we have enough rate limit for all pages
+		limits = await get_rate_limit_async(session)
+		if limits and 'core' in limits:
+			pages_needed = (min(last_page, max) if max else last_page) - 1
+			if limits['core'].remaining < pages_needed:
+				logger.warning(f"Not enough rate limit for {pages_needed} pages (have {limits['core'].remaining})")
+				await wait_for_rate_limit_async(session, 'core')
+
+		# Fetch remaining pages concurrently
+		max_page = min(last_page, max) if max else last_page
+		tasks = [session.get(f"{apiurl}?page={p}") for p in range(2, max_page + 1)]
+		logger.debug(f"[r] tasks: {len(tasks)} pages to fetch")
+		responses = await asyncio.gather(*tasks)
+		logger.debug(f"[r] fetched {len(responses)} pages")
+		for resp in responses:
+			if resp.status == 200:
+				data = await resp.json()
+				jsonbuffer.extend(data)
+				for s in data:
+					stars_dict[s['id']] = s
+			elif resp.status == 403:
+				logger.warning("Hit rate limit during fetch")
+				break
+
+	return jsonbuffer, stars_dict
 
 def get_git_stars(auth, max=None, use_cache=False):
 	"""
@@ -16,7 +191,7 @@ def get_git_stars(auth, max=None, use_cache=False):
 	star_list = []
 	stars_dict = {}
 	session = requests.session()
-	apiurl = 'https://api.github.com/user/starred'
+	apiurl = 'https://api.github.com/user/starred?per_page=100'
 	headers = {
 		'Accept': 'application/vnd.github+json',
 		'Authorization': f'Bearer {auth.password}',
@@ -26,7 +201,7 @@ def get_git_stars(auth, max=None, use_cache=False):
 	except Exception as e:
 		logger.error(f"[r] {e}")
 		return []
-	# logger.info(f"[r] {r.status_code}  ")
+	logger.info(f"[r] {r.status_code}  ")
 	if r.status_code == 401:
 		logger.error(f"[r] autherr:401 a:{auth}")
 	elif r.status_code == 404:
@@ -37,7 +212,8 @@ def get_git_stars(auth, max=None, use_cache=False):
 		jsonbuffer.extend(r.json())
 		for s in r.json():
 			stars_dict[s['id']] = s
-	elif 'link' in r.headers:
+		logger.debug(f"[r] page:1 jsonbuffer: {len(jsonbuffer)} stars_dict: {len(stars_dict)}")
+	if 'link' in r.headers:
 		page_count = 0
 		links = r.headers['link'].split(',')
 		nexturl = [k for k in links if 'next' in k][0].split('>')[0].replace('<','')
@@ -56,11 +232,12 @@ def get_git_stars(auth, max=None, use_cache=False):
 				page_count += 1
 				if 'link' in r.headers:
 					links = r.headers['link'].split(',')
-					try:
-						nexturl = [k for k in links if 'next' in k][0].split('>')[0].replace('<','')
-					except IndexError as e:
-						logger.error(f"[r] {e} {r.headers}")
-						break
+					if links:
+						try:
+							nexturl = [k for k in links if 'next' in k][0].split('>')[0].replace('<','')
+						except IndexError as e:
+							logger.error(f"[r] {e} links: {links} no next link found")
+							break
 				else:
 					logger.warning(f'[r] {r.status_code} link not in headers: {r.headers} nexturl: {nexturl}')
 					break
@@ -160,27 +337,192 @@ def get_updated_at_sort(x) -> HTTPBasicAuth:
 
 def get_auth_param():
 	try:
-		auth = HTTPBasicAuth(os.getenv("GITHUB_USERNAME",''), os.getenv("GITHUBAPITOKEN",''))
+		auth = HTTPBasicAuth(os.getenv("GITHUB_USERNAME",''), os.getenv("GITSTARSTOKEN",''))
 	except Exception as e:
 		logger.error(f'failed to get auth param {e} {type(e)}')
 		exit(1)
 	return auth
 
-if __name__ == '__main__':
-	# todo add argparse
-	# todo handle cache better
+async def get_info_for_list_async(link, session: aiohttp.ClientSession, use_cache=False):
+	"""
+	get info for a list asynchronously with pagination support
+	param link: str
+	param session: aiohttp.ClientSession
+	param use_cache: bool
+	"""
+	link_fn = CACHE_DIR + '/' + link.split('/')[-1] + '.tmp'
+	list_hrefs = []
+	page = 1
+	max_pages = 50  # Safety limit to prevent infinite loops
+
+	while page <= max_pages:
+		page_link = f"{link}?page={page}" if page > 1 else link
+		cache_fn = f"{link_fn}.page{page}" if page > 1 else link_fn
+		soup = None
+
+		if use_cache:
+			try:
+				with open(cache_fn, 'r') as f:
+					soup = BeautifulSoup(f.read(), 'html.parser')
+			except FileNotFoundError:
+				pass
+			except Exception as e:
+				logger.error(f'failed to read {cache_fn} {e}')
+
+		if not soup:
+			async with session.get(page_link) as r:
+				if r.status == 429:
+					logger.warning(f'Rate limited on page {page} for {link}')
+					await asyncio.sleep(60)  # Wait a minute and retry
+					continue
+				content = await r.text()
+				soup = BeautifulSoup(content, 'html.parser')
+
+		try:
+			with open(cache_fn, 'w') as f:
+				f.write(str(soup))
+		except Exception as e:
+			logger.error(f'failed to write {cache_fn} {e} {type(e)}')
+
+		soupdata = soup.select_one('div', attrs={"id": "user-list-repositories", "class": "my-3"})
+		if not soupdata:
+			logger.warning(f'no more data on page {page} for {link}')
+			break
+
+		listdata = soupdata.find_all('div', class_="col-12 d-block width-full py-4 border-bottom color-border-muted")
+		if not listdata:
+			logger.warning(f'no list items on page {page} for {link}')
+			break
+
+		page_hrefs = [k.find('div', class_='d-inline-block mb-1').find('a').attrs['href'] for k in listdata]  # type: ignore
+		list_hrefs.extend(page_hrefs)
+
+		# Check for next page - multiple ways GitHub shows pagination
+		has_next = False
+
+		# Method 1: Look for pagination container with next link
+		pagination = soup.find('div', class_='paginate-container')
+		if pagination:
+			next_link = pagination.find('a', string='Next')  # type: ignore
+			if not next_link:
+				next_link = pagination.find('a', class_='next_page')  # type: ignore
+			if next_link and 'disabled' not in next_link.get('class', []):  # type: ignore
+				has_next = True
+
+		# Method 2: Look for BtnGroup pagination
+		if not has_next:
+			btn_group = soup.find('div', class_='BtnGroup')
+			if btn_group:
+				next_btn = btn_group.find('a', string='Next')  # type: ignore
+				if next_btn and 'disabled' not in next_btn.get('class', []):  # type: ignore
+					has_next = True
+
+		# Method 3: Check if we got a full page (30 items = likely more pages)
+		if not has_next and len(page_hrefs) == 30:
+			has_next = True
+
+		if not has_next:
+			break
+
+		page += 1
+
+	logger.info(f'total list_hrefs: {len(list_hrefs)} from {page} pages for {link}')
+	return list_hrefs
+
+
+async def get_git_lists_async(auth: HTTPBasicAuth, use_cache=False) -> dict:
+	"""
+	get lists of starred repos asynchronously
+	param auth: HTTPBasicAuth
+	returns dict of lists
+	"""
+	listurl = f'https://github.com/{auth.username}?tab=stars'
+	headers = {'Authorization': f'Bearer {auth.password}', 'X-GitHub-Api-Version': '2022-11-28'}
+	soup = None
+
+	if use_cache:
+		try:
+			with open('starlist.tmp', 'r') as f:
+				soup = BeautifulSoup(f.read(), 'html.parser')
+		except Exception as e:
+			logger.error(f'failed to read starlist.tmp {e}')
+
+	async with aiohttp.ClientSession(headers=headers) as session:
+		# Check rate limit before starting
+		if not await check_rate_limit_async(session, 'core', min_remaining=5):
+			await wait_for_rate_limit_async(session, 'core')
+
+		if not soup:
+			async with session.get(listurl) as r:
+				if r.status == 429:
+					logger.error("Rate limited fetching lists")
+					await wait_for_rate_limit_async(session, 'core')
+					return {}
+				text = await r.text()
+				soup = BeautifulSoup(text, 'html.parser')
+				with open('starlist.tmp', 'w') as f:
+					f.write(str(soup))
+
+		listsoup = soup.find_all('div', attrs={"id": "profile-lists-container"})
+		list_items = listsoup[0].find_all('a', attrs={'class': 'd-block Box-row Box-row--hover-gray mt-0 color-fg-default no-underline'})  # type: ignore
+		logger.debug(f'list_items: {len(list_items)} listsoup: {len(listsoup)}')
+
+		# Prepare list metadata
+		list_meta = []
+		for item in list_items:
+			listname = item.find('h3').text  # type: ignore
+			list_link = f"https://github.com{item.attrs['href']}"  # type: ignore
+			list_count_info = item.find('div', class_="color-fg-muted text-small no-wrap").text  # type: ignore
+			try:
+				list_description = item.select('span', class_="Truncate-text color-fg-muted mr-3")[1].text.strip()  # type: ignore
+			except IndexError:
+				list_description = ''
+			list_meta.append((listname, list_link, list_count_info, list_description))
+
+		# Fetch all list repos concurrently
+		tasks = [get_info_for_list_async(meta[1], session, use_cache) for meta in list_meta]
+		results = await asyncio.gather(*tasks, return_exceptions=True)
+
+		lists = {}
+		for (listname, list_link, list_count_info, list_description), result in zip(list_meta, results):
+			if isinstance(result, Exception):
+				logger.warning(f'{result} {type(result)} failed to get list info for {listname}')
+				list_repos = []
+			else:
+				list_repos = result
+			lists[listname] = {'href': list_link, 'count': list_count_info, 'description': list_description, 'hrefs': list_repos}
+
+	return lists
+
+
+async def main():
 	if not os.path.exists(CACHE_DIR):
 		logger.debug(f'creating cache dir: {CACHE_DIR}')
 		os.makedirs(CACHE_DIR)
-	use_cache = True
-	max_items = 4
-
+	use_cache = False
 	auth = get_auth_param()
-	lists = get_git_lists(auth, use_cache)
-	starred_repos, stars_dict = get_git_stars(auth=auth, use_cache=use_cache, max=max_items)
-	# sorted(starred_repos,key=get_updated_at_sort,reverse=True)
-	idlist = [k['id'] for k in starred_repos]
-	logger.debug(f'idlist: {len(idlist)} lists: {len(lists)} stars: {len(starred_repos)}')
-	# _ = [print(f'id: {k['id']} {k['name']} {k['updated_at']}') for k in starred_repos]
-	# _ = [print(k.get('name')  in ''.join([''.join(lists[k].get('hrefs')) for k in lists]))  for k in starred_repos ]
-	# _ = [print(f"{k.get('name')} listed: {k.get('name')  in ''.join([''.join(lists[k].get('hrefs')) for k in lists])}")  for k in starred_repos ]
+
+	# Check and display rate limits before starting
+	limits = get_rate_limit(auth)
+	if limits:
+		logger.info(f"API Rate limits - Core: {limits.get('core')}")
+
+	lists = await get_git_lists_async(auth, use_cache)
+	logger.info(f'got {len(lists)} lists')
+
+	# Show rate limits after operations
+	limits = get_rate_limit(auth)
+	if limits:
+		logger.info(f"API Rate limits after - Core: {limits.get('core')}")
+
+	jsonbuffer, stars_dict = await get_git_stars_async(auth, max=None)
+	logger.info(f'got {len(jsonbuffer)} starred repos')
+
+	limits = get_rate_limit(auth)
+	if limits:
+		logger.info(f"API Rate limits after - Core: {limits.get('core')}")
+
+if __name__ == '__main__':
+	# todo add argparse
+	# todo handle cache better
+	asyncio.run(main())
