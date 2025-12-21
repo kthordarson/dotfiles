@@ -6,6 +6,9 @@ import requests
 import json
 import importlib
 import importlib_metadata
+from importlib.metadata import PackageMetadata
+from importlib.metadata import packages_distributions
+from importlib.metadata import metadata, version, distribution, distributions
 from loguru import logger
 import time
 from colorama import Fore, Back, Style
@@ -13,36 +16,56 @@ from pathlib import Path
 import glob
 
 
-def get_modules():
-	usrpacks = []
-	localpacks = []
+def get_all_packs():
 	allpacks = [k for k in set([k for k in importlib_metadata.entry_points()])]
-	logger.debug(f'Found {len(allpacks)} modules')
-	# cache all module names
-	# usrdistmods = [k for k in set( [k.dist.name for k in allpacks if str(k.dist._path).startswith('/usr')])]
-	# logger.debug(f'Found {len(usrdistmods)} usrdistmods modules')
-	# localdistmods = [k for k in set( [k.dist.name for k in allpacks if str(k.dist._path).startswith('/home')])]
-	# logger.debug(f'Found {len(localdistmods)} localdistmods modules')
-	usrdistmods = []
-	localdistmods = []
+	allpack_names = list(set([k.name for k in importlib_metadata.entry_points()]))
+	allpack_dist_names = list(set([k.dist.name for k in importlib_metadata.entry_points()]))
+
+	logger.debug(f'Found {len(allpacks)} modules, unique names: {len(allpack_names)} allpack_dist_names: {len(allpack_dist_names)}')
+	distmods = []
+	packs = []
 	for idx,p in enumerate(allpacks):
-		if str(p.dist._path).startswith('/usr') and p.dist.name not in usrdistmods:
-			usrpacks.append(p)
-			usrdistmods.append(p.dist.name)
-		elif str(p.dist._path).startswith('/home/') and p.dist.name not in localdistmods:
-			localpacks.append(p)
-			localdistmods.append(p.dist.name)
+		if p.dist.name not in distmods and p.name not in distmods:
+			packs.append(p)
+			distmods.append(p.dist.name)
+			distmods.append(p.name)
 		else:
-			pass  # logger.warning(f'[{idx}/{len(allpacks)} {len(usrpacks)}/{len(localpacks)}] unhandled package {p.dist.name} path: {p.dist._path}')
-	# usrpacks = [k for k in set([k for k in importlib_metadata.entry_points() if str(k.dist._path).startswith('/usr')])]
-	# localpacks = [k for k in set([k for k in importlib_metadata.entry_points() if str(k.dist._path).startswith('/home/')])]
-	return allpacks, usrpacks, localpacks
+			pass  # logger.warning(f'[{idx}/{len(allpacks)} {len(packs)}] dupe package {p.dist.name} path: {p.dist._path}')
+	return packs
+
+def get_local_packs():
+	allpacks = [k for k in set([k for k in importlib_metadata.entry_points()])]
+	distmods = []
+	packs = []
+	for idx,p in enumerate(allpacks):
+		if p.dist.name not in distmods and str(p.dist._path).startswith('/home/'):
+			packs.append(p)
+			distmods.append(p.dist.name)
+	logger.debug(f'Found {len(packs)} modules')
+	return packs
+
+def get_usr_packs():
+	allpacks = [k for k in set([k for k in importlib_metadata.entry_points()])]
+	distmods = []
+	packs = []
+	for idx,p in enumerate(allpacks):
+		if p.dist.name in distmods:
+			pass  # logger.warning(f'[{idx}/{len(allpacks)} {len(packs)}] dupe package {p.dist.name} path: {p.dist._path}')
+		elif str(p.dist._path).startswith('/usr/') and p.dist.name not in distmods:
+			packs.append(p)
+			distmods.append(p.dist.name)
+		elif str(p.dist._path).startswith('/home/') and p.dist.name not in distmods:
+			pass
+		else:
+			logger.warning(f'[{idx}/{len(allpacks)} {len(packs)}] unhandled package {p.dist.name} path: {p.dist._path}')
+	logger.debug(f'Found {len(packs)} modules')
+	return packs
 
 def make_json_link(modulename):
-	if '_' in modulename:
-		on = modulename
-		modulename = modulename.replace('_','-')
-		logger.warning(f'fixing modulename {on} to {modulename}')
+	# if '_' in modulename:
+	# 	on = modulename
+	# 	modulename = modulename.replace('_','-')
+	# 	logger.warning(f'fixing modulename {on} to {modulename}')
 	info = {'modulename': modulename, 'url': f'https://pypi.org/pypi/{modulename}/json'}
 	return info
 
@@ -62,7 +85,7 @@ def get_pypi_json(module):
 			logger.error(f'Unhandled Exception: {e} {type(e)} for {url} response: {r.status_code}')
 			jsondata = {'error': e, 'status_code': r.status_code, 'url': url, 'module': module['modulename']}
 	elif r.status_code == 404:
-		logger.warning(f'modulenotfound {module["modulename"]} {url=} response: {r.status_code} ')
+		logger.warning(f'modulenotfound {module["modulename"]} {url=} response: {r.status_code} {module=}')
 		jsondata = {'error': '404 Not Found','url': url, 'module': module['modulename']}
 	else:
 		logger.error(f'moduleerror {module["modulename"]} {url} response: {r.status_code}')
@@ -98,10 +121,13 @@ def get_latest_version_cache(packname, cachedata):
 	latest_version = '0.0.0'
 	jsoninfo = {}
 	try:
-		jsoninfo = [k for k in cachedata if k.get('info').get('name') == packname][0]
+		jsoninfo = [k for k in cachedata if k.get('info',{}).get('name','') == packname][0]
 	except IndexError as e:
-		jsoninfo = [k for k in cachedata if k.get('info').get('name') == packname]
-		logger.warning(f'Error: {e} {type(e)} for {packname} jsoninfo:{jsoninfo}')
+		# jsoninfo = [k for k in cachedata if k.get('info').get('name') == packname]
+		# logger.warning(f'Error: {e} {type(e)} for {packname}')
+		latest_version = f'Error {e}'
+	except AttributeError as e:
+		logger.error(f'AttributeError: {e} {type(e)} for {packname}')
 		latest_version = f'Error {e}'
 	except Exception as e:
 		logger.error(f'Unhandled Exception: {e} {type(e)} for {packname}')
@@ -116,7 +142,21 @@ def get_latest_version_cache(packname, cachedata):
 			latest_version = 'Error: No info in jsoninfo'
 	return latest_version
 
-def update_check(allpacks, usrpacks, localpacks):
+def update_check(packs):
+	pack_names = [k for k in set([k.dist.name for k in packs])]
+	pack_links = [make_json_link(k) for k in pack_names]
+	packs_json = [get_pypi_json(k) for k in pack_links]
+	for pack in pack_names:
+		installed_version = get_installed_version(pack)
+		latest_version = get_latest_version_cache(pack, packs_json)
+		if 'Error' in latest_version:
+			print(f'{Fore.CYAN} Name: {pack} version: {Fore.YELLOW} {installed_version} {Fore.BLUE} latest version: {Fore.RED} {latest_version}{Style.RESET_ALL}')
+		elif installed_version != latest_version:
+			print(f'{Fore.CYAN} Name: {pack} version: {Fore.RED} {installed_version} {Fore.BLUE} latest version: {Fore.LIGHTGREEN_EX} {latest_version}{Style.RESET_ALL}')
+		else:
+			print(f'{Fore.CYAN} Name: {pack} version: {Fore.GREEN} {installed_version} {Fore.BLUE} latest version: {Fore.LIGHTGREEN_EX} {latest_version}{Style.RESET_ALL}')
+
+def old_update_check(allpacks, usrpacks, localpacks):
 	usrnames = [k for k in set([k.dist.name for k in usrpacks])]
 	localnames = [k for k in set([k.dist.name for k in localpacks])]
 	dupe_packs = [k for k in usrpacks if k.dist.name in localnames]
@@ -169,34 +209,56 @@ def update_check(allpacks, usrpacks, localpacks):
 			print(f'{Fore.BLUE}localpacks{Fore.CYAN} Name: {pack} localversion: {Fore.GREEN} {installed_version} {Fore.BLUE} latestversion: {Fore.LIGHTGREEN_EX} {latest_version}{Style.RESET_ALL}')
 	print(f'{Fore.RED}usr_outdated:{Fore.LIGHTRED_EX} {len(usr_outdated)} {Fore.RED}local_outdated:{Fore.LIGHTRED_EX} {len(local_outdated)} {Style.RESET_ALL}')
 
-def check_folders(allpacks, usrpacks, localpacks):
-	search_paths = [k for k in sys.path if Path(k).exists() and Path(k).is_dir() and k != '']
+def check_folders():
+	search_paths = [k for k in sys.path if Path(k).exists() and Path(k).is_dir() and k != '' and not Path(k).is_symlink()]
 	found_folders = []
 	for idx,p in enumerate(search_paths):
-		print(f'{Fore.LIGHTBLUE_EX}Searching:{Fore.BLUE}{p}{Style.RESET_ALL}')
-		for sub_path in Path(p).glob('*'):
-			if 'dist-info' in str(sub_path):
-				break
+		sub_paths = [k for k in Path(p).glob('*') if k.is_dir()]
+		symlink_sub_paths = [k for k in Path(p).glob('*') if k.is_symlink()]
+		print(f'{Fore.LIGHTBLUE_EX}[{idx}/{len(search_paths)}] {Fore.LIGHTBLUE_EX}Searching:{Fore.BLUE}{p}{Fore.GREEN} sub_paths: {len(sub_paths)}{Fore.BLUE} symlink_sub_paths: {len(symlink_sub_paths)}{Style.RESET_ALL}')
+		for sub_idx,sub_path in enumerate(sub_paths):
+			if sub_path.exists() and sub_path.is_file():
+				print(f'{Fore.RED}[{sub_idx}/{len(sub_paths)}] {Fore.CYAN}{sub_path} skipping file!{Style.RESET_ALL}')
+				continue
+			elif Path(sub_path).is_symlink() and Path(sub_path).resolve().exists():
+				print(f'{Fore.YELLOW}[{sub_idx}/{len(sub_paths)}] symlink: {Fore.CYAN}{sub_path} target: {Path(sub_path).resolve()} {Style.RESET_ALL}')
+			elif Path(sub_path).is_symlink() and not Path(sub_path).resolve().exists():
+				print(f'{Fore.RED}[{sub_idx}/{len(sub_paths)}] symlink: {Fore.CYAN}{sub_path} target not found: {Path(sub_path).resolve()} {Style.RESET_ALL}')
+			elif 'dist-info' in str(sub_path) or 'egg-info' in str(sub_path):
+				print(f'{Fore.BLUE}[{sub_idx}/{len(sub_paths)}] {Fore.CYAN}{sub_path}{Style.RESET_ALL}')
+				# break
 			elif sub_path.exists() and sub_path.is_dir():
 				found_folders.append(sub_path)
-				print(f'{Fore.LIGHTBLUE_EX}[{idx}/{len(search_paths)}] {Fore.CYAN}{sub_path}{Style.RESET_ALL}')
+				print(f'{Fore.LIGHTBLUE_EX}[{sub_idx}/{len(sub_paths)}] {Fore.CYAN}{sub_path}{Style.RESET_ALL}')
+			else:
+				print(f'{Fore.RED}[{sub_idx}/{len(sub_paths)}] {Fore.CYAN}{sub_path} not found!{Style.RESET_ALL}')
 
 async def main(args):
-	allpacks, usrpacks, localpacks = get_modules()
+	allpacks = get_all_packs()
 	if args.count:
+		localpacks = get_local_packs()
+		usrpacks = get_usr_packs()
 		print(f'{Fore.LIGHTBLUE_EX}total:{Fore.CYAN} {len(usrpacks)+len(localpacks)} {Fore.LIGHTBLUE_EX}usr:{Fore.CYAN} {len(usrpacks)} {Fore.LIGHTBLUE_EX}local:{Fore.CYAN} {len(localpacks)}{Style.RESET_ALL}')
 		sys.exit(0)
-	elif args.update:
-		print(f'{Fore.LIGHTBLUE_EX}Starting update check{Style.RESET_ALL}')
+	elif args.update_check_local:
+		localpacks = get_local_packs()
+		print(f'{Fore.LIGHTBLUE_EX}Starting update check {Fore.LIGHTBLUE_EX} for {Fore.GREEN} {len(localpacks)}{Fore.BLUE} packs {Style.RESET_ALL}')
 		try:
-			update_check(allpacks, usrpacks, localpacks)
+			update_check(localpacks)
+		except Exception as e:
+			logger.error(f'unhandled exception: {e} {type(e)}')
+		sys.exit(0)
+	elif args.update_check_usr:
+		print(f'{Fore.LIGHTBLUE_EX}Starting update check {Fore.LIGHTBLUE_EX} for {Fore.GREEN} {len(usrpacks)}{Fore.BLUE} packs {Style.RESET_ALL}')
+		try:
+			update_check(usrpacks)
 		except Exception as e:
 			logger.error(f'unhandled exception: {e} {type(e)}')
 		sys.exit(0)
 	elif args.check_folders:
 		print(f'{Fore.LIGHTBLUE_EX}Checking folders{Style.RESET_ALL}')
 		try:
-			check_folders(allpacks, usrpacks, localpacks)
+			check_folders()
 		except Exception as e:
 			logger.error(f'unhandled exception: {e} {type(e)}')
 		sys.exit(0)
@@ -206,7 +268,8 @@ if __name__ == '__main__':
 	argparser.add_argument('-v', '--verbose', help='verbose output', action='store_true', default=False, dest='verbose')
 	argparser.add_argument('--config',action='store', default='piplist.json', dest='config', type=str, help='config file with module paths to search in')
 	argparser.add_argument('--count', action='store_true', default=False, dest='count', help='count installed modules')
-	argparser.add_argument('--update-check', action='store_true', default=False, dest='update', help='check for updates')
-	argparser.add_argument('--check-folders', action='store_true', default=False, dest='update', help='search for modules in folders (including orphan folders without dist-info)')
+	argparser.add_argument('--update-check-local', action='store_true', default=False, help='check local packs for updates')
+	argparser.add_argument('--update-check-usr', action='store_true', default=False, help='check usr packs for updates')
+	argparser.add_argument('--check-folders', action='store_true', default=False, help='search for modules in folders (including orphan folders without dist-info)')
 	args = argparser.parse_args()
 	asyncio.run(main(args))
