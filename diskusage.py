@@ -37,7 +37,6 @@ if __name__ == '__main__':
 	limit = args.number
 	filelist = []
 	itemlist = []
-	itemlist2 = []
 	folder_task_list = [(args,k) for k in input_path.glob('*') if not k.is_file() and not Path(k).is_symlink() and k.name not in args.exclude_list]
 	folder_task_list_excluded = [(args,k) for k in input_path.glob('*') if not k.is_file() and not Path(k).is_symlink() and k.name in args.exclude_list]
 	if args.debug:
@@ -51,20 +50,30 @@ if __name__ == '__main__':
 	total_items = 0
 	total_files = 0
 	total_dirs = 0
-	if args.sort == 'size':
-		sorteditems = sorted(itemlist, key=operator.attrgetter("totalsize"), reverse=args.reverselist)
-	elif args.sort == 'files':
-		sorteditems = sorted(itemlist, key=operator.attrgetter("subfilecount"), reverse=args.reverselist)
-	elif args.sort == 'dirs':
-		sorteditems = sorted(itemlist, key=operator.attrgetter("subdircount"), reverse=args.reverselist)
+	itemlist = [k for k in itemlist if k is not None]
+	try:
+		if args.sort == 'size':
+			sorteditems = sorted(itemlist, key=operator.attrgetter("totalsize"), reverse=args.reverselist)
+		elif args.sort == 'files':
+			sorteditems = sorted(itemlist, key=operator.attrgetter("subfilecount"), reverse=args.reverselist)
+		elif args.sort == 'dirs':
+			sorteditems = sorted(itemlist, key=operator.attrgetter("subdircount"), reverse=args.reverselist)
+	except AttributeError as e:
+		logger.error(f'[err] {e} itemlist:{itemlist}')
+		sorteditems = itemlist
 	print(f'[size] {" "*5}[name]{" "*15}[items] [files] [folders]')
 	print(f'{"-"*60}')
 	for item in sorteditems:
-		print(f'{item.get_size():<10}  {item.dirname[0:20]:<20} {item.subitemcount:<7,} {item.subfilecount:<7,} {item.subdircount:<7,}')
-		total_size += item.totalsize
-		total_items += item.subitemcount
-		total_files += item.subfilecount
-		total_dirs += item.subdircount
+		if item:
+			try:
+				print(f'{item.get_size():<10}  {item.dirname[0:20]:<20} {item.subitemcount:<7,} {item.subfilecount:<7,} {item.subdircount:<7,}')
+				total_size += item.totalsize
+				total_items += item.subitemcount
+				total_files += item.subfilecount
+				total_dirs += item.subdircount
+			except AttributeError as e:
+				logger.warning(f'[debug] skipping None item in sorteditems')
+				continue
 	# print(f'[t] {get_size_format(b=total_size, suffix="B")} {" "*34} {total_files:,} {total_dirs:,}')
 	print(f'{"-"*60}')
 	print(f'{get_size_format(b=total_size, suffix="B")} {" "*23}{total_items:<7,} {total_files:<7,} {total_dirs:<7,}')
