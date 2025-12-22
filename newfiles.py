@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 import os
 from functools import partial
-
+from loguru import logger
 import multiprocessing
 import argparse
 from pathlib import Path
@@ -11,18 +11,6 @@ from utils import filelist_generator, get_size_format, FileItem, EXCLUDES
 
 def process_directory(directory, args, exclude_list):
 	return list(filelist_generator(args, exclude_list, specific_dir=directory))
-
-def debugprintlist(filelist):
-	# reslist.sort(key=lambda x: x[1], reverse=args.reverse)
-	# logger.debug(f'[done] r:{len(reslist)}')
-	timefmt = '%d-%m-%Y %H:%M:%S'
-	print(f'{"file":<30}{"ctime":<21}{"mtime":<21}{"atime":<21}')
-	print(f'{"-"*90}')
-	for file in filelist[-maxfiles:]:
-		ct = datetime.fromtimestamp(file.st_ctime).strftime(timefmt)
-		mt = datetime.fromtimestamp(file.st_mtime).strftime(timefmt)
-		at = datetime.fromtimestamp(file.st_atime).strftime(timefmt)
-		print(f'{file.filename[:30]:30} | {ct} | {mt} | {at}')
 
 def printlist(filelist, args):
 	# reslist.sort(key=lambda x: x[1], reverse=args.reverse)
@@ -35,14 +23,14 @@ def printlist(filelist, args):
 		filelist = sorted(filelist, key=operator.attrgetter('st_mtime'), reverse=args.reverse)
 	timefmt = '%d-%m-%Y %H:%M:%S'
 	maxlen = 0
-	for file in filelist[-maxfiles:]:
+	for file in filelist[-args.maxfiles:]:
 		if len(str(file.name)) > maxlen:
-			maxlen = len(str(file.name))
+			maxlen = len(str(file.name)) + 3
 	# print(f'{"file":<maxlen}{args.sort:<21}')
 	# print(f'{"-"*90}')
 	s0 = 'file'.ljust(maxlen)+str(args.sort)
 	print(s0)
-	for file in filelist[-maxfiles:]:
+	for file in filelist[-args.maxfiles:]:
 		if args.sort == 'ctime':
 			datefield = datetime.fromtimestamp(file.st_ctime).strftime(timefmt)
 		elif args.sort == 'mtime':
@@ -68,31 +56,31 @@ if __name__ == '__main__':
 	myparse.add_argument('--reverse','-r', help="reverse", action='store_true', dest='reverse', default=False)
 	myparse.add_argument('--excludes', '-e', help="use exclude list", action='store_true', default=False)
 	myparse.add_argument('--sort', '-s', metavar='sort', type=str, help="sort by ctime/mtime/atime", default='ctime')
+	myparse.add_argument('--debug', '-d', help="enable debug", action='store_true', default=False)
 	args = myparse.parse_args()
 	if args.excludes:
 		exclude_list = EXCLUDES
 	else:
 		exclude_list = []
-	maxfiles = args.maxfiles
 	if args.reverse:
 		reverse = True
 	else:
 		reverse = False
 	filelist = []
-	# reslist = [k for k in filelist_generator(args.path)]
-	# filelist = [k for k in filelist_generator(args, exclude_list)]
 	input_path = Path(args.path)
 	top_dirs = [d for d in input_path.iterdir() if d.is_dir() and d.name not in exclude_list]
-
+	if args.debug:
+		logger.debug(f'[debug] top_dirs: {len(top_dirs)}')
 	with multiprocessing.Pool(processes=os.cpu_count()) as pool:
 		results = pool.map(partial(process_directory, args=args, exclude_list=exclude_list), top_dirs)
 
 	filelist = [item for sublist in results for item in sublist]
-
+	if args.debug:
+		logger.debug(f'[debug] filelist count: {len(filelist)}')
 	# Add files in the root directory
 	root_files = list(filelist_generator(args, exclude_list, specific_dir=input_path, root_only=True))
 	filelist.extend(root_files)
-
-	# filelist = [FileItem(Path(k)) for k in glob.glob(startpath,recursive=True, include_hidden=True)]
+	if args.debug:
+		logger.debug(f'[debug] added {len(root_files)} root files filelist count: {len(filelist)}')
 	printlist(filelist, args)
 

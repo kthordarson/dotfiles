@@ -9,3 +9,4 @@ __pycache__/**
 dotfiles.code-workspace
 test*
 *.log
+system_info_comparison.txt

@@ -8,13 +8,13 @@
 # ffmpeg -i <input>   -c:v libx264 -crf 23 -profile:v baseline -level 3.0 -pix_fmt yuv420p   -c:a aac -ac 2 -b:a 128k   -movflags faststart   output.mp4
 
 function fmakevid(){
-    if [ -z $1 ]
+    if [ -z "$1" ]
     then
         echo "usage: fmakevid <input folder> <output filename"
         echo "missing input folder"
         return 1
     fi
-    if [ -z $2 ]
+    if [ -z "$2" ]
     then
         echo "usage: fmakevid <input folder> <output filename"
         echo "missing output filename"
@@ -22,17 +22,17 @@ function fmakevid(){
     fi
     inputfolder=$1
     outputfolder=$2
-    echo ffmpeg -framerate 24 -f image2 -pix_fmt yuv420p -i "$inputfolder/image-%08d.jpg" $outputfolder
+    echo ffmpeg -framerate 24 -f image2 -pix_fmt yuv420p -i "$inputfolder/image-%08d.jpg" "$outputfolder"
 }
 
 function fextract(){
-     if [ -z $1 ]
+     if [ -z "$1" ]
     then
         echo "usage: fextract <video file> <output folder>"
         echo "missing input file"
         return 1
     fi
-    if [ -z $2 ]
+    if [ -z "$2" ]
     then
         echo "usage: fextract <video file> <output folder>"
         echo "missing output folder"
@@ -40,7 +40,7 @@ function fextract(){
     fi
     inputfile=$1
     outputfolder=$2
-    echo ffmpeg -r 1 -i $inputfile -r 1 $outputfolder/image-%08d.jpg
+    echo ffmpeg -r 1 -i "$inputfile" -r 1 "$outputfolder"/image-%08d.jpg
 }
 
 

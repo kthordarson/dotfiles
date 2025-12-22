@@ -2,27 +2,26 @@ syntax on
 
 " autoread files when changed
 set autoread
-
-
-set noerrorbells
-set tabstop=4 softtabstop=4
-set shiftwidth=4
+set colorcolumn=160
 set expandtab
-set smartindent
-set nu
-set nowrap
-set smartcase
+set hlsearch
+set incsearch
+set mouse=a
 set nobackup
+set noerrorbells
 set noswapfile
+set nowrap
+set nu
+set number
+set shiftwidth=4
+set showmatch
+set smartcase
+set smartindent
+set tabstop=4 softtabstop=4
+set textwidth=120
+set ttymouse=xterm2
 set undodir=~/.vim/undodir
 set undofile
-set incsearch
-set number
-
-set colorcolumn=160
-
-set mouse=a
-set ttymouse=xterm2
 
 highlight ColorColumn ctermbg=0 guibg=lightgray
 
