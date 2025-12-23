@@ -57,8 +57,8 @@ def show_tcp():
 				peer_address = parts[4]
 				process_info = parts[5]
 				match = re.search(r'\("([^"]+)",pid=(\d+),fd=(\d+)\)', process_info)
-			if match:
-				process_name = match.group(1)
+				if match:
+					process_name = match.group(1)
 				pid = int(match.group(2))
 				fd = int(match.group(3))
 				print(f'\tLocal: {local_address} Peer: {peer_address} State: {state} Process: {process_name} pid:{pid} fd:{fd}')
@@ -81,8 +81,8 @@ def show_tcp_listen():
 				peer_address = parts[4]
 				process_info = parts[5]
 				match = re.search(r'\("([^"]+)",pid=(\d+),fd=(\d+)\)', process_info)
-			if match:
-				process_name = match.group(1)
+				if match:
+					process_name = match.group(1)
 				pid = int(match.group(2))
 				fd = int(match.group(3))
 
