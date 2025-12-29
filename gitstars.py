@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import os
 import aiohttp
 import asyncio
@@ -7,6 +8,11 @@ from loguru import logger
 import requests
 from requests.auth import HTTPBasicAuth
 from bs4 import BeautifulSoup
+import pandas as pd
+from sqlalchemy import create_engine
+import sqlite3
+import json
+import argparse
 
 CACHE_DIR = os.path.join(os.path.expanduser('~'), '.cache', 'gitstars')
 
@@ -56,13 +62,13 @@ def get_rate_limit(auth: HTTPBasicAuth) -> dict[str, RateLimit]:
 		'Authorization': f'Bearer {auth.password}',
 		'X-GitHub-Api-Version': '2022-11-28'
 	}
+	limits = {}
 	try:
 		r = requests.get(url, headers=headers)
 		if r.status_code != 200:
 			logger.error(f"Failed to get rate limit: {r.status_code}")
-			return {}
+			return limits
 		data = r.json()
-		limits = {}
 		for resource, values in data.get('resources', {}).items():
 			limits[resource] = RateLimit(
 				limit=values['limit'],
@@ -73,7 +79,7 @@ def get_rate_limit(auth: HTTPBasicAuth) -> dict[str, RateLimit]:
 		return limits
 	except Exception as e:
 		logger.error(f"Failed to get rate limit: {e}")
-		return {}
+		return limits
 
 
 async def check_rate_limit_async(session: aiohttp.ClientSession, resource: str = 'core', min_remaining: int = 10) -> bool:
@@ -484,16 +490,51 @@ async def get_git_lists_async(auth: HTTPBasicAuth, use_cache=False) -> dict:
 		results = await asyncio.gather(*tasks, return_exceptions=True)
 
 		lists = {}
+
 		for (listname, list_link, list_count_info, list_description), result in zip(list_meta, results):
+			list_hrefs = []
 			if isinstance(result, Exception):
 				logger.warning(f'{result} {type(result)} failed to get list info for {listname}')
-				list_repos = []
+				list_hrefs = []
 			else:
-				list_repos = result
-			lists[listname] = {'href': list_link, 'count': list_count_info, 'description': list_description, 'hrefs': list_repos}
+				for listresult in result:
+					if listresult.startswith('/'):
+						list_hrefs.append(listresult[1:])
+					else:
+						list_hrefs.append(listresult)
+			lists[listname] = {'href': list_link, 'count': list_count_info, 'description': list_description, 'hrefs': list_hrefs}
 
 	return lists
 
+def save_to_db(data, tablename, db_path='gitstars.db'):
+	"""
+	Save starred repositories to a SQLite database
+	param stars_dict: dict of starred repositories
+	param db_path: path to SQLite database file
+	"""
+	try:
+		# engine = create_engine(f'sqlite:///{db_path}')
+		conn = sqlite3.connect(db_path)
+		df = pd.DataFrame.from_dict(data, orient='index')
+		# df.to_sql('starred_repos', con=engine, if_exists='replace', index=False)
+
+		for col in df.columns:
+			if df[col].apply(lambda x: isinstance(x, (dict, list))).any():
+				df[col] = df[col].apply(lambda x: json.dumps(x) if isinstance(x, (dict, list)) else x)
+
+		df.to_sql(tablename, conn, if_exists='replace', index=False)
+		logger.info(f'Saved {len(df)} starred repositories to {db_path}')
+	except Exception as e:
+		logger.error(f'Failed to save stars to database: {e}')
+
+def get_args():
+	parser = argparse.ArgumentParser(description='GitHub Starred Repositories Manager')
+	parser.add_argument('--use-cache', action='store_true', help='Use cached data if available')
+	parser.add_argument('--max-pages', type=int, default=None, help='Maximum number of pages to fetch')
+	parser.add_argument('--refresh', action='store_true', default=False, help='Refresh data from GitHub')
+	parser.add_argument('--refresh_lists', action='store_true', default=False, help='Refresh lists from GitHub')
+	parser.add_argument('--refresh_stars', action='store_true', default=False, help='Refresh stars from GitHub')
+	return parser.parse_args()
 
 async def main():
 	if not os.path.exists(CACHE_DIR):
@@ -501,26 +542,50 @@ async def main():
 		os.makedirs(CACHE_DIR)
 	use_cache = False
 	auth = get_auth_param()
+	args = get_args()
 
 	# Check and display rate limits before starting
 	limits = get_rate_limit(auth)
-	if limits:
-		logger.info(f"API Rate limits - Core: {limits.get('core')}")
+	print(f"API Rate limits - Core: {limits.get('core')}")
+	_ = [print(f'{k} {limits.get(k)}') for k in limits if limits.get(k).used > 0]
 
-	lists = await get_git_lists_async(auth, use_cache)
-	logger.info(f'got {len(lists)} lists')
+	if args.refresh_lists:
+		lists = await get_git_lists_async(auth, use_cache)
+		logger.info(f'got {len(lists)} lists')
+		save_to_db(lists, 'starred_lists', db_path='gitstars.db')
+		# Show rate limits after operations
+		limits = get_rate_limit(auth)
+		print(f"API Rate limits after - Core: {limits.get('core')}")
+		_ = [print(f'{k} {limits.get(k)}') for k in limits if limits.get(k).used > 0]
+		return
 
-	# Show rate limits after operations
-	limits = get_rate_limit(auth)
-	if limits:
-		logger.info(f"API Rate limits after - Core: {limits.get('core')}")
+	if args.refresh_stars:
+		jsonbuffer, stars_dict = await get_git_stars_async(auth, max=None)
+		logger.info(f'got {len(jsonbuffer)} starred repos')
+		save_to_db(stars_dict, 'starred_repos', db_path='gitstars.db')
 
-	jsonbuffer, stars_dict = await get_git_stars_async(auth, max=None)
-	logger.info(f'got {len(jsonbuffer)} starred repos')
+		limits = get_rate_limit(auth)
+		print(f"API Rate limits after - Core: {limits.get('core')}")
+		_ = [print(f'{k} {limits.get(k)}') for k in limits if limits.get(k).used > 0]
+		return
 
-	limits = get_rate_limit(auth)
-	if limits:
-		logger.info(f"API Rate limits after - Core: {limits.get('core')}")
+	if args.refresh:
+		lists = await get_git_lists_async(auth, use_cache)
+		logger.info(f'got {len(lists)} lists')
+		save_to_db(lists, 'starred_lists', db_path='gitstars.db')
+		# Show rate limits after operations
+		limits = get_rate_limit(auth)
+		print(f"API Rate limits after - Core: {limits.get('core')}")
+		_ = [print(f'{k} {limits.get(k)}') for k in limits if limits.get(k).used > 0]
+
+		jsonbuffer, stars_dict = await get_git_stars_async(auth, max=None)
+		logger.info(f'got {len(jsonbuffer)} starred repos')
+		save_to_db(stars_dict, 'starred_repos', db_path='gitstars.db')
+
+		limits = get_rate_limit(auth)
+		print(f"API Rate limits after - Core: {limits.get('core')}")
+		_ = [print(f'{k} {limits.get(k)}') for k in limits if limits.get(k).used > 0]
+		return
 
 if __name__ == '__main__':
 	# todo add argparse
