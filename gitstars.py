@@ -97,7 +97,7 @@ async def check_rate_limit_async(session: aiohttp.ClientSession, resource: str =
 		return True
 
 	limit = limits[resource]
-	logger.debug(f"Rate limit for {resource}: {limit}")
+	# logger.debug(f"Rate limit for {resource}: {limit}")
 
 	if limit.remaining < min_remaining:
 		wait_seconds = limit.reset - int(datetime.now().timestamp())
@@ -172,9 +172,9 @@ async def get_git_stars_async(auth, max=None):
 		# Fetch remaining pages concurrently
 		max_page = min(last_page, max) if max else last_page
 		tasks = [session.get(f"{apiurl}?page={p}") for p in range(2, max_page + 1)]
-		logger.debug(f"[r] tasks: {len(tasks)} pages to fetch")
+		# logger.debug(f"[r] tasks: {len(tasks)} pages to fetch")
 		responses = await asyncio.gather(*tasks)
-		logger.debug(f"[r] fetched {len(responses)} pages")
+		# logger.debug(f"[r] fetched {len(responses)} pages")
 		for resp in responses:
 			if resp.status == 200:
 				data = await resp.json()
@@ -270,15 +270,17 @@ def get_git_lists(auth:HTTPBasicAuth, use_cache=False) -> dict:
 	soup = None
 	if use_cache:
 		try:
-			with open('starlist.tmp', 'r') as f:
+			with open(f'{CACHE_DIR}/starlist.tmp', 'r') as f:
 				soup = BeautifulSoup(f.read(), 'html.parser')
 		except Exception as e:
 			logger.error(f'failed to read starlist.tmp {e}')
 	if not soup:
 		r = session.get(listurl)
 		soup = BeautifulSoup(r.text, 'html.parser')
-		with open('starlist.tmp', 'w') as f:
+		fn = f'{CACHE_DIR}/starlist.tmp'
+		with open(fn, 'w') as f:
 			f.write(str(soup))
+		logger.debug(f'Wrote cache for to {fn}')
 	listsoup = soup.find_all('div', attrs={"id": "profile-lists-container"})
 	list_items = listsoup[0].find_all('a', attrs={'class':'d-block Box-row Box-row--hover-gray mt-0 color-fg-default no-underline'})  # type: ignore
 	logger.debug(f'list_items: {len(list_items)} listsoup: {len(listsoup)}')
@@ -327,6 +329,7 @@ def get_info_for_list(link, session, use_cache):
 	try:
 		with open(link_fn, 'w') as f:
 			f.write(str(soup))
+		logger.debug(f'wrote cache for list {link} to {link_fn}')
 	except Exception as e:
 		logger.error(f'failed to write {link_fn} {e} {type(e)}')
 	# userlist_repos_data = soup.select_one('div', attrs={"id":"user-list-repositories"})
@@ -387,6 +390,7 @@ async def get_info_for_list_async(link, session: aiohttp.ClientSession, use_cach
 		try:
 			with open(cache_fn, 'w') as f:
 				f.write(str(soup))
+			# logger.debug(f'wrote cached page {page} for {link} to {cache_fn}')
 		except Exception as e:
 			logger.error(f'failed to write {cache_fn} {e} {type(e)}')
 
@@ -432,7 +436,7 @@ async def get_info_for_list_async(link, session: aiohttp.ClientSession, use_cach
 
 		page += 1
 
-	logger.info(f'total list_hrefs: {len(list_hrefs)} from {page} pages for {link}')
+	# logger.info(f'total list_hrefs: {len(list_hrefs)} from {page} pages for {link}')
 	return list_hrefs
 
 
@@ -448,7 +452,7 @@ async def get_git_lists_async(auth: HTTPBasicAuth, use_cache=False) -> dict:
 
 	if use_cache:
 		try:
-			with open('starlist.tmp', 'r') as f:
+			with open(f'{CACHE_DIR}/starlist.tmp', 'r') as f:
 				soup = BeautifulSoup(f.read(), 'html.parser')
 		except Exception as e:
 			logger.error(f'failed to read starlist.tmp {e}')
@@ -466,12 +470,14 @@ async def get_git_lists_async(auth: HTTPBasicAuth, use_cache=False) -> dict:
 					return {}
 				text = await r.text()
 				soup = BeautifulSoup(text, 'html.parser')
-				with open('starlist.tmp', 'w') as f:
+				fn = f'{CACHE_DIR}/starlist.tmp'
+				with open(fn, 'w') as f:
 					f.write(str(soup))
+				logger.debug(f'Wrote cache for to {fn}')
 
 		listsoup = soup.find_all('div', attrs={"id": "profile-lists-container"})
 		list_items = listsoup[0].find_all('a', attrs={'class': 'd-block Box-row Box-row--hover-gray mt-0 color-fg-default no-underline'})  # type: ignore
-		logger.debug(f'list_items: {len(list_items)} listsoup: {len(listsoup)}')
+		# logger.debug(f'list_items: {len(list_items)} listsoup: {len(listsoup)}')
 
 		# Prepare list metadata
 		list_meta = []
@@ -529,8 +535,8 @@ def save_to_db(data, tablename, db_path='gitstars.db'):
 
 def get_args():
 	parser = argparse.ArgumentParser(description='GitHub Starred Repositories Manager')
-	parser.add_argument('--use-cache', action='store_true', help='Use cached data if available')
-	parser.add_argument('--max-pages', type=int, default=None, help='Maximum number of pages to fetch')
+	# parser.add_argument('--use-cache', action='store_true', help='Use cached data if available')
+	# parser.add_argument('--max-pages', type=int, default=None, help='Maximum number of pages to fetch')
 	parser.add_argument('--refresh', action='store_true', default=False, help='Refresh data from GitHub')
 	parser.add_argument('--refresh_lists', action='store_true', default=False, help='Refresh lists from GitHub')
 	parser.add_argument('--refresh_stars', action='store_true', default=False, help='Refresh stars from GitHub')
@@ -551,7 +557,15 @@ async def main():
 
 	if args.refresh_lists:
 		lists = await get_git_lists_async(auth, use_cache)
-		logger.info(f'got {len(lists)} lists')
+		lists_fn = f'{CACHE_DIR}/starred_lists.json'
+		try:
+			with open(lists_fn, 'w') as f:
+				json.dump(lists, f, indent=2)
+			logger.debug(f'wrote lists to {lists_fn}')
+		except Exception as e:
+			logger.error(f'failed to write lists to {lists_fn} {e} {type(e)}')
+		total_hrefs = sum([len(lists.get(k).get('hrefs')) for k in lists])
+		print(f'got {len(lists)} lists with {total_hrefs} hrefs')
 		save_to_db(lists, 'starred_lists', db_path='gitstars.db')
 		# Show rate limits after operations
 		limits = get_rate_limit(auth)
@@ -561,7 +575,18 @@ async def main():
 
 	if args.refresh_stars:
 		jsonbuffer, stars_dict = await get_git_stars_async(auth, max=None)
-		logger.info(f'got {len(jsonbuffer)} starred repos')
+		print(f'got {len(jsonbuffer)} starred repos')
+		stars_fn = f'{CACHE_DIR}/starred_repos.json'
+		jsonbuffer_fn = f'{CACHE_DIR}/starred_repos_buffer.json'
+		try:
+			with open(stars_fn, 'w') as f:
+				json.dump(stars_dict, f, indent=2)
+			logger.debug(f'wrote stars to {stars_fn}')
+			with open(jsonbuffer_fn, 'w') as f:
+				json.dump(jsonbuffer, f, indent=2)
+			logger.debug(f'wrote jsonbuffer to {jsonbuffer_fn}')
+		except Exception as e:
+			logger.error(f'failed to write stars to {stars_fn} {e} {type(e)}')
 		save_to_db(stars_dict, 'starred_repos', db_path='gitstars.db')
 
 		limits = get_rate_limit(auth)
@@ -571,20 +596,56 @@ async def main():
 
 	if args.refresh:
 		lists = await get_git_lists_async(auth, use_cache)
-		logger.info(f'got {len(lists)} lists')
+		lists_fn = f'{CACHE_DIR}/starred_lists.json'
+		try:
+			with open(lists_fn, 'w') as f:
+				json.dump(lists, f, indent=2)
+			logger.debug(f'wrote lists to {lists_fn}')
+		except Exception as e:
+			logger.error(f'failed to write lists to {lists_fn} {e} {type(e)}')
+		total_hrefs = sum([len(lists.get(k).get('hrefs')) for k in lists])
+		all_hrefs = set()
+		for list in lists:
+			list_hrefs = lists.get(list).get('hrefs')
+			# print(f'list: {list} hrefs: {len(list_hrefs)} all_hrefs: {len(all_hrefs)}')
+			for href in list_hrefs:
+				all_hrefs.add(href)
+		print(f'got {len(lists)} lists with {total_hrefs} hrefs')
 		save_to_db(lists, 'starred_lists', db_path='gitstars.db')
+
 		# Show rate limits after operations
 		limits = get_rate_limit(auth)
 		print(f"API Rate limits after - Core: {limits.get('core')}")
 		_ = [print(f'{k} {limits.get(k)}') for k in limits if limits.get(k).used > 0]
 
 		jsonbuffer, stars_dict = await get_git_stars_async(auth, max=None)
-		logger.info(f'got {len(jsonbuffer)} starred repos')
+		stars_fn = f'{CACHE_DIR}/starred_repos.json'
+		jsonbuffer_fn = f'{CACHE_DIR}/starred_repos_buffer.json'
+		try:
+			with open(stars_fn, 'w') as f:
+				json.dump(stars_dict, f, indent=2)
+			logger.debug(f'wrote stars to {stars_fn}')
+			with open(jsonbuffer_fn, 'w') as f:
+				json.dump(jsonbuffer, f, indent=2)
+			logger.debug(f'wrote jsonbuffer to {jsonbuffer_fn}')
+		except Exception as e:
+			logger.error(f'failed to write stars to {stars_fn} {e} {type(e)}')
+		print(f'jsonbuffer: {len(jsonbuffer)} stars_dict: {len(stars_dict)}')
 		save_to_db(stars_dict, 'starred_repos', db_path='gitstars.db')
 
 		limits = get_rate_limit(auth)
 		print(f"API Rate limits after - Core: {limits.get('core')}")
 		_ = [print(f'{k} {limits.get(k)}') for k in limits if limits.get(k).used > 0]
+
+		starred_full_names = set(repo['full_name'] for repo in stars_dict.values())
+		missing_in_stars = all_hrefs - starred_full_names
+		not_in_any_list = starred_full_names - all_hrefs
+		if missing_in_stars:
+			print(f'{len(missing_in_stars)} repos from lists missing from stars')
+			for missing in missing_in_stars:
+				print(f'\trepo: {missing}')
+		if not_in_any_list:
+			print(f'{len(not_in_any_list)} repos not in any list:')
 		return
 
 if __name__ == '__main__':
