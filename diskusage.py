@@ -14,7 +14,7 @@ def process_directory(task_item):
 		if args.debug:
 			logger.warning(f'[debug] skipping excluded dir: {dirname}')
 		return None
-	return DirItem(name=dirname, maxdepth=args.maxdepth, exclude_list=args.exclude_list)
+	return DirItem(name=dirname, maxdepth=args.maxdepth, exclude_list=args.exclude_list, skip_counts=args.skip_counts, debug=args.debug)
 
 if __name__ == '__main__':
 	myparse = argparse.ArgumentParser(description="show folder sizes and things..")
@@ -30,6 +30,7 @@ if __name__ == '__main__':
 	myparse.add_argument('-r','--reverse', help="reverse list", action='store_true', default=False, dest='reverselist')
 	myparse.add_argument('-wc','--wildcard', required=False, metavar='wildcard', nargs='?', type=str, help="search by wildcard", default='*')
 	myparse.add_argument('--debug', '-d', help="enable debug", action='store_true', default=False)
+	myparse.add_argument('--skip_counts', '-s', help="skip counting files and directories", action='store_true', default=False)
 	args = myparse.parse_args()
 	if args.excludes:
 		args.exclude_list = EXCLUDES
@@ -40,7 +41,7 @@ if __name__ == '__main__':
 	folder_task_list = [(args,k) for k in input_path.glob('*') if not k.is_file() and not Path(k).is_symlink() and k.name not in args.exclude_list]
 	folder_task_list_excluded = [(args,k) for k in input_path.glob('*') if not k.is_file() and not Path(k).is_symlink() and k.name in args.exclude_list]
 	if args.debug:
-		logger.debug(f'[debug] folder_task_list: {len(folder_task_list)} folder_task_list_excluded: {len(folder_task_list_excluded)}')
+		logger.debug(f'folder_task_list: {len(folder_task_list)} folder_task_list_excluded: {len(folder_task_list_excluded)} os.cpu_count(): {os.cpu_count()} skip_counts: {args.skip_counts}')
 	try:
 		with Pool(processes=os.cpu_count()) as pool:
 			itemlist = pool.map(process_directory, folder_task_list)
@@ -51,6 +52,13 @@ if __name__ == '__main__':
 	total_files = 0
 	total_dirs = 0
 	itemlist = [k for k in itemlist if k is not None]
+	if args.debug:
+		logger.debug(f'itemlist: {len(itemlist)}')
+	if args.skip_counts:
+		for item in itemlist:
+			if args.debug:
+				logger.debug(f'getting counts for item: {item.dirname}')
+			item.get_counts()
 	try:
 		if args.sort == 'size':
 			sorteditems = sorted(itemlist, key=operator.attrgetter("totalsize"), reverse=args.reverselist)
