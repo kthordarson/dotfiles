@@ -51,6 +51,7 @@ if __name__ == '__main__':
 	total_files = 0
 	total_dirs = 0
 	itemlist = [k for k in itemlist if k is not None]
+	sorteditems = []
 	try:
 		if args.sort == 'size':
 			sorteditems = sorted(itemlist, key=operator.attrgetter("totalsize"), reverse=args.reverselist)
