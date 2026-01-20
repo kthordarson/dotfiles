@@ -52,6 +52,7 @@ if __name__ == '__main__':
 	total_files = 0
 	total_dirs = 0
 	itemlist = [k for k in itemlist if k is not None]
+	sorteditems = []
 	if args.debug:
 		logger.debug(f'itemlist: {len(itemlist)}')
 	if args.skip_counts:
