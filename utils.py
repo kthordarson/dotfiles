@@ -100,16 +100,20 @@ class DirItem:
 	subitemcount: int = 0
 	# bigfiles: list = []
 
-	def __init__(self, name:Path, maxfiles=0, maxdepth=0, wildcard='*', exclude_list=[]):
+	def __init__(self, name:Path, maxfiles=0, maxdepth=0, wildcard='*', exclude_list=[], skip_counts=False, debug=False):
+		self.debug = debug
 		self.name = name
 		self.dirname = str(name.name)
 		self.maxfiles = maxfiles
 		self.maxdepth = maxdepth
 		self.wildcard = wildcard
 		self.exclude_list = exclude_list
-		self.totalsize = get_directory_size(directory=self.name, wildcard=self.wildcard, maxdepth=self.maxdepth, exclude_list=self.exclude_list)
-		self.subfilecount = get_subfilecount(self.name)
-		self.subdircount = get_subdircount(self.name)
+		if skip_counts:
+			self.totalsize = 0
+			self.subfilecount = 0
+			self.subdircount = 0
+		else:
+			self.totalsize, self.subfilecount, self.subdircount = get_dir_stats(directory=self.name, wildcard=self.wildcard, maxdepth=self.maxdepth, exclude_list=self.exclude_list)
 		self.subitemcount = self.subfilecount + self.subdircount
 		self.bigfiles = []
 		self.filelist = []
@@ -129,55 +133,68 @@ class DirItem:
 
 	def get_size(self):
 		return get_size_format(self.totalsize,suffix='B')
+	
+	def get_counts(self):
+		if self.debug:
+			logger.debug(f'Getting counts for DirItem: {self.name}')
+		
+		self.totalsize, self.subfilecount, self.subdircount = get_dir_stats(directory=self.name, wildcard=self.wildcard, maxdepth=self.maxdepth, exclude_list=self.exclude_list)
+		
+		if self.debug:
+			logger.debug(f'\ttotalsize: {self.totalsize}')
+			logger.debug(f'\tsubfilecount: {self.subfilecount}')
+			logger.debug(f'\tsubdircount: {self.subdircount}')
+		self.subitemcount = self.subfilecount + self.subdircount
+
+def get_dir_stats(directory, wildcard='*', exclude_list=[], maxdepth=20, current_depth=0):
+	total_size = 0
+	file_count = 0
+	dir_count = 0
+
+	if current_depth > maxdepth and maxdepth != -1:
+		return 0, 0, 0
+
+	try:
+		with os.scandir(directory) as it:
+			for entry in it:
+				try:
+					if entry.is_symlink():
+						continue
+					if entry.name in exclude_list:
+						continue
+
+					if entry.is_file():
+						if fnmatch.fnmatch(entry.name, wildcard):
+							total_size += entry.stat().st_size
+							file_count += 1
+					elif entry.is_dir():
+						dir_count += 1
+						if maxdepth == -1 or current_depth < maxdepth:
+							s, f, d = get_dir_stats(entry.path, wildcard, exclude_list, maxdepth, current_depth + 1)
+							total_size += s
+							file_count += f
+							dir_count += d
+				except OSError:
+					pass
+	except (PermissionError, FileNotFoundError, NotADirectoryError, OSError):
+		pass
+	return total_size, file_count, dir_count
 
 def get_directory_size(directory, wildcard='*',maxdepth=20, exclude_list=[]):
-	total = 0
-	entry = None
-	current_depth = 0
-	try:
-		for entry in os.scandir(directory):
-			try:
-				if Path(entry).is_symlink():
-					# if Path(entry).is_file():
-					# print(f'[!] {entry.name} is symlink to {Path(entry).resolve()}')
-					continue
-				if Path(entry).name in exclude_list:
-					# logger.warning(f'[!] excluded entry: {entry} {entry.path}')
-					continue
-				if entry.is_file() and Path(entry).match(wildcard):
-					total += entry.stat().st_size
-				elif entry.is_dir() and entry.name not in exclude_list:
-					if current_depth > maxdepth and maxdepth != -1:
-						# logger.warning(f'[!] maxdepth {maxdepth} reached {current_depth} at {entry} {entry.path}')
-						continue
-					else:
-						try:
-							total += get_directory_size(directory=entry.path, wildcard=wildcard, maxdepth=maxdepth, exclude_list=exclude_list)
-						except FileNotFoundError as e:
-							logger.error(f'[err] {e} entry:{entry}')
-							continue
-						current_depth += 1
-			except OSError as e:
-				logger.warning(f'[err]  {entry} {e}')
-	except (PermissionError, FileNotFoundError, NotADirectoryError) as e:
-		logger.error(f'[err] dir:{directory} {e}')
-	return total
+	# Wrapper for backward compatibility if needed, though get_dir_stats is preferred
+	s, _, _ = get_dir_stats(directory, wildcard, exclude_list, maxdepth)
+	return s
 
 def get_subfilecount(directory):
-	try:
-		filecount = len([k for k in directory.glob('**/*') if k.is_file()])
-	except PermissionError as e:
-		logger.error(f'[err] {e} d:{directory}')
-		return 0
-	return filecount
+	# Approximate backward compatibility - ignores exclude_list and maxdepth as original logic did not use them correctly
+	# But new get_dir_stats does. To match old behavior closely we might need recursion.
+	# But replacing with optimized version is better.
+	_, f, _ = get_dir_stats(directory, maxdepth=-1)
+	return f
 
 def get_subdircount(directory):
-	dc = 0
-	try:
-		dc = len([k for k in directory.glob('**/*') if k.is_dir()])
-	except (PermissionError,FileNotFoundError) as e:
-		logger.error(f'[err] {e} d:{directory}')
-	return dc
+	_, _, d = get_dir_stats(directory, maxdepth=-1)
+	return d
 
 def format_bytes(size):
 	# 2**10 = 1024

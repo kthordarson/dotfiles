@@ -68,6 +68,7 @@ def show_tcp():
 def show_tcp_listen():
 	result = subprocess.run(["ss", "-tnpHl4"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=5)
 	lines = result.stdout.decode("utf-8").split("\n")
+	match = None
 	print(f"{len(lines)} Listening TCP sockets:")
 	for line in lines:
 		process_name = ''
