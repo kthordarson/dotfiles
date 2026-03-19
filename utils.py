@@ -70,8 +70,8 @@ def filelist_generator(args, exclude_list, specific_dir=None, root_only=False):
 					try:
 						# size = os.path.getsize(full_path)
 						yield FileItem(name=Path(full_path))
-					except (FileNotFoundError, PermissionError):
-						continue
+					except (FileNotFoundError, PermissionError) as e:
+						logger.warning(f'[warn] {e} Could not access file: {full_path}')
 
 @dataclass(order=True, frozen=False)
 class FileItemx:
