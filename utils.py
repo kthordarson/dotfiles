@@ -65,13 +65,13 @@ def filelist_generator(args, exclude_list, specific_dir=None, root_only=False):
 			dirs[:] = [d for d in dirs if d not in exclude_list]
 
 			for file in files:
-				if file not in exclude_list and fnmatch.fnmatch(file, wildcard):
-					full_path = os.path.join(root, file)
+				full_path = os.path.join(root, file)
+				if file not in exclude_list and fnmatch.fnmatch(file, wildcard) and Path(full_path).is_file():
 					try:
 						# size = os.path.getsize(full_path)
 						yield FileItem(name=Path(full_path))
-					except (FileNotFoundError, PermissionError):
-						continue
+					except (FileNotFoundError, PermissionError) as e:
+						logger.warning(f'[warn] {e} Could not access file: {full_path}')
 
 @dataclass(order=True, frozen=False)
 class FileItemx:
@@ -133,13 +133,13 @@ class DirItem:
 
 	def get_size(self):
 		return get_size_format(self.totalsize,suffix='B')
-	
+
 	def get_counts(self):
 		if self.debug:
 			logger.debug(f'Getting counts for DirItem: {self.name}')
-		
+
 		self.totalsize, self.subfilecount, self.subdircount = get_dir_stats(directory=self.name, wildcard=self.wildcard, maxdepth=self.maxdepth, exclude_list=self.exclude_list)
-		
+
 		if self.debug:
 			logger.debug(f'\ttotalsize: {self.totalsize}')
 			logger.debug(f'\tsubfilecount: {self.subfilecount}')
