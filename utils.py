@@ -56,7 +56,7 @@ def filelist_generator(args, exclude_list, specific_dir=None, root_only=False):
 	if root_only:
 		for entry in os.scandir(path):
 			if entry.is_file() and not entry.name.startswith('.') and entry.name not in exclude_list:
-				if fnmatch.fnmatch(entry.name, wildcard):
+				if fnmatch.fnmatch(entry.name, wildcard) and Path(entry.path).stat().st_size > 0:
 					# stat = entry.stat()
 					yield FileItem(name=Path(entry.path))
 	else:
@@ -66,7 +66,7 @@ def filelist_generator(args, exclude_list, specific_dir=None, root_only=False):
 
 			for file in files:
 				full_path = os.path.join(root, file)
-				if file not in exclude_list and fnmatch.fnmatch(file, wildcard) and Path(full_path).is_file():
+				if file not in exclude_list and fnmatch.fnmatch(file, wildcard) and Path(full_path).is_file() and Path(full_path).stat().st_size > 0:
 					try:
 						# size = os.path.getsize(full_path)
 						yield FileItem(name=Path(full_path))
