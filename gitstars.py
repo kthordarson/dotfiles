@@ -399,12 +399,16 @@ async def get_info_for_list_async(link, session: aiohttp.ClientSession, use_cach
 			logger.warning(f'no more data on page {page} for {link}')
 			break
 
-		listdata = soupdata.find_all('div', class_="col-12 d-block width-full py-4 border-bottom color-border-muted")
+		# listdata = soupdata.find_all('div', class_="col-12 d-block width-full py-4 border-bottom color-border-muted")
+		listdata = soupdata.find_all(id='user-list-repositories')
+
 		if not listdata:
 			logger.warning(f'no list items on page {page} for {link}')
 			break
 
-		page_hrefs = [k.find('div', class_='d-inline-block mb-1').find('a').attrs['href'] for k in listdata]  # type: ignore
+		# page_hrefs = [k.find('div', class_='d-inline-block mb-1').find('a').attrs['href'] for k in listdata]  # type: ignore
+		page_hrefs_data = [k.find_all('div', class_='d-inline-block') for k in listdata][0]
+		page_hrefs = [k.find('a')['href'] for k in page_hrefs_data]
 		list_hrefs.extend(page_hrefs)
 
 		# Check for next page - multiple ways GitHub shows pagination
@@ -452,17 +456,19 @@ async def get_git_lists_async(auth: HTTPBasicAuth, use_cache=False) -> dict:
 
 	if use_cache:
 		try:
-			with open(f'{CACHE_DIR}/starlist.tmp', 'r') as f:
+			tmpfile = f'{CACHE_DIR}/starlist.tmp'
+			logger.info(f'checking cache for {tmpfile}')
+			with open(tmpfile, 'r') as f:
 				soup = BeautifulSoup(f.read(), 'html.parser')
 		except Exception as e:
 			logger.error(f'failed to read starlist.tmp {e}')
 
-	async with aiohttp.ClientSession(headers=headers) as session:
-		# Check rate limit before starting
-		if not await check_rate_limit_async(session, 'core', min_remaining=5):
-			await wait_for_rate_limit_async(session, 'core')
-
-		if not soup:
+	if not soup:
+		async with aiohttp.ClientSession(headers=headers) as session:
+			logger.debug(f'fetching lists from {listurl}')
+			# Check rate limit before starting
+			if not await check_rate_limit_async(session, 'core', min_remaining=5):
+				await wait_for_rate_limit_async(session, 'core')
 			async with session.get(listurl) as r:
 				if r.status == 429:
 					logger.error("Rate limited fetching lists")
@@ -474,10 +480,10 @@ async def get_git_lists_async(auth: HTTPBasicAuth, use_cache=False) -> dict:
 				with open(fn, 'w') as f:
 					f.write(str(soup))
 				logger.debug(f'Wrote cache for to {fn}')
-
+	if soup:
 		listsoup = soup.find_all('div', attrs={"id": "profile-lists-container"})
 		list_items = listsoup[0].find_all('a', attrs={'class': 'd-block Box-row Box-row--hover-gray mt-0 color-fg-default no-underline'})  # type: ignore
-		# logger.debug(f'list_items: {len(list_items)} listsoup: {len(listsoup)}')
+		logger.debug(f'list_items: {len(list_items)} listsoup: {len(listsoup)}')
 
 		# Prepare list metadata
 		list_meta = []
@@ -490,10 +496,11 @@ async def get_git_lists_async(auth: HTTPBasicAuth, use_cache=False) -> dict:
 			except IndexError:
 				list_description = ''
 			list_meta.append((listname, list_link, list_count_info, list_description))
-
-		# Fetch all list repos concurrently
-		tasks = [get_info_for_list_async(meta[1], session, use_cache) for meta in list_meta]
-		results = await asyncio.gather(*tasks, return_exceptions=True)
+		async with aiohttp.ClientSession(headers=headers) as session:
+			# Fetch all list repos concurrently
+			tasks = [get_info_for_list_async(meta[1], session, use_cache) for meta in list_meta]
+			logger.debug(f'Created {len(tasks)} tasks for list info fetching')
+			results = await asyncio.gather(*tasks, return_exceptions=True)
 
 		lists = {}
 
@@ -575,7 +582,7 @@ async def main():
 
 	if args.refresh_stars:
 		jsonbuffer, stars_dict = await get_git_stars_async(auth, max=None)
-		print(f'got {len(jsonbuffer)} starred repos')
+		print(f'jsonbuffer: {len(jsonbuffer)} starred repos: {len(stars_dict)}')
 		stars_fn = f'{CACHE_DIR}/starred_repos.json'
 		jsonbuffer_fn = f'{CACHE_DIR}/starred_repos_buffer.json'
 		try:
@@ -638,8 +645,8 @@ async def main():
 		_ = [print(f'{k} {limits.get(k)}') for k in limits if limits.get(k).used > 0]
 
 		starred_full_names = set(repo['full_name'] for repo in stars_dict.values())
-		missing_in_stars = all_hrefs - starred_full_names
-		not_in_any_list = starred_full_names - all_hrefs
+		missing_in_stars = [k for k in (all_hrefs - starred_full_names)]
+		not_in_any_list = [k for k in (starred_full_names - all_hrefs)]
 		if missing_in_stars:
 			print(f'{len(missing_in_stars)} repos from lists missing from stars')
 			for missing in missing_in_stars:
