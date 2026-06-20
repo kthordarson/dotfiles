@@ -12,3 +12,5 @@ test*
 system_info_comparison.txt
 gitstars.db
 filterlog.db
+*.sql
+*.db
