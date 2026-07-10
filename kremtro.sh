@@ -194,7 +194,18 @@ shopt -s cdspell
 
 # Turn on recursive globbing (enables ** to recurse all directories)
 # shopt -s globstar 2> /dev/null
-
+function lsofpid() {
+    if [ $# -ne 2 ]; then
+        echo "Looking for proc $1"
+        for pid in $(ps uxa | grep -v -E "grep|tail" | grep $1 | awk -F' ' '{print $2}')
+        do
+           echo "checking pid: $pid"
+           sudo lsof -n -p $pid
+        done;
+    else
+        echo "wrong args"
+    fi
+}
 function findit() {
     if [ $# -gt 0 ]; then
         echo "Searching in $1 for string $2"

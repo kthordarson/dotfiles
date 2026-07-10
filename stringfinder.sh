@@ -65,10 +65,10 @@ matched_files=0
 print_color 34 "Searching for '$search_string' in '$directory'..."
 
 # Process files
-eval "$find_cmd -print0" | while IFS= read -r -d '' file; do
+while IFS= read -r -d '' file; do
     ((total_files++))
     # Extract strings and search for the pattern
-    matches=$(strings "$file" 2>/dev/null | sort | uniq | grep $grep_opts "$search_string")
+    matches=$(strings "$file" 2>/dev/null | sort | uniq | grep $grep_opts "$search_string" | head)
     if [[ -n "$matches" ]]; then
         ((matched_files++))
         print_color 32 "Found in: $file"
@@ -76,7 +76,7 @@ eval "$find_cmd -print0" | while IFS= read -r -d '' file; do
         echo "$matches" | awk '{print "\t" NR ": " $0}'
         echo ""
     fi
-done
+done < <(eval "$find_cmd -print0")
 
 # Print summary
 print_color 34 "Summary:"
