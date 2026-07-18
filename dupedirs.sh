@@ -34,7 +34,7 @@ echo "Results:"
 # Find directories, extract their names, and identify duplicates
 find "$(realpath "$1")" -maxdepth "$MAX_DEPTH" -type d -not -path "$(realpath "$1")" | while read -r dir; do
     basename "$(realpath "$dir")"
-done | sort | uniq -d | while read -r dirname; do
+    done | sort | uniq -d | while read -r dirname; do
     echo "Duplicate directory name: $dirname"
     # Find all directories with this name and calculate their sizes
     find "$(realpath "$1")" -maxdepth "$MAX_DEPTH" -type d -name "$dirname" | while read -r dup_dir; do

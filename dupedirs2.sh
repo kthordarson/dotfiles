@@ -82,7 +82,7 @@ echo "Results:"
 # Find directories, extract their names, and identify duplicates
 find "$(realpath "$1")" -maxdepth "$MAX_DEPTH" -type d -not -path "$(realpath "$1")" | while read -r dir; do
     basename "$(realpath "$dir")"
-done | sort | uniq -d | while read -r dirname; do
+    done | sort | uniq -d | while read -r dirname; do
     # Create a temporary file for this group of directories
     tmp_file=$(mktemp)
     # has_matches=0
