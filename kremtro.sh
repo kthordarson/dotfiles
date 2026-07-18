@@ -435,7 +435,6 @@ function findupessize() {
 
 }
 
-alias dupeguru='/usr/bin/python ~/development2/dupeguru/run.py'
 alias ogr='open $(git remote get-url origin)'
 
 # gitfoo
