@@ -5,24 +5,24 @@
 
 # Function to display usage information
 usage() {
-    echo "Usage: $0 <directory> <search_string> [-c] [-e <extension>]"
-    echo "  -c: Case-sensitive search"
-    echo "  -e: Limit search to files with specified extension (e.g., 'txt')"
-    exit 1
+	echo "Usage: $0 <directory> <search_string> [-c] [-e <extension>]"
+	echo "  -c: Case-sensitive search"
+	echo "  -e: Limit search to files with specified extension (e.g., 'txt')"
+	exit 1
 }
 
 # Function to print colored output
 print_color() {
-    local color="$1"
-    shift
-    # ANSI colors: red=31, green=32, blue=34
-    printf "\033[${color}m%s\033[0m\n" "$@"
+	local color="$1"
+	shift
+	# ANSI colors: red=31, green=32, blue=34
+	printf "\033[${color}m%s\033[0m\n" "$@"
 }
 
 # Check for minimum arguments
 if [[ $# -lt 2 ]]; then
-    print_color 31 "Error: Directory and search string are required."
-    usage
+	print_color 31 "Error: Directory and search string are required."
+	usage
 fi
 
 # Assign arguments
@@ -36,17 +36,17 @@ file_extension=""
 
 # Parse optional arguments
 while getopts "ce:" opt; do
-    case $opt in
-        c) case_sensitive=true ;;
-        e) file_extension="$OPTARG" ;;
-        *) usage ;;
-    esac
+	case $opt in
+		c) case_sensitive=true ;;
+		e) file_extension="$OPTARG" ;;
+		*) usage ;;
+	esac
 done
 
 # Validate directory
 if [[ ! -d "$directory" ]]; then
-    print_color 31 "Error: '$directory' is not a valid directory."
-    exit 1
+	print_color 31 "Error: '$directory' is not a valid directory."
+	exit 1
 fi
 
 # Build find command based on file extension
@@ -66,16 +66,16 @@ print_color 34 "Searching for '$search_string' in '$directory'..."
 
 # Process files
 while IFS= read -r -d '' file; do
-    ((total_files++))
-    # Extract strings and search for the pattern
-    matches=$(strings "$file" 2>/dev/null | sort | uniq | grep $grep_opts "$search_string" | head)
-    if [[ -n "$matches" ]]; then
-        ((matched_files++))
-        print_color 32 "Found in: $file"
-        # Print matches with indentation and line numbers
-        echo "$matches" | awk '{print "\t" NR ": " $0}'
-        echo ""
-    fi
+	((total_files++))
+	# Extract strings and search for the pattern
+	matches=$(strings "$file" 2>/dev/null | sort | uniq | grep $grep_opts "$search_string" | head)
+	if [[ -n "$matches" ]]; then
+		((matched_files++))
+		print_color 32 "Found in: $file"
+		# Print matches with indentation and line numbers
+		echo "$matches" | awk '{print "\t" NR ": " $0}'
+		echo ""
+	fi
 done < <(eval "$find_cmd -print0")
 
 # Print summary
