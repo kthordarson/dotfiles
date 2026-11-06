@@ -14,3 +14,4 @@ gitstars.db
 filterlog.db
 *.sql
 *.db
+ghidrassist_chat_artifacts/**
