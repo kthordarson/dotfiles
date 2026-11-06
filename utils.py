@@ -113,7 +113,7 @@ class DirItem:
 			self.subfilecount = 0
 			self.subdircount = 0
 		else:
-			self.totalsize, self.subfilecount, self.subdircount = get_dir_stats(directory=self.name, wildcard=self.wildcard, maxdepth=self.maxdepth, exclude_list=self.exclude_list)
+			self.totalsize, self.subfilecount, self.subdircount = get_dir_stats(directory=self.name, wildcard=self.wildcard, maxdepth=self.maxdepth, exclude_list=self.exclude_list, debug=self.debug)
 		self.subitemcount = self.subfilecount + self.subdircount
 		self.bigfiles = []
 		self.filelist = []
@@ -138,7 +138,7 @@ class DirItem:
 		if self.debug:
 			logger.debug(f'Getting counts for DirItem: {self.name}')
 
-		self.totalsize, self.subfilecount, self.subdircount = get_dir_stats(directory=self.name, wildcard=self.wildcard, maxdepth=self.maxdepth, exclude_list=self.exclude_list)
+		self.totalsize, self.subfilecount, self.subdircount = get_dir_stats(directory=self.name, wildcard=self.wildcard, maxdepth=self.maxdepth, exclude_list=self.exclude_list, debug=self.debug)
 
 		if self.debug:
 			logger.debug(f'\ttotalsize: {self.totalsize}')
@@ -146,7 +146,7 @@ class DirItem:
 			logger.debug(f'\tsubdircount: {self.subdircount}')
 		self.subitemcount = self.subfilecount + self.subdircount
 
-def get_dir_stats(directory, wildcard='*', exclude_list=[], maxdepth=20, current_depth=0):
+def get_dir_stats(directory, wildcard='*', exclude_list=[], maxdepth=20, current_depth=0, debug=False):
 	total_size = 0
 	file_count = 0
 	dir_count = 0
@@ -161,6 +161,8 @@ def get_dir_stats(directory, wildcard='*', exclude_list=[], maxdepth=20, current
 					if entry.is_symlink():
 						continue
 					if entry.name in exclude_list:
+						if debug:
+							logger.warning(f'[warn] excluded entry in get_dir_stats: {entry.name}')
 						continue
 
 					if entry.is_file():

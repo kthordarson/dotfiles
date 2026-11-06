@@ -21,9 +21,8 @@ if __name__ == '__main__':
 	_default = str(Path(myparse.prog).parent)
 	# myparse.add_argument('--path', metavar='path', type=str, help="Path to search", default=".")
 	myparse.add_argument('path', nargs='?', type=str, default=_default, metavar='input_path')
-	myparse.add_argument('--number', metavar='filenum', type=int, help="Limit to x results", default=10)
+	myparse.add_argument('--limit', metavar='limit', type=int, help="Limit to x results", default=30)
 	myparse.add_argument('--sort', metavar='sort', type=str, help="sort by size/files/dirs", default='size')
-	myparse.add_argument('--maxfiles', metavar='maxfiles', type=int, help="include X biggest file(s)", default=0)
 	myparse.add_argument('--maxdepth', metavar='maxdepth', type=int, help="limit to maxdepth dirs", default=-1)
 	myparse.add_argument('-e','--excludes', help="use exclude list", action='store_true', default=False)
 	myparse.add_argument('--exclude_list', help="exclude_list", action='store', default=[], nargs='*')
@@ -33,9 +32,10 @@ if __name__ == '__main__':
 	myparse.add_argument('--skip_counts', '-s', help="skip counting files and directories", action='store_true', default=False)
 	args = myparse.parse_args()
 	if args.excludes:
-		args.exclude_list = EXCLUDES
+		args.exclude_list.extend(EXCLUDES)
+		if args.debug:
+			logger.debug(f'updated exclude_list: {args.exclude_list}')
 	input_path = Path(args.path)
-	limit = args.number
 	filelist = []
 	itemlist = []
 	folder_task_list = [(args,k) for k in input_path.glob('*') if not k.is_file() and not Path(k).is_symlink() and k.name not in args.exclude_list]
@@ -72,7 +72,7 @@ if __name__ == '__main__':
 		sorteditems = itemlist
 	print(f'[size] {" "*5}[name]{" "*15}[items] [files] [folders]')
 	print(f'{"-"*60}')
-	for item in sorteditems:
+	for item in sorteditems[:args.limit]:
 		if item:
 			try:
 				print(f'{item.get_size():<10}  {item.dirname[0:20]:<20} {item.subitemcount:<7,} {item.subfilecount:<7,} {item.subdircount:<7,}')
