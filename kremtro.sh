@@ -48,7 +48,8 @@ function llw() {
 	fi
 
 	filetype=$(file "$filename")
-	echo "$filename - $filetype"
+    filesize=$(stat "$(which $filename)" --format %s)
+	echo "$filename - $filetype - $filesize"
 }
 function llwf() {
 	# file $(llw $1 | awk '{print $9}')
